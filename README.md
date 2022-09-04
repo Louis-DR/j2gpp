@@ -47,3 +47,13 @@ For instance the following command will write the rendered file to `./bar/foo.c`
 ```
 j2gpp ./foo.c.j2 --outdir ./bar/
 ```
+
+## Specifying output file
+
+By default the rendered files are saved next to the source templates. If a single source template is provided, you can specify the output file directory and name with the `-o/--output` argument. The output file path can be relative or absolute. If the directory doesn't exist, it will be created.
+
+For instance the following command will write the rendered file to `./bar.c`.
+
+```
+j2gpp ./foo.c.j2 --output ./bar.c
+```

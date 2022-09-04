@@ -7,6 +7,7 @@ from jinja2 import Environment, BaseLoader
 argparser = argparse.ArgumentParser()
 argparser.add_argument("source",                        help="Path to library file",             nargs='+')
 argparser.add_argument("-O", "--outdir", dest="outdir", help="Output directory path"                      )
+argparser.add_argument("-o", "--output", dest="output", help="Output file path for single source template")
 args = argparser.parse_args()
 
 # Parsing arguments
@@ -16,6 +17,12 @@ if args.outdir:
   out_dir = os.path.expandvars(os.path.expanduser(os.path.abspath(args.outdir)))
   if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
+one_out_path = ""
+if args.output:
+  one_out_path = os.path.expandvars(os.path.expanduser(os.path.abspath(args.output)))
+  one_out_dir = os.path.dirname(one_out_path)
+  if not os.path.isdir(one_out_dir):
+    os.makedirs(one_out_dir)
 
 # Collecting source templates paths
 sources = []
@@ -27,8 +34,13 @@ for raw_path in arg_source:
     if os.path.isfile(abs_path) and abs_path.endswith('.j2'):
       # Strip .j2 extension for output path
       out_path = abs_path[:-3]
+      # Providing output directory
       if out_dir:
         out_path = os.path.join(out_dir, os.path.basename(out_path))
+      # Providing output file name
+      if one_out_path:
+        out_path = one_out_path
+      # Dict structure for each source template
       src_dict = {
         'src_path': abs_path,
         'out_path': out_path
