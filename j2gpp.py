@@ -19,13 +19,17 @@ args = argparser.parse_args()
 arg_source = args.source
 out_dir = ""
 if args.outdir:
+  # Get full path
   out_dir = os.path.expandvars(os.path.expanduser(os.path.abspath(args.outdir)))
+  # Create directories if needed
   if not os.path.isdir(out_dir):
     os.makedirs(out_dir)
 one_out_path = ""
 if args.output:
+  # Get full path
   one_out_path = os.path.expandvars(os.path.expanduser(os.path.abspath(args.output)))
   one_out_dir = os.path.dirname(one_out_path)
+  # Create directories if needed
   if not os.path.isdir(one_out_dir):
     os.makedirs(one_out_dir)
 if args.define:
