@@ -38,6 +38,15 @@ int main() {
 }
 ```
 
+The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
+
+| Argument      | Description                                                |
+|---------------|------------------------------------------------------------|
+| `-O/--outdir` | Output directory for all rendered templates                |
+| `-o/--output` | Output file for single template                            |
+| `-I/--incdir` | Include search directory for include and import statements |
+| `-D/--define` | Inline global variables for all templates                  |
+
 ## Specify output directory
 
 By default the rendered files are saved next to the source templates. You can provide an output directory with the `-O/--outdir` argument. The output directory path can be relative or absolute. If the directory doesn't exist, it will be created.
