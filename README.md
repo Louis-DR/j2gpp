@@ -37,3 +37,13 @@ int main() {
   return 0;
 }
 ```
+
+## Specify output directory
+
+By default the rendered files are saved next to the source templates. You can provide an output directory with the `-O/--outdir` argument. The output directory path can be relative or absolute. If the directory doesn't exist, it will be created.
+
+For instance the following command will write the rendered file to `./bar/foo.c`.
+
+```
+j2gpp ./foo.c.j2 --outdir ./bar/
+```
