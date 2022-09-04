@@ -2,12 +2,17 @@ import argparse
 import glob
 import os
 from jinja2 import Environment, BaseLoader
+from utils import *
+
+sources = []
+global_vars = {}
 
 # Command line arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                        help="Path to library file",             nargs='+')
-argparser.add_argument("-O", "--outdir", dest="outdir", help="Output directory path"                      )
-argparser.add_argument("-o", "--output", dest="output", help="Output file path for single source template")
+argparser.add_argument("source",                        help="Path to library file",                      nargs='+')
+argparser.add_argument("-O", "--outdir", dest="outdir", help="Output directory path"                               )
+argparser.add_argument("-o", "--output", dest="output", help="Output file path for single source template"         )
+argparser.add_argument("-D", "--define", dest="define", help="Define variables in the format name=value", nargs='+')
 args = argparser.parse_args()
 
 # Parsing arguments
@@ -23,9 +28,18 @@ if args.output:
   one_out_dir = os.path.dirname(one_out_path)
   if not os.path.isdir(one_out_dir):
     os.makedirs(one_out_dir)
+if args.define:
+  for define in args.define:
+    # Defines in the format name=value
+    var, val = define.split('=')
+    # Cast int and floats
+    if val.isdecimal():
+      val = int(val)
+    elif str_isfloat(val):
+      val = float(val)
+    global_vars[var] = val
 
 # Collecting source templates paths
-sources = []
 for raw_path in arg_source:
   # Glob to apply UNIX-style path patterns
   for glob_path in glob.glob(raw_path):
@@ -57,4 +71,4 @@ for src_dict in sources:
   with open(src_dict['src_path'],'r') as src_file:
     with open(src_dict['out_path'],'w') as out_file:
       print(f"Rendering {src_dict['src_path']} to {src_dict['out_path']}")
-      out_file.write(env.from_string(src_file.read()).render())
+      out_file.write(env.from_string(src_file.read()).render(global_vars))

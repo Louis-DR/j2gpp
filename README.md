@@ -57,3 +57,13 @@ For instance the following command will write the rendered file to `./bar.c`.
 ```
 j2gpp ./foo.c.j2 --output ./bar.c
 ```
+
+## Passing variables in command line
+
+You can pass global variables to all templates rendered using the `-D/--define` argument with a list of variables in the format `name=value`. Integers and floats are automatically cast to allow math operations in the templates.
+
+For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
+
+```
+j2gpp ./foo.c.j2 --define bar=42
+```
