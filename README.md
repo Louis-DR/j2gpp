@@ -58,6 +58,16 @@ For instance the following command will write the rendered file to `./bar.c`.
 j2gpp ./foo.c.j2 --output ./bar.c
 ```
 
+## Include search directory
+
+The `include` and `import` Jinja2 statements require specifying the directory in which the renderer will search. That is provided using the `-I/--incidr` argument.
+
+For instance, with the following command, the files in the directory `./includes/` will be available to `include` and `import` statements when rendering the template `foo.c.j2`.
+
+```
+j2gpp ./foo.c.j2 --incdir ./includes/
+```
+
 ## Passing variables in command line
 
 You can pass global variables to all templates rendered using the `-D/--define` argument with a list of variables in the format `name=value`. Integers and floats are automatically cast to allow math operations in the templates.

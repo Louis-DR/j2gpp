@@ -1,7 +1,7 @@
 import argparse
 import glob
 import os
-from jinja2 import Environment, BaseLoader
+from jinja2 import Environment, FileSystemLoader
 from utils import *
 
 sources = []
@@ -9,10 +9,11 @@ global_vars = {}
 
 # Command line arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                        help="Path to library file",                      nargs='+')
-argparser.add_argument("-O", "--outdir", dest="outdir", help="Output directory path"                               )
-argparser.add_argument("-o", "--output", dest="output", help="Output file path for single source template"         )
-argparser.add_argument("-D", "--define", dest="define", help="Define variables in the format name=value", nargs='+')
+argparser.add_argument("source",                        help="Path to library file",                                         nargs='+')
+argparser.add_argument("-O", "--outdir", dest="outdir", help="Output directory path"                                                  )
+argparser.add_argument("-o", "--output", dest="output", help="Output file path for single source template"                            )
+argparser.add_argument("-I", "--incdir", dest="incdir", help="Include directories for include and import Jinja2 statements", nargs='+')
+argparser.add_argument("-D", "--define", dest="define", help="Define variables in the format name=value",                    nargs='+')
 args = argparser.parse_args()
 
 # Parsing arguments
@@ -32,6 +33,12 @@ if args.output:
   # Create directories if needed
   if not os.path.isdir(one_out_dir):
     os.makedirs(one_out_dir)
+inc_dirs = []
+if args.incdir:
+  for inc_dir in args.incdir:
+    # Get full path
+    inc_dir = os.path.expandvars(os.path.expanduser(os.path.abspath(inc_dir)))
+    inc_dirs.append(inc_dir)
 if args.define:
   for define in args.define:
     # Defines in the format name=value
@@ -42,6 +49,11 @@ if args.define:
     elif str_isfloat(val):
       val = float(val)
     global_vars[var] = val
+
+# Jinja2 environment
+env = Environment(
+  loader=FileSystemLoader(inc_dirs)
+)
 
 # Collecting source templates paths
 for raw_path in arg_source:
@@ -64,11 +76,6 @@ for raw_path in arg_source:
         'out_path': out_path
       }
       sources.append(src_dict)
-
-# Jinja2 environment
-env = Environment(
-  loader=BaseLoader()
-)
 
 # Render all templates
 for src_dict in sources:
