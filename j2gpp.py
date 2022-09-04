@@ -1,3 +1,17 @@
+# ╔═══════════════════════════════════════════════════════════════════════════╗
+# ║ Project:     j2gpp - Jinja2-based General Purpose Preprocessor            ║
+# ║ Author:      Louis Duret-Robert - louisduret@gmail.com                    ║
+# ║ Website:     louis-dr.github.io                                           ║
+# ║ License:     MIT License                                                  ║
+# ║ File:        j2gpp.py                                                     ║
+# ╟───────────────────────────────────────────────────────────────────────────╢
+# ║ Description: Jinja2-based General Purpose Preprocessor. For information   ║
+# ║              about the usage of this tool, please refer to the README.    ║
+# ║                                                                           ║
+# ╚═══════════════════════════════════════════════════════════════════════════╝
+
+
+
 import argparse
 import glob
 import os
@@ -7,7 +21,13 @@ from utils import *
 sources = []
 global_vars = {}
 
-# Command line arguments
+
+
+# ┌────────────────────────┐
+# │ Command line interface │
+# └────────────────────────┘
+
+# Creating arguments
 argparser = argparse.ArgumentParser()
 argparser.add_argument("source",                        help="Path to library file",                                         nargs='+')
 argparser.add_argument("-O", "--outdir", dest="outdir", help="Output directory path"                                                  )
@@ -55,6 +75,12 @@ env = Environment(
   loader=FileSystemLoader(inc_dirs)
 )
 
+
+
+# ┌───────────────────────┐
+# │ Fetching source files │
+# └───────────────────────┘
+
 # Collecting source templates paths
 for raw_path in arg_source:
   # Glob to apply UNIX-style path patterns
@@ -76,6 +102,12 @@ for raw_path in arg_source:
         'out_path': out_path
       }
       sources.append(src_dict)
+
+
+
+# ┌─────────────────────┐
+# │ Rendering templates │
+# └─────────────────────┘
 
 # Render all templates
 for src_dict in sources:
