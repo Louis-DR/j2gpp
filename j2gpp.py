@@ -91,7 +91,7 @@ loaders = {
 
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                          help="Path to library file",                                         nargs='+')
+argparser.add_argument("source",                          help="Path to library file",                                         nargs='*')
 argparser.add_argument("-O", "--outdir",  dest="outdir",  help="Output directory path"                                                  )
 argparser.add_argument("-o", "--output",  dest="output",  help="Output file path for single source template"                            )
 argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
@@ -103,6 +103,9 @@ args = argparser.parse_args()
 throw_h2("Parsing command line arguments")
 
 arg_source = args.source
+if not arg_source:
+  throw_error("Must provide at least one source template.")
+  exit()
 
 out_dir = ""
 if args.outdir:
