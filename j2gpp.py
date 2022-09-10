@@ -30,7 +30,7 @@ global_vars = {}
 
 def load_yaml(var_path):
   from ruamel.yaml import YAML
-  yaml = YAML()
+  yaml = YAML(typ="safe")
   with open(var_path) as var_file:
     return yaml.load(var_file)
 
