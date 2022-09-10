@@ -23,7 +23,7 @@ int main() {
 
 We can render the template using `j2gpp` :
 
-```
+``` shell
 j2gpp ./foo.c.j2
 ```
 
@@ -54,7 +54,7 @@ By default the rendered files are saved next to the source templates. You can pr
 
 For instance the following command will write the rendered file to `./bar/foo.c`.
 
-```
+``` shell
 j2gpp ./foo.c.j2 --outdir ./bar/
 ```
 
@@ -64,7 +64,7 @@ By default the rendered files are saved next to the source templates. If a singl
 
 For instance the following command will write the rendered file to `./bar.c`.
 
-```
+``` shell
 j2gpp ./foo.c.j2 --output ./bar.c
 ```
 
@@ -74,7 +74,7 @@ The `include` and `import` Jinja2 statements require specifying the directory in
 
 For instance, with the following command, the files in the directory `./includes/` will be available to `include` and `import` statements when rendering the template `foo.c.j2`.
 
-```
+``` shell
 j2gpp ./foo.c.j2 --incdir ./includes/
 ```
 
@@ -84,7 +84,7 @@ You can pass global variables to all templates rendered using the `-D/--define` 
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
-```
+``` shell
 j2gpp ./foo.c.j2 --define bar=42
 ```
 
@@ -94,7 +94,7 @@ You can load global variables from files using the `-V/--varfile` argument with 
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
-```
+``` shell
 j2gpp ./foo.c.j2 --varfile ./qux.yml
 ```
 
