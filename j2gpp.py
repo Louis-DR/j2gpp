@@ -37,20 +37,44 @@ global_vars = {}
 # └────────────────────────┘
 
 def load_yaml(var_path):
-  from ruamel.yaml import YAML
-  yaml = YAML(typ="safe")
-  with open(var_path) as var_file:
-    return yaml.load(var_file)
+  var_dict = {}
+  try:
+    from ruamel.yaml import YAML
+    yaml = YAML(typ="safe")
+    with open(var_path) as var_file:
+      try:
+        var_dict = yaml.load(var_file)
+      except Exception as exc:
+        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
+  return var_dict
 
 def load_json(var_path):
-  import json
-  with open(var_path) as var_file:
-    return json.load(var_file)
+  var_dict = {}
+  try:
+    import json
+    with open(var_path) as var_file:
+      try:
+        var_dict = json.load(var_file)
+      except Exception as exc:
+        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'json' to parse JSON variables files.")
+  return var_dict
 
 def load_xml(var_path):
-  import xmltodict
-  with open(var_path) as var_file:
-    return xmltodict.parse(var_file.read())
+  var_dict = {}
+  try:
+    import xmltodict
+    with open(var_path) as var_file:
+      try:
+        var_dict = xmltodict.parse(var_file.read())
+      except Exception as exc:
+        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
+  return var_dict
 
 loaders = {
   'yaml': load_yaml,

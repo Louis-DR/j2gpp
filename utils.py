@@ -96,6 +96,10 @@ def throw_fatal(text):
   print(f"FATAL:",text)
   print(ansi_codes['reset'], end='')
 
+# Intend block of text
+def intend_text(text):
+  return "  "+str(text).replace('\n','\n  ')
+
 
 
 # ┌─────────────────────┐
