@@ -89,8 +89,6 @@ loaders = {
 # │ Command line interface │
 # └────────────────────────┘
 
-throw_h2("Parsing command line arguments")
-
 # Creating arguments
 argparser = argparse.ArgumentParser()
 argparser.add_argument("source",                          help="Path to library file",                                         nargs='+')
@@ -102,6 +100,7 @@ argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables
 args = argparser.parse_args()
 
 # Parsing arguments
+throw_h2("Parsing command line arguments")
 
 arg_source = args.source
 
