@@ -40,12 +40,13 @@ int main() {
 
 The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
 
-| Argument      | Description                                                |
-|---------------|------------------------------------------------------------|
-| `-O/--outdir` | Output directory for all rendered templates                |
-| `-o/--output` | Output file for single template                            |
-| `-I/--incdir` | Include search directory for include and import statements |
-| `-D/--define` | Inline global variables for all templates                  |
+| Argument       | Description                                                |
+|----------------|------------------------------------------------------------|
+| `-O/--outdir`  | Output directory for all rendered templates                |
+| `-o/--output`  | Output file for single template                            |
+| `-I/--incdir`  | Include search directory for include and import statements |
+| `-D/--define`  | Inline global variables for all templates                  |
+| `-V/--varfile` | Global variables files for all templates                   |
 
 ## Specify output directory
 
@@ -77,7 +78,7 @@ For instance, with the following command, the files in the directory `./includes
 j2gpp ./foo.c.j2 --incdir ./includes/
 ```
 
-## Passing variables in command line
+## Passing global variables in command line
 
 You can pass global variables to all templates rendered using the `-D/--define` argument with a list of variables in the format `name=value`. Integers and floats are automatically cast to allow math operations in the templates.
 
@@ -85,4 +86,20 @@ For instance, with the following command, the variable `bar` will have the value
 
 ```
 j2gpp ./foo.c.j2 --define bar=42
+```
+
+## Loading global variables from files
+
+You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON and XML.
+
+For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
+
+```
+j2gpp ./foo.c.j2 --varfile ./qux.yml
+```
+
+With the variables file `qux.yml` :
+
+``` yml
+bar: 42
 ```
