@@ -19,7 +19,37 @@ from jinja2 import Environment, FileSystemLoader
 from utils import *
 
 sources = []
+global_var_paths = []
 global_vars = {}
+
+
+
+# ┌────────────────────────┐
+# │ Variable files loaders │
+# └────────────────────────┘
+
+def load_yaml(var_path):
+  from ruamel.yaml import YAML
+  yaml = YAML()
+  with open(var_path) as var_file:
+    return yaml.load(var_file)
+
+def load_json(var_path):
+  import json
+  with open(var_path) as var_file:
+    return json.load(var_file)
+
+def load_xml(var_path):
+  import xmltodict
+  with open(var_path) as var_file:
+    return xmltodict.parse(var_file.read())
+
+loaders = {
+  'yaml': load_yaml,
+  'yml':  load_yaml,
+  'json': load_json,
+  'xml':  load_xml
+}
 
 
 
@@ -29,11 +59,12 @@ global_vars = {}
 
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                        help="Path to library file",                                         nargs='+')
-argparser.add_argument("-O", "--outdir", dest="outdir", help="Output directory path"                                                  )
-argparser.add_argument("-o", "--output", dest="output", help="Output file path for single source template"                            )
-argparser.add_argument("-I", "--incdir", dest="incdir", help="Include directories for include and import Jinja2 statements", nargs='+')
-argparser.add_argument("-D", "--define", dest="define", help="Define variables in the format name=value",                    nargs='+')
+argparser.add_argument("source",                          help="Path to library file",                                         nargs='+')
+argparser.add_argument("-O", "--outdir",  dest="outdir",  help="Output directory path"                                                  )
+argparser.add_argument("-o", "--output",  dest="output",  help="Output file path for single source template"                            )
+argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
+argparser.add_argument("-D", "--define",  dest="define",  help="Define global variables in the format name=value",             nargs='+')
+argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
 args = argparser.parse_args()
 
 # Parsing arguments
@@ -69,6 +100,11 @@ if args.define:
     elif str_isfloat(val):
       val = float(val)
     global_vars[var] = val
+if args.varfile:
+  for var_path in args.varfile:
+    # Get full path
+    var_path = os.path.expandvars(os.path.expanduser(os.path.abspath(var_path)))
+    global_var_paths.append(var_path)
 
 # Jinja2 environment
 env = Environment(
@@ -103,6 +139,18 @@ for raw_path in arg_source:
       }
       sources.append(src_dict)
 
+
+
+# ┌───────────────────┐
+# │ Loading variables │
+# └───────────────────┘
+
+# Loading global variables from files
+for var_path in global_var_paths:
+  for extension, loader in loaders.items():
+    if var_path.endswith(extension):
+      var_dict = loader(var_path)
+      global_vars.update(var_dict)
 
 
 # ┌─────────────────────┐
