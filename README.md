@@ -2,6 +2,10 @@
 
 `j2gpp` is a command-line tool for rendering templates using the Jinja2 syntax. It's intended purpose is to serve as a preprocessor for any programming or markup language with a unified syntax and flow accross languages.
 
+## Installation
+
+Simply download the latest executable from the [release page](https://github.com/Louis-DR/j2gpp/releases) and add to your PATH.
+
 ## Basic usage
 
 `j2gpp` requires at least one source be provided. The source paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Template file names must end with the `.j2` extension which will be stripped at render.
