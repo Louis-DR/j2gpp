@@ -40,34 +40,34 @@ ansi_codes = {
 # Totally sick program header
 def j2gpp_title():
   print(ansi_codes['bold'],end='')
-  print("╔══════════════════════════════════════╗")
-  print("║     ╻┏━┓┏━┓┏━┓┏━┓  JINJA2-BASED      ║")
-  print("║     ┃┏━┛┃╺┓┣━┛┣━┛  GENERAL-PURPOSE   ║")
-  print("║   ┗━┛┗━╸┗━┛╹  ╹    PREPROCESSOR      ║")
-  print("╚══════════════════════════════════════╝")
+  print("┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓")
+  print("┃     ╻┏━┓┏━┓┏━┓┏━┓  JINJA2-BASED      ┃")
+  print("┃     ┃┏━┛┃╺┓┣━┛┣━┛  GENERAL-PURPOSE   ┃")
+  print("┃   ┗━┛┗━╸┗━┛╹  ╹    PREPROCESSOR      ┃")
+  print("┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛")
   print(ansi_codes['reset'],end='')
 
 # Cool looking headers
-def throw_h1(text):
-  width = len(text)+2
+def throw_h1(text, min_width=40):
+  width = max(min_width-2,len(text)+2)
   print(ansi_codes['bold'], end='')
   print('╔'+width*'═'+'╗')
-  print('║',text,'║')
+  print('║',text.center(width-2),'║')
   print('╚'+width*'═'+'╝')
   print(ansi_codes['reset'], end='')
 
-def throw_h2(text):
-  width = len(text)+2
+def throw_h2(text, min_width=40):
+  width = max(min_width-2,len(text)+2)
   print(ansi_codes['bold'], end='')
   print('┏'+width*'━'+'┓')
-  print('┃',text,'┃')
+  print('┃',text.center(width-2),'┃')
   print('┗'+width*'━'+'┛')
   print(ansi_codes['reset'], end='')
 
-def throw_h3(text):
-  width = len(text)+2
+def throw_h3(text, min_width=40):
+  width = max(min_width-2,len(text)+2)
   print('┌'+width*'─'+'┐')
-  print('│',text,'│')
+  print('│',text.center(width-2),'│')
   print('└'+width*'─'+'┘')
 
 # Cool looking messages
