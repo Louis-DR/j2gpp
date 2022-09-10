@@ -18,6 +18,8 @@ import os
 from jinja2 import Environment, FileSystemLoader
 from utils import *
 
+j2gpp_title()
+
 sources = []
 global_var_paths = []
 global_vars = {}
