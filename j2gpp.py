@@ -222,9 +222,16 @@ throw_h2("Rendering templates")
 
 # Render all templates
 for src_dict in sources:
-  with open(src_dict['src_path'],'r') as src_file:
-    with open(src_dict['out_path'],'w') as out_file:
-      print(f"Rendering {src_dict['src_path']} \n       to {src_dict['out_path']}")
-      out_file.write(env.from_string(src_file.read()).render(global_vars))
+  print(f"Rendering {src_dict['src_path']} \n       to {src_dict['out_path']}")
+  src_path = src_dict['src_path']
+  out_path = src_dict['out_path']
+  src_res = ""
+  try:
+    with open(src_path,'r') as src_file:
+      src_res = env.from_string(src_file.read()).render(global_vars)
+  except Exception as exc:
+    throw_error(f"Exception occured while rendering {src_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  with open(out_path,'w') as out_file:
+    out_file.write(src_res)
 
 throw_h2("Done")
