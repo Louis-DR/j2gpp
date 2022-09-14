@@ -4,7 +4,7 @@
 
 ## Installation
 
-Simply download the latest executable from the [release page](https://github.com/Louis-DR/j2gpp/releases) and add to your PATH.
+Simply download the latest executable for your platform from the [release page](https://github.com/Louis-DR/j2gpp/releases), unzip it to the desired installation directory and add to your PATH.
 
 ## Basic usage
 
