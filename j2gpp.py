@@ -271,4 +271,15 @@ for src_dict in sources:
     else:
       throw_error(f"Cannot write {var_path}.")
 
+
+
+# ┌─────┐
+# │ End │
+# └─────┘
+
+# Print all errors and warnings at the end
+if errors or warnings:
+  throw_h2("Error/warning summary")
+  error_warning_summary()
+
 throw_h2("Done")
