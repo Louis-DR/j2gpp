@@ -15,6 +15,7 @@
 import argparse
 import glob
 import os
+import errno
 from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
@@ -48,6 +49,13 @@ def load_yaml(var_path):
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
+  except OSError as exc:
+    if exc.errno == errno.ENOENT:
+      throw_error(f"Cannot read {var_path} : file doesn't exist.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot read {var_path} : missing read permission.")
+    else:
+      throw_error(f"Cannot read {var_path}.")
   return var_dict
 
 def load_json(var_path):
@@ -61,6 +69,13 @@ def load_json(var_path):
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'json' to parse JSON variables files.")
+  except OSError as exc:
+    if exc.errno == errno.ENOENT:
+      throw_error(f"Cannot read {var_path} : file doesn't exist.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot read {var_path} : missing read permission.")
+    else:
+      throw_error(f"Cannot read {var_path}.")
   return var_dict
 
 def load_xml(var_path):
@@ -74,6 +89,13 @@ def load_xml(var_path):
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
+  except OSError as exc:
+    if exc.errno == errno.ENOENT:
+      throw_error(f"Cannot read {var_path} : file doesn't exist.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot read {var_path} : missing read permission.")
+    else:
+      throw_error(f"Cannot read {var_path}.")
   return var_dict
 
 loaders = {
@@ -229,9 +251,24 @@ for src_dict in sources:
   try:
     with open(src_path,'r') as src_file:
       src_res = env.from_string(src_file.read()).render(global_vars)
+  except OSError as exc:
+    if exc.errno == errno.ENOENT:
+      throw_error(f"Cannot read {var_path} : file doesn't exist.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot read {var_path} : missing read permission.")
+    else:
+      throw_error(f"Cannot read {var_path}.")
   except Exception as exc:
     throw_error(f"Exception occured while rendering {src_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
-  with open(out_path,'w') as out_file:
-    out_file.write(src_res)
+  try:
+    with open(out_path,'w') as out_file:
+      out_file.write(src_res)
+  except OSError as exc:
+    if exc.errno == errno.EISDIR:
+      throw_error(f"Cannot write {var_path} : path is a directory.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot write {var_path} : missing write permission.")
+    else:
+      throw_error(f"Cannot write {var_path}.")
 
 throw_h2("Done")
