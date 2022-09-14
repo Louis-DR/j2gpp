@@ -49,13 +49,6 @@ def load_yaml(var_path):
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
-  except OSError as exc:
-    if exc.errno == errno.ENOENT:
-      throw_error(f"Cannot read {var_path} : file doesn't exist.")
-    elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot read {var_path} : missing read permission.")
-    else:
-      throw_error(f"Cannot read {var_path}.")
   return var_dict
 
 def load_json(var_path):
@@ -69,13 +62,6 @@ def load_json(var_path):
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'json' to parse JSON variables files.")
-  except OSError as exc:
-    if exc.errno == errno.ENOENT:
-      throw_error(f"Cannot read {var_path} : file doesn't exist.")
-    elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot read {var_path} : missing read permission.")
-    else:
-      throw_error(f"Cannot read {var_path}.")
   return var_dict
 
 def load_xml(var_path):
@@ -89,13 +75,6 @@ def load_xml(var_path):
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
-  except OSError as exc:
-    if exc.errno == errno.ENOENT:
-      throw_error(f"Cannot read {var_path} : file doesn't exist.")
-    elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot read {var_path} : missing read permission.")
-    else:
-      throw_error(f"Cannot read {var_path}.")
   return var_dict
 
 loaders = {
@@ -232,7 +211,16 @@ for var_path in global_var_paths:
   for extension, loader in loaders.items():
     if var_path.endswith(extension):
       print(f"Loading global variables file {var_path}")
-      var_dict = loader(var_path)
+      try:
+        var_dict = loader(var_path)
+      except OSError as exc:
+        var_dict = {}
+        if exc.errno == errno.ENOENT:
+          throw_error(f"Cannot read {var_path} : file doesn't exist.")
+        elif exc.errno == errno.EACCES:
+          throw_error(f"Cannot read {var_path} : missing read permission.")
+        else:
+          throw_error(f"Cannot read {var_path}.")
       global_vars.update(var_dict)
 
 
