@@ -210,17 +210,17 @@ throw_h2("Loading variables")
 for var_path in global_var_paths:
   for extension, loader in loaders.items():
     if var_path.endswith(extension):
-      print(f"Loading global variables file {var_path}")
+      print(f"Loading global variables file '{var_path}'")
       try:
         var_dict = loader(var_path)
       except OSError as exc:
         var_dict = {}
         if exc.errno == errno.ENOENT:
-          throw_error(f"Cannot read {var_path} : file doesn't exist.")
+          throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
         elif exc.errno == errno.EACCES:
-          throw_error(f"Cannot read {var_path} : missing read permission.")
+          throw_error(f"Cannot read '{var_path}' : missing read permission.")
         else:
-          throw_error(f"Cannot read {var_path}.")
+          throw_error(f"Cannot read '{var_path}'.")
       global_vars.update(var_dict)
 
 
@@ -241,23 +241,23 @@ for src_dict in sources:
       src_res = env.from_string(src_file.read()).render(global_vars)
   except OSError as exc:
     if exc.errno == errno.ENOENT:
-      throw_error(f"Cannot read {var_path} : file doesn't exist.")
+      throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
     elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot read {var_path} : missing read permission.")
+      throw_error(f"Cannot read '{var_path}' : missing read permission.")
     else:
-      throw_error(f"Cannot read {var_path}.")
+      throw_error(f"Cannot read '{var_path}'.")
   except Exception as exc:
-    throw_error(f"Exception occured while rendering {src_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+    throw_error(f"Exception occured while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   try:
     with open(out_path,'w') as out_file:
       out_file.write(src_res)
   except OSError as exc:
     if exc.errno == errno.EISDIR:
-      throw_error(f"Cannot write {var_path} : path is a directory.")
+      throw_error(f"Cannot write '{var_path}' : path is a directory.")
     elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot write {var_path} : missing write permission.")
+      throw_error(f"Cannot write '{var_path}' : missing write permission.")
     else:
-      throw_error(f"Cannot write {var_path}.")
+      throw_error(f"Cannot write '{var_path}'.")
 
 
 
