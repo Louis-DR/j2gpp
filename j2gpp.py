@@ -98,10 +98,14 @@ argparser.add_argument("-o", "--output",  dest="output",  help="Output file path
 argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
 argparser.add_argument("-D", "--define",  dest="define",  help="Define global variables in the format name=value",             nargs='+')
 argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
+argparser.add_argument(      "--perf",    dest="perf",    help="Measure and display performance",                              action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
 
 # Parsing arguments
 throw_h2("Parsing command line arguments")
+
+if args.perf:
+  perf_counter = perf_counter_start()
 
 if args_unknown:
   throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
@@ -272,5 +276,10 @@ for src_dict in sources:
 if errors or warnings:
   throw_h2("Error/warning summary")
   error_warning_summary()
+
+# Print the performance timer
+if args.perf:
+  throw_h2("Performance")
+  perf_counter_print(perf_counter_stop(perf_counter))
 
 throw_h2("Done")
