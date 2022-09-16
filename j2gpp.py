@@ -15,12 +15,13 @@
 import argparse
 import glob
 import os
+import errno
 from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
 from utils import *
 
-j2gpp_version = "1.0.0"
+j2gpp_version = "1.1.0"
 j2gpp_title()
 print(f"Python version :",python_version())
 print(f"Jinja2 version :",jinja2_version)
@@ -37,20 +38,44 @@ global_vars = {}
 # └────────────────────────┘
 
 def load_yaml(var_path):
-  from ruamel.yaml import YAML
-  yaml = YAML(typ="safe")
-  with open(var_path) as var_file:
-    return yaml.load(var_file)
+  var_dict = {}
+  try:
+    from ruamel.yaml import YAML
+    yaml = YAML(typ="safe")
+    with open(var_path) as var_file:
+      try:
+        var_dict = yaml.load(var_file)
+      except Exception as exc:
+        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
+  return var_dict
 
 def load_json(var_path):
-  import json
-  with open(var_path) as var_file:
-    return json.load(var_file)
+  var_dict = {}
+  try:
+    import json
+    with open(var_path) as var_file:
+      try:
+        var_dict = json.load(var_file)
+      except Exception as exc:
+        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'json' to parse JSON variables files.")
+  return var_dict
 
 def load_xml(var_path):
-  import xmltodict
-  with open(var_path) as var_file:
-    return xmltodict.parse(var_file.read())
+  var_dict = {}
+  try:
+    import xmltodict
+    with open(var_path) as var_file:
+      try:
+        var_dict = xmltodict.parse(var_file.read())
+      except Exception as exc:
+        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
+  return var_dict
 
 loaders = {
   'yaml': load_yaml,
@@ -65,11 +90,9 @@ loaders = {
 # │ Command line interface │
 # └────────────────────────┘
 
-throw_h2("Parsing command line arguments")
-
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                          help="Path to library file",                                         nargs='+')
+argparser.add_argument("source",                          help="Path to library file",                                         nargs='*')
 argparser.add_argument("-O", "--outdir",  dest="outdir",  help="Output directory path"                                                  )
 argparser.add_argument("-o", "--output",  dest="output",  help="Output file path for single source template"                            )
 argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
@@ -77,12 +100,17 @@ argparser.add_argument("-D", "--define",  dest="define",  help="Define global va
 argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
 argparser.add_argument(      "--version", dest="version", help="Print J2GPP version and quits",                                action="store_true", default=False)
 argparser.add_argument(      "--license", dest="license", help="Print J2GPP license and quits",                                action="store_true", default=False)
-args = argparser.parse_args()
+args, args_unknown = argparser.parse_known_args()
 
 # Parsing arguments
+throw_h2("Parsing command line arguments")
+
+if args_unknown:
+  throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
 
 if args.version:
   print(j2gpp_version)
+  exit()
 
 if args.license:
   with open('LICENSE','r') as license_file:
@@ -91,6 +119,9 @@ if args.license:
   exit()
 
 arg_source = args.source
+if not arg_source:
+  throw_error("Must provide at least one source template.")
+  exit()
 
 out_dir = ""
 if args.outdir:
@@ -194,8 +225,17 @@ throw_h2("Loading variables")
 for var_path in global_var_paths:
   for extension, loader in loaders.items():
     if var_path.endswith(extension):
-      print(f"Loading global variables file {var_path}")
-      var_dict = loader(var_path)
+      print(f"Loading global variables file '{var_path}'")
+      try:
+        var_dict = loader(var_path)
+      except OSError as exc:
+        var_dict = {}
+        if exc.errno == errno.ENOENT:
+          throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
+        elif exc.errno == errno.EACCES:
+          throw_error(f"Cannot read '{var_path}' : missing read permission.")
+        else:
+          throw_error(f"Cannot read '{var_path}'.")
       global_vars.update(var_dict)
 
 
@@ -207,9 +247,42 @@ throw_h2("Rendering templates")
 
 # Render all templates
 for src_dict in sources:
-  with open(src_dict['src_path'],'r') as src_file:
-    with open(src_dict['out_path'],'w') as out_file:
-      print(f"Rendering {src_dict['src_path']} \n       to {src_dict['out_path']}")
-      out_file.write(env.from_string(src_file.read()).render(global_vars))
+  print(f"Rendering {src_dict['src_path']} \n       to {src_dict['out_path']}")
+  src_path = src_dict['src_path']
+  out_path = src_dict['out_path']
+  src_res = ""
+  try:
+    with open(src_path,'r') as src_file:
+      src_res = env.from_string(src_file.read()).render(global_vars)
+  except OSError as exc:
+    if exc.errno == errno.ENOENT:
+      throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot read '{var_path}' : missing read permission.")
+    else:
+      throw_error(f"Cannot read '{var_path}'.")
+  except Exception as exc:
+    throw_error(f"Exception occured while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  try:
+    with open(out_path,'w') as out_file:
+      out_file.write(src_res)
+  except OSError as exc:
+    if exc.errno == errno.EISDIR:
+      throw_error(f"Cannot write '{var_path}' : path is a directory.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot write '{var_path}' : missing write permission.")
+    else:
+      throw_error(f"Cannot write '{var_path}'.")
+
+
+
+# ┌─────┐
+# │ End │
+# └─────┘
+
+# Print all errors and warnings at the end
+if errors or warnings:
+  throw_h2("Error/warning summary")
+  error_warning_summary()
 
 throw_h2("Done")
