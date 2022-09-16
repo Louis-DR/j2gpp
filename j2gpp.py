@@ -98,10 +98,13 @@ argparser.add_argument("-o", "--output",  dest="output",  help="Output file path
 argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
 argparser.add_argument("-D", "--define",  dest="define",  help="Define global variables in the format name=value",             nargs='+')
 argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
-args = argparser.parse_args()
+args, args_unknown = argparser.parse_known_args()
 
 # Parsing arguments
 throw_h2("Parsing command line arguments")
+
+if args_unknown:
+  throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
 
 arg_source = args.source
 if not arg_source:
