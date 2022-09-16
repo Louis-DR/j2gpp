@@ -70,6 +70,10 @@ def throw_h3(text, min_width=40):
   print('│',text.center(width-2),'│')
   print('└'+width*'─'+'┘')
 
+# Error and warning accumulators
+warnings = []
+errors = []
+
 # Cool looking messages
 def throw_note(text):
   print(ansi_codes['blue']+ansi_codes['bold'], end='')
@@ -82,11 +86,15 @@ def throw_done(text):
   print(ansi_codes['reset'], end='')
 
 def throw_warning(text):
+  global warnings
+  warnings.append(text)
   print(ansi_codes['yellow']+ansi_codes['bold'], end='')
   print(f"WARNING:",text)
   print(ansi_codes['reset'], end='')
 
 def throw_error(text):
+  global errors
+  errors.append(text)
   print(ansi_codes['red']+ansi_codes['bold'], end='')
   print(f"ERROR:",text)
   print(ansi_codes['reset'], end='')
@@ -95,6 +103,24 @@ def throw_fatal(text):
   print(ansi_codes['red']+ansi_codes['bold']+ansi_codes['reversed']+ansi_codes['slowblink'], end='')
   print(f"FATAL:",text)
   print(ansi_codes['reset'], end='')
+
+def error_warning_summary():
+  print("Warnings:", ansi_codes['yellow']+ansi_codes['bold']+ansi_codes['reversed'], len(warnings), ansi_codes['reset'],
+        "Errors:",   ansi_codes['red']   +ansi_codes['bold']+ansi_codes['reversed'], len(errors),   ansi_codes['reset'])
+  print(ansi_codes['yellow']+ansi_codes['bold'], end='')
+  for warning in warnings:
+    print(f"WARNING:",warning)
+  print(ansi_codes['reset'], end='')
+  print(ansi_codes['red']+ansi_codes['bold'], end='')
+  for error in errors:
+    print(f"ERROR:",error)
+  print(ansi_codes['reset'], end='')
+  print("Warnings:", ansi_codes['yellow']+ansi_codes['bold']+ansi_codes['reversed'], len(warnings), ansi_codes['reset'],
+        "Errors:",   ansi_codes['red']   +ansi_codes['bold']+ansi_codes['reversed'], len(errors),   ansi_codes['reset'])
+
+# Intend block of text
+def intend_text(text):
+  return "  "+str(text).replace('\n','\n  ')
 
 
 
