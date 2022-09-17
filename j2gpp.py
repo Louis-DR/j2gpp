@@ -163,19 +163,12 @@ if args.incdir:
     inc_dirs.append(inc_dir)
 else: print("No include directory provided.")
 
+defines = []
 if args.define:
+  defines = args.define
   print("Global variables defined :")
-  for define in args.define:
-    if '=' not in define:
-      throw_error(f"Incorrect define argument format for '{define}'.")
-      continue
-    # Defines in the format name=value
-    var, val = define.split('=')
-    # Evaluate value to correct type
-    try:
-      global_vars[var] = ast.literal_eval(val)
-    except:
-      global_vars[var] = val
+  for define in defines:
+    print(" ",define)
 else: print("No global variables defined.")
 
 if args.varfile:
@@ -272,7 +265,24 @@ def load_var_file(var_path):
 for var_path in global_var_paths:
   print(f"Loading global variables file '{var_path}'")
   var_dict = load_var_file(var_path)
-  global_vars = var_dict_update(global_vars, var_dict, context=f" when loading '{var_path}'")
+  global_vars = var_dict_update(global_vars, var_dict, context=f" when loading global variables file '{var_path}'")
+
+# Loading global variables from define
+if defines:
+  print(f"Loading global variables from command line defines.")
+  for define in defines:
+    # Defines in the format name=value
+    if '=' not in define:
+      throw_error(f"Incorrect define argument format for '{define}'.")
+      continue
+    var, val = define.split('=')
+    # Evaluate value to correct type
+    try:
+      val = ast.literal_eval(val)
+    except:
+      pass
+    global_vars = var_dict_update(global_vars, {var:val}, context=f" when loading global command line defines")
+
 
 
 # ┌─────────────────────┐
