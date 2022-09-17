@@ -231,22 +231,29 @@ for raw_path in arg_source:
 
 throw_h2("Loading variables")
 
+def load_var_file(var_path):
+  var_dict = {}
+  var_format = var_path.split('.')[-1]
+  if var_format in loaders:
+    loader = loaders[var_format]
+    try:
+      var_dict = loader(var_path)
+    except OSError as exc:
+      if exc.errno == errno.ENOENT:
+        throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
+      elif exc.errno == errno.EACCES:
+        throw_error(f"Cannot read '{var_path}' : missing read permission.")
+      else:
+        throw_error(f"Cannot read '{var_path}'.")
+  else:
+    throw_error(f"Cannot read '{var_path}' : unsupported format.")
+  return var_dict
+
 # Loading global variables from files
 for var_path in global_var_paths:
-  for extension, loader in loaders.items():
-    if var_path.endswith(extension):
-      print(f"Loading global variables file '{var_path}'")
-      try:
-        var_dict = loader(var_path)
-      except OSError as exc:
-        var_dict = {}
-        if exc.errno == errno.ENOENT:
-          throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
-        elif exc.errno == errno.EACCES:
-          throw_error(f"Cannot read '{var_path}' : missing read permission.")
-        else:
-          throw_error(f"Cannot read '{var_path}'.")
-      global_vars.update(var_dict)
+  print(f"Loading global variables file '{var_path}'")
+  var_dict = load_var_file(var_path)
+  global_vars.update(var_dict)
 
 
 # ┌─────────────────────┐
