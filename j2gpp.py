@@ -91,15 +91,16 @@ loaders = {
 
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                          help="Path to library file",                                         nargs='*')
-argparser.add_argument("-O", "--outdir",  dest="outdir",  help="Output directory path"                                                  )
-argparser.add_argument("-o", "--output",  dest="output",  help="Output file path for single source template"                            )
-argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
-argparser.add_argument("-D", "--define",  dest="define",  help="Define global variables in the format name=value",             nargs='+')
-argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
-argparser.add_argument(      "--perf",    dest="perf",    help="Measure and display performance",                              action="store_true", default=False)
-argparser.add_argument(      "--version", dest="version", help="Print J2GPP version and quits",                                action="store_true", default=False)
-argparser.add_argument(      "--license", dest="license", help="Print J2GPP license and quits",                                action="store_true", default=False)
+argparser.add_argument("source",                                help="Path to library file",                                         nargs='*')
+argparser.add_argument("-O", "--outdir",     dest="outdir",     help="Output directory path"                                                  )
+argparser.add_argument("-o", "--output",     dest="output",     help="Output file path for single source template"                            )
+argparser.add_argument("-I", "--incdir",     dest="incdir",     help="Include directories for include and import Jinja2 statements", nargs='+')
+argparser.add_argument("-D", "--define",     dest="define",     help="Define global variables in the format name=value",             nargs='+')
+argparser.add_argument("-V", "--varfile",    dest="varfile",    help="Global variables files",                                       nargs='+')
+argparser.add_argument(      "--force-glob", dest="force_glob", help="Glob UNIX-like patterns in path even when quoted",             action="store_true", default=False)
+argparser.add_argument(      "--perf",       dest="perf",       help="Measure and display performance",                              action="store_true", default=False)
+argparser.add_argument(      "--version",    dest="version",    help="Print J2GPP version and quits",                                action="store_true", default=False)
+argparser.add_argument(      "--license",    dest="license",    help="Print J2GPP license and quits",                                action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
 
 if args.version:
@@ -180,6 +181,9 @@ if args.varfile:
     global_var_paths.append(var_path)
 else: print("No global variables file provided.")
 
+options = {}
+options['force_glob'] = args.force_glob
+
 # Jinja2 environment
 env = Environment(
   loader=FileSystemLoader(inc_dirs)
@@ -236,9 +240,14 @@ def fetch_source(src_path):
 
 # Collecting source templates paths
 for raw_path in arg_source:
-  # Glob to apply UNIX-style path patterns
-  for glob_path in glob.glob(raw_path):
-    abs_path = os.path.abspath(glob_path)
+  print(raw_path)
+  if options['force_glob']:
+    # Glob to apply UNIX-style path patterns
+    for glob_path in glob.glob(raw_path):
+      abs_path = os.path.abspath(glob_path)
+      fetch_source(abs_path)
+  else:
+    abs_path = os.path.abspath(raw_path)
     fetch_source(abs_path)
 
 
