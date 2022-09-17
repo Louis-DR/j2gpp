@@ -160,7 +160,8 @@ else: print("No include directory provided.")
 if args.define:
   print("Global variables defined :")
   for define in args.define:
-    print(" ",define)
+    if '=' not in define:
+      throw_error(f"Incorrect define argument format for '{define}'.")
     # Defines in the format name=value
     var, val = define.split('=')
     # Evaluate value to correct type
