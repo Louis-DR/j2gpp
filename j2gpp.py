@@ -198,9 +198,9 @@ env = Environment(
 throw_h2("Fetching source files")
 
 # Fetch source template file
-def fetch_source_file(src_path):
+def fetch_source_file(src_path, warn_non_template=False):
   # Only keep files ending with .j2 extension
-  if os.path.isfile(src_path) and src_path.endswith('.j2'):
+  if src_path.endswith('.j2'):
     print(f"Found template source {src_path}")
     # Strip .j2 extension for output path
     out_path = src_path[:-3]
@@ -216,6 +216,8 @@ def fetch_source_file(src_path):
       'out_path': out_path
     }
     sources.append(src_dict)
+  elif warn_non_template:
+    throw_warning(f"Source file '{src_path}' is not a tempalte.")
 
 # Fetch directory of source files
 def fetch_source_directory(dir_path):
@@ -230,17 +232,16 @@ def fetch_source_directory(dir_path):
         fetch_source_file(abs_path)
 
 # Fetch source file or directory
-def fetch_source(src_path):
+def fetch_source(src_path, warn_non_template=False):
   if os.path.isdir(src_path):
     fetch_source_directory(src_path)
   elif os.path.isfile(src_path):
-    fetch_source_file(src_path)
+    fetch_source_file(src_path, warn_non_template)
   else:
     throw_error(f"Unresolved source '{src_path}'.")
 
 # Collecting source templates paths
 for raw_path in arg_source:
-  print(raw_path)
   if options['force_glob']:
     # Glob to apply UNIX-style path patterns
     for glob_path in glob.glob(raw_path):
@@ -248,7 +249,7 @@ for raw_path in arg_source:
       fetch_source(abs_path)
   else:
     abs_path = os.path.abspath(raw_path)
-    fetch_source(abs_path)
+    fetch_source(abs_path, warn_non_template=True)
 
 
 
