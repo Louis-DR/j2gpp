@@ -14,6 +14,7 @@
 
 import argparse
 import glob
+import ast
 import os
 import errno
 from platform import python_version
@@ -22,10 +23,6 @@ from jinja2 import __version__ as jinja2_version
 from utils import *
 
 j2gpp_version = "1.1.0"
-j2gpp_title()
-print(f"Python version :",python_version())
-print(f"Jinja2 version :",jinja2_version)
-print(f"J2GPP  version :",j2gpp_version)
 
 sources = []
 global_var_paths = []
@@ -71,6 +68,8 @@ def load_xml(var_path):
     with open(var_path) as var_file:
       try:
         var_dict = xmltodict.parse(var_file.read())
+        if '_' in var_dict.keys():
+          var_dict = var_dict['_']
       except Exception as exc:
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
@@ -98,7 +97,25 @@ argparser.add_argument("-o", "--output",  dest="output",  help="Output file path
 argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
 argparser.add_argument("-D", "--define",  dest="define",  help="Define global variables in the format name=value",             nargs='+')
 argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
+argparser.add_argument(      "--version", dest="version", help="Print J2GPP version and quits",                                action="store_true", default=False)
+argparser.add_argument(      "--license", dest="license", help="Print J2GPP license and quits",                                action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
+
+if args.version:
+  print(j2gpp_version)
+  exit()
+
+if args.license:
+  with open('LICENSE','r') as license_file:
+    license_text = license_file.read()
+    print("J2GPP is under",license_text)
+  exit()
+
+# Title after license and version argument parsing
+j2gpp_title()
+print(f"Python version :",python_version())
+print(f"Jinja2 version :",jinja2_version)
+print(f"J2GPP  version :",j2gpp_version)
 
 # Parsing arguments
 throw_h2("Parsing command line arguments")
@@ -145,15 +162,16 @@ else: print("No include directory provided.")
 if args.define:
   print("Global variables defined :")
   for define in args.define:
-    print(" ",define)
+    if '=' not in define:
+      throw_error(f"Incorrect define argument format for '{define}'.")
+      continue
     # Defines in the format name=value
     var, val = define.split('=')
-    # Cast int and floats
-    if val.isdecimal():
-      val = int(val)
-    elif str_isfloat(val):
-      val = float(val)
-    global_vars[var] = val
+    # Evaluate value to correct type
+    try:
+      global_vars[var] = ast.literal_eval(val)
+    except:
+      global_vars[var] = val
 else: print("No global variables defined.")
 
 if args.varfile:
