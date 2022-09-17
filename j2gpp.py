@@ -213,12 +213,29 @@ def fetch_source_file(src_path):
     }
     sources.append(src_dict)
 
+# Fetch directory of source files
+def fetch_source_directory(dir_path):
+  # Read and execute permission required
+  if not os.access(dir_path, os.R_OK | os.X_OK):
+    throw_error(f"Missing access permissions for source directory '{dir_path}'.")
+  else:
+    print(f"Found source directory {dir_path}")
+    for subdir, dirs, files in os.walk(dir_path):
+      for src_path in files:
+        abs_path = os.path.join(subdir, src_path)
+        fetch_source_file(abs_path)
+
 # Collecting source templates paths
 for raw_path in arg_source:
   # Glob to apply UNIX-style path patterns
   for glob_path in glob.glob(raw_path):
     abs_path = os.path.abspath(glob_path)
-    fetch_source_file(abs_path)
+    if os.path.isdir(abs_path):
+      fetch_source_directory(abs_path)
+    elif os.path.isfile(abs_path):
+      fetch_source_file(abs_path)
+    else:
+      throw_error(f"Unresolved source '{abs_path}'.")
 
 
 
