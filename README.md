@@ -44,16 +44,18 @@ int main() {
 
 The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
 
-| Argument       | Description                                                |
-| -------------- | ---------------------------------------------------------- |
-| `-O/--outdir`  | Output directory for all rendered templates                |
-| `-o/--output`  | Output file for single template                            |
-| `-I/--incdir`  | Include search directory for include and import statements |
-| `-D/--define`  | Inline global variables for all templates                  |
-| `-V/--varfile` | Global variables files for all templates                   |
-| `--perf`       | Measure the execusion time for performance testing         |
-| `--version`    | Print J2GPP version and quits                              |
-| `--license`    | Print J2GPP license and quits                              |
+| Argument                | Description                                                    |
+| ----------------------- | -------------------------------------------------------------- |
+| `-O/--outdir`           | Output directory for all rendered templates                    |
+| `-o/--output`           | Output file for single template                                |
+| `-I/--incdir`           | Include search directory for include and import statements     |
+| `-D/--define`           | Inline global variables for all templates                      |
+| `-V/--varfile`          | Global variables files for all templates                       |
+| `--render-non-template` | Process also source files that are not recognized as templates |
+| `--force-glob`          | Glob UNIX-like patterns in path even when quoted               |
+| `--perf`                | Measure the execusion time for performance testing             |
+| `--version`             | Print J2GPP version and quits                                  |
+| `--license`             | Print J2GPP license and quits                                  |
 
 ## Command line arguments
 
@@ -112,6 +114,14 @@ With the variables file `qux.yml` :
 ``` yml
 bar: 42
 ```
+
+### Option flags
+
+Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
+
+`--render-non-template` forces every source file found to be rendered, even if they are not recognized as a template (by ending with a template extension). The resulting file will be saved in the location following the rules of regular templates, but instead of removing the template extension, they will have a suffix added before the file extensions. By default, this suffix is `_j2gpp`, but this can be replaced by whatever is specified after the flag argument.
+
+`--force-glob` enables globbing UNIX-like patterns in the source files paths even if they are surrounded by quotes. This is disabled by default to allow processing files with `*` and `[...]` in their path. Paths provided without quotes are preprocessed by the shell and any wildcard or other patterns cannot be prevented.
 
 ## Supported formats for variables
 
