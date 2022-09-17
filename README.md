@@ -51,6 +51,7 @@ The following arguments can be added to the command for additional features. The
 | `-I/--incdir`  | Include search directory for include and import statements |
 | `-D/--define`  | Inline global variables for all templates                  |
 | `-V/--varfile` | Global variables files for all templates                   |
+| `--perf`       | Measure the execusion time for performance testing         |
 | `--version`    | Print J2GPP version and quits                              |
 | `--license`    | Print J2GPP license and quits                              |
 
