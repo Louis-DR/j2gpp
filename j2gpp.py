@@ -231,6 +231,24 @@ for raw_path in arg_source:
 
 throw_h2("Loading variables")
 
+# Merge two dictionnaries
+def var_dict_update(var_dict1, var_dict2):
+  var_dict_res = {}
+  for key,val in var_dict2.items():
+    # Conflict
+    if key in var_dict1.keys() and var_dict1[key] != val:
+      val_ori = var_dict1[key]
+      # Recursively merge dictionnary
+      if isinstance(val_ori, dict) and isinstance(val, dict):
+        var_dict_res[key] = var_dict_update(val_ori, val)
+      else:
+        var_dict_res[key] = val
+        throw_warning(f"Variable '{key}' got overwritten from '{val_ori}' to '{val}'.")
+    else:
+      var_dict_res[key] = val
+  return var_dict_res
+
+# Load variables from a file and return the dictionnary
 def load_var_file(var_path):
   var_dict = {}
   var_format = var_path.split('.')[-1]
@@ -253,7 +271,7 @@ def load_var_file(var_path):
 for var_path in global_var_paths:
   print(f"Loading global variables file '{var_path}'")
   var_dict = load_var_file(var_path)
-  global_vars.update(var_dict)
+  global_vars = var_dict_update(global_vars, var_dict)
 
 
 # ┌─────────────────────┐
