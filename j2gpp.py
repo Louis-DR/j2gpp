@@ -23,10 +23,6 @@ from jinja2 import __version__ as jinja2_version
 from utils import *
 
 j2gpp_version = "1.1.0"
-j2gpp_title()
-print(f"Python version :",python_version())
-print(f"Jinja2 version :",jinja2_version)
-print(f"J2GPP  version :",j2gpp_version)
 
 sources = []
 global_var_paths = []
@@ -105,12 +101,6 @@ argparser.add_argument(      "--version", dest="version", help="Print J2GPP vers
 argparser.add_argument(      "--license", dest="license", help="Print J2GPP license and quits",                                action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
 
-# Parsing arguments
-throw_h2("Parsing command line arguments")
-
-if args_unknown:
-  throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
-
 if args.version:
   print(j2gpp_version)
   exit()
@@ -120,6 +110,18 @@ if args.license:
     license_text = license_file.read()
     print("J2GPP is under",license_text)
   exit()
+
+# Title after license and version argument parsing
+j2gpp_title()
+print(f"Python version :",python_version())
+print(f"Jinja2 version :",jinja2_version)
+print(f"J2GPP  version :",j2gpp_version)
+
+# Parsing arguments
+throw_h2("Parsing command line arguments")
+
+if args_unknown:
+  throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
 
 arg_source = args.source
 if not arg_source:
