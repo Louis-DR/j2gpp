@@ -163,19 +163,12 @@ if args.incdir:
     inc_dirs.append(inc_dir)
 else: print("No include directory provided.")
 
+defines = []
 if args.define:
+  defines = args.define
   print("Global variables defined :")
-  for define in args.define:
-    if '=' not in define:
-      throw_error(f"Incorrect define argument format for '{define}'.")
-      continue
-    # Defines in the format name=value
-    var, val = define.split('=')
-    # Evaluate value to correct type
-    try:
-      global_vars[var] = ast.literal_eval(val)
-    except:
-      global_vars[var] = val
+  for define in defines:
+    print(" ",define)
 else: print("No global variables defined.")
 
 if args.varfile:
@@ -231,22 +224,72 @@ for raw_path in arg_source:
 
 throw_h2("Loading variables")
 
+# Merge two dictionaries
+def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
+  var_dict_res = var_dict1.copy()
+  for key,val in var_dict2.items():
+    # Conflict
+    if key in var_dict1.keys() and var_dict1[key] != val:
+      val_ori = var_dict1[key]
+      # Recursively merge dictionary
+      if isinstance(val_ori, dict) and isinstance(val, dict):
+        val_scope = f"{val_scope}{key}."
+        var_dict_res[key] = var_dict_update(val_ori, val, val_scope, context)
+      else:
+        var_dict_res[key] = val
+        throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
+    else:
+      var_dict_res[key] = val
+  return var_dict_res
+
+# Load variables from a file and return the dictionary
+def load_var_file(var_path):
+  var_dict = {}
+  var_format = var_path.split('.')[-1]
+  if var_format in loaders:
+    loader = loaders[var_format]
+    try:
+      var_dict = loader(var_path)
+    except OSError as exc:
+      if exc.errno == errno.ENOENT:
+        throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
+      elif exc.errno == errno.EACCES:
+        throw_error(f"Cannot read '{var_path}' : missing read permission.")
+      else:
+        throw_error(f"Cannot read '{var_path}'.")
+  else:
+    throw_error(f"Cannot read '{var_path}' : unsupported format.")
+  return var_dict
+
 # Loading global variables from files
 for var_path in global_var_paths:
-  for extension, loader in loaders.items():
-    if var_path.endswith(extension):
-      print(f"Loading global variables file '{var_path}'")
-      try:
-        var_dict = loader(var_path)
-      except OSError as exc:
-        var_dict = {}
-        if exc.errno == errno.ENOENT:
-          throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
-        elif exc.errno == errno.EACCES:
-          throw_error(f"Cannot read '{var_path}' : missing read permission.")
-        else:
-          throw_error(f"Cannot read '{var_path}'.")
-      global_vars.update(var_dict)
+  print(f"Loading global variables file '{var_path}'")
+  var_dict = load_var_file(var_path)
+  global_vars = var_dict_update(global_vars, var_dict, context=f" when loading global variables file '{var_path}'")
+
+# Loading global variables from define
+if defines:
+  print(f"Loading global variables from command line defines.")
+  for define in defines:
+    # Defines in the format name=value
+    if '=' not in define:
+      throw_error(f"Incorrect define argument format for '{define}'.")
+      continue
+    var, val = define.split('=')
+    var_dict = {}
+    # Evaluate value to correct type
+    try:
+      val = ast.literal_eval(val)
+    except:
+      pass
+    # Interpret dot as dictionary depth
+    var_keys = var.split('.')[::-1]
+    var_dict = {var_keys[0]:val}
+    for var_key in var_keys[1:]:
+      var_dict = {var_key:var_dict}
+    # Merge with global variables dictionary
+    global_vars = var_dict_update(global_vars, var_dict, context=f" when loading global command line defines")
+
 
 
 # ┌─────────────────────┐

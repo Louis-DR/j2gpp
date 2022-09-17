@@ -89,7 +89,7 @@ j2gpp ./foo.c.j2 --incdir ./includes/
 
 ### Passing global variables in command line
 
-You can pass global variables to all templates rendered using the `-D/--define` argument with a list of variables in the format `name=value`. Integers and floats are automatically cast to allow math operations in the templates.
+You can pass global variables to all templates rendered using the `-D/--define` argument with a list of variables in the format `name=value`. Values are parsed to cast to the correct Python type as explained [later](#command-line-define). Dictionary attributes to any depth can be assigned using dots "`.`" to separate the keys. Global variables defined in the command line overwrite the global variables set by loading files.
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
@@ -99,7 +99,7 @@ j2gpp ./foo.c.j2 --define bar=42
 
 ### Loading global variables from files
 
-You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON and XML.
+You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON and XML. Global variables loaded from files are overwritten by variables defined in the command line.
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
@@ -130,7 +130,8 @@ j2gpp ./foo.c.j2 --define test_none=None             \
                           test_string2="lorem ipsum" \
                           test_tuple="(1,2,3)"       \
                           test_list="[1,2,3]"        \
-                          test_dict="{'key1': value1, 'key2': value2}"
+                          test_dict="{'key1': value1, 'key2': value2}" \
+                          test_dict.key3=value3
 ```
 
 ### YAML
