@@ -14,6 +14,7 @@
 
 import argparse
 import glob
+import ast
 import os
 import errno
 from platform import python_version
@@ -162,12 +163,11 @@ if args.define:
     print(" ",define)
     # Defines in the format name=value
     var, val = define.split('=')
-    # Cast int and floats
-    if val.isdecimal():
-      val = int(val)
-    elif str_isfloat(val):
-      val = float(val)
-    global_vars[var] = val
+    # Evaluate value to correct type
+    try:
+      global_vars[var] = ast.literal_eval(val)
+    except:
+      global_vars[var] = val
 else: print("No global variables defined.")
 
 if args.varfile:
