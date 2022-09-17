@@ -99,6 +99,7 @@ argparser.add_argument("-D", "--define",  dest="define",  help="Define global va
 argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
 argparser.add_argument(      "--version", dest="version", help="Print J2GPP version and quits",                                action="store_true", default=False)
 argparser.add_argument(      "--license", dest="license", help="Print J2GPP license and quits",                                action="store_true", default=False)
+argparser.add_argument(      "--perf",    dest="perf",    help="Measure and display performance",                              action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
 
 if args.version:
@@ -119,6 +120,9 @@ print(f"J2GPP  version :",j2gpp_version)
 
 # Parsing arguments
 throw_h2("Parsing command line arguments")
+
+if args.perf:
+  perf_counter = perf_counter_start()
 
 if args_unknown:
   throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
@@ -290,5 +294,10 @@ for src_dict in sources:
 if errors or warnings:
   throw_h2("Error/warning summary")
   error_warning_summary()
+
+# Print the performance timer
+if args.perf:
+  throw_h2("Performance")
+  perf_counter_print(perf_counter_stop(perf_counter))
 
 throw_h2("Done")

@@ -11,6 +11,10 @@
 
 
 
+import time
+
+
+
 # ┌───────────────────────┐
 # │ Drawing and messaging │
 # └───────────────────────┘
@@ -135,3 +139,19 @@ def str_isfloat(str):
     return True
   except ValueError:
     return False
+
+
+
+# ┌─────────────┐
+# │ Performance │
+# └─────────────┘
+
+def perf_counter_start():
+  return time.process_time_ns()
+
+def perf_counter_stop(start_time):
+  stop_time = time.process_time_ns()
+  return stop_time - start_time
+
+def perf_counter_print(counter_time):
+  print(f"Execution time : {counter_time}ns")
