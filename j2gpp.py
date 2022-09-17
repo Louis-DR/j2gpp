@@ -224,14 +224,14 @@ for raw_path in arg_source:
 
 throw_h2("Loading variables")
 
-# Merge two dictionnaries
+# Merge two dictionaries
 def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
   var_dict_res = var_dict1.copy()
   for key,val in var_dict2.items():
     # Conflict
     if key in var_dict1.keys() and var_dict1[key] != val:
       val_ori = var_dict1[key]
-      # Recursively merge dictionnary
+      # Recursively merge dictionary
       if isinstance(val_ori, dict) and isinstance(val, dict):
         val_scope = f"{val_scope}{key}."
         var_dict_res[key] = var_dict_update(val_ori, val, val_scope, context)
@@ -242,7 +242,7 @@ def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
       var_dict_res[key] = val
   return var_dict_res
 
-# Load variables from a file and return the dictionnary
+# Load variables from a file and return the dictionary
 def load_var_file(var_path):
   var_dict = {}
   var_format = var_path.split('.')[-1]
@@ -276,12 +276,19 @@ if defines:
       throw_error(f"Incorrect define argument format for '{define}'.")
       continue
     var, val = define.split('=')
+    var_dict = {}
     # Evaluate value to correct type
     try:
       val = ast.literal_eval(val)
     except:
       pass
-    global_vars = var_dict_update(global_vars, {var:val}, context=f" when loading global command line defines")
+    # Interpret dot as dictionary depth
+    var_keys = var.split('.')[::-1]
+    var_dict = {var_keys[0]:val}
+    for var_key in var_keys[1:]:
+      var_dict = {var_key:var_dict}
+    # Merge with global variables dictionary
+    global_vars = var_dict_update(global_vars, var_dict, context=f" when loading global command line defines")
 
 
 
