@@ -193,28 +193,32 @@ env = Environment(
 
 throw_h2("Fetching source files")
 
+# Fetch source template file
+def fetch_source_file(src_path):
+  # Only keep files ending with .j2 extension
+  if os.path.isfile(src_path) and src_path.endswith('.j2'):
+    print(f"Found template source {src_path}")
+    # Strip .j2 extension for output path
+    out_path = src_path[:-3]
+    # Providing output directory
+    if out_dir:
+      out_path = os.path.join(out_dir, os.path.basename(out_path))
+    # Providing output file name
+    if one_out_path:
+      out_path = one_out_path
+    # Dict structure for each source template
+    src_dict = {
+      'src_path': src_path,
+      'out_path': out_path
+    }
+    sources.append(src_dict)
+
 # Collecting source templates paths
 for raw_path in arg_source:
   # Glob to apply UNIX-style path patterns
   for glob_path in glob.glob(raw_path):
     abs_path = os.path.abspath(glob_path)
-    # Only keep files ending with .j2 extension
-    if os.path.isfile(abs_path) and abs_path.endswith('.j2'):
-      print(f"Found template source {abs_path}")
-      # Strip .j2 extension for output path
-      out_path = abs_path[:-3]
-      # Providing output directory
-      if out_dir:
-        out_path = os.path.join(out_dir, os.path.basename(out_path))
-      # Providing output file name
-      if one_out_path:
-        out_path = one_out_path
-      # Dict structure for each source template
-      src_dict = {
-        'src_path': abs_path,
-        'out_path': out_path
-      }
-      sources.append(src_dict)
+    fetch_source_file(abs_path)
 
 
 
