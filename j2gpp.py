@@ -226,7 +226,7 @@ throw_h2("Loading variables")
 
 # Merge two dictionnaries
 def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
-  var_dict_res = {}
+  var_dict_res = var_dict1.copy()
   for key,val in var_dict2.items():
     # Conflict
     if key in var_dict1.keys() and var_dict1[key] != val:
