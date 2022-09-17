@@ -91,7 +91,7 @@ loaders = {
 
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                                                  help="Path to library file",                                           nargs='*')
+argparser.add_argument("source",                                                  help="Source template files or directories to render",                 nargs='*')
 argparser.add_argument("-O", "--outdir",              dest="outdir",              help="Output directory path"                                                    )
 argparser.add_argument("-o", "--output",              dest="output",              help="Output file path for single source template"                              )
 argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
