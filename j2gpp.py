@@ -91,16 +91,17 @@ loaders = {
 
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                                help="Path to library file",                                         nargs='*')
-argparser.add_argument("-O", "--outdir",     dest="outdir",     help="Output directory path"                                                  )
-argparser.add_argument("-o", "--output",     dest="output",     help="Output file path for single source template"                            )
-argparser.add_argument("-I", "--incdir",     dest="incdir",     help="Include directories for include and import Jinja2 statements", nargs='+')
-argparser.add_argument("-D", "--define",     dest="define",     help="Define global variables in the format name=value",             nargs='+')
-argparser.add_argument("-V", "--varfile",    dest="varfile",    help="Global variables files",                                       nargs='+')
-argparser.add_argument(      "--force-glob", dest="force_glob", help="Glob UNIX-like patterns in path even when quoted",             action="store_true", default=False)
-argparser.add_argument(      "--perf",       dest="perf",       help="Measure and display performance",                              action="store_true", default=False)
-argparser.add_argument(      "--version",    dest="version",    help="Print J2GPP version and quits",                                action="store_true", default=False)
-argparser.add_argument(      "--license",    dest="license",    help="Print J2GPP license and quits",                                action="store_true", default=False)
+argparser.add_argument("source",                                                  help="Path to library file",                                           nargs='*')
+argparser.add_argument("-O", "--outdir",              dest="outdir",              help="Output directory path"                                                    )
+argparser.add_argument("-o", "--output",              dest="output",              help="Output file path for single source template"                              )
+argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
+argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
+argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
+argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
+argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
+argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                action="store_true", default=False)
+argparser.add_argument(      "--version",             dest="version",             help="Print J2GPP version and quits",                                  action="store_true", default=False)
+argparser.add_argument(      "--license",             dest="license",             help="Print J2GPP license and quits",                                  action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
 
 if args.version:
@@ -182,7 +183,8 @@ if args.varfile:
 else: print("No global variables file provided.")
 
 options = {}
-options['force_glob'] = args.force_glob
+options['force_glob']          = args.force_glob
+options['render_non_template'] = args.render_non_template
 
 # Jinja2 environment
 env = Environment(
@@ -200,10 +202,18 @@ throw_h2("Fetching source files")
 # Fetch source template file
 def fetch_source_file(src_path, warn_non_template=False):
   # Only keep files ending with .j2 extension
-  if src_path.endswith('.j2'):
+  if src_path.endswith('.j2') or options['render_non_template']:
     print(f"Found template source {src_path}")
-    # Strip .j2 extension for output path
-    out_path = src_path[:-3]
+    # Output file name if we render non-templates sources
+    if options['render_non_template'] and not src_path.endswith('.j2'):
+      # Add the option suffix before file extensions if present
+      if '.' in src_path:
+        out_path = src_path.replace('.', options['render_non_template']+'.', 1)
+      else:
+        out_path = src_path + options['render_non_template']
+    else:
+      # Strip .j2 extension for output path
+      out_path = src_path[:-3]
     # Providing output directory
     if out_dir:
       out_path = os.path.join(out_dir, os.path.basename(out_path))
