@@ -164,6 +164,7 @@ if args.define:
   for define in args.define:
     if '=' not in define:
       throw_error(f"Incorrect define argument format for '{define}'.")
+      continue
     # Defines in the format name=value
     var, val = define.split('=')
     # Evaluate value to correct type
