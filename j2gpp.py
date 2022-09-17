@@ -71,6 +71,8 @@ def load_xml(var_path):
     with open(var_path) as var_file:
       try:
         var_dict = xmltodict.parse(var_file.read())
+        if '_' in var_dict.keys():
+          var_dict = var_dict['_']
       except Exception as exc:
         throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
