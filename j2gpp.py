@@ -225,17 +225,21 @@ def fetch_source_directory(dir_path):
         abs_path = os.path.join(subdir, src_path)
         fetch_source_file(abs_path)
 
+# Fetch source file or directory
+def fetch_source(src_path):
+  if os.path.isdir(src_path):
+    fetch_source_directory(src_path)
+  elif os.path.isfile(src_path):
+    fetch_source_file(src_path)
+  else:
+    throw_error(f"Unresolved source '{src_path}'.")
+
 # Collecting source templates paths
 for raw_path in arg_source:
   # Glob to apply UNIX-style path patterns
   for glob_path in glob.glob(raw_path):
     abs_path = os.path.abspath(glob_path)
-    if os.path.isdir(abs_path):
-      fetch_source_directory(abs_path)
-    elif os.path.isfile(abs_path):
-      fetch_source_file(abs_path)
-    else:
-      throw_error(f"Unresolved source '{abs_path}'.")
+    fetch_source(abs_path)
 
 
 
