@@ -232,7 +232,7 @@ for raw_path in arg_source:
 throw_h2("Loading variables")
 
 # Merge two dictionnaries
-def var_dict_update(var_dict1, var_dict2):
+def var_dict_update(var_dict1, var_dict2, val_context=""):
   var_dict_res = {}
   for key,val in var_dict2.items():
     # Conflict
@@ -240,10 +240,11 @@ def var_dict_update(var_dict1, var_dict2):
       val_ori = var_dict1[key]
       # Recursively merge dictionnary
       if isinstance(val_ori, dict) and isinstance(val, dict):
-        var_dict_res[key] = var_dict_update(val_ori, val)
+        val_context = f"{val_context}{key}."
+        var_dict_res[key] = var_dict_update(val_ori, val, val_context)
       else:
         var_dict_res[key] = val
-        throw_warning(f"Variable '{key}' got overwritten from '{val_ori}' to '{val}'.")
+        throw_warning(f"Variable '{val_context}{key}' got overwritten from '{val_ori}' to '{val}'.")
     else:
       var_dict_res[key] = val
   return var_dict_res
