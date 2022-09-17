@@ -232,7 +232,7 @@ for raw_path in arg_source:
 throw_h2("Loading variables")
 
 # Merge two dictionnaries
-def var_dict_update(var_dict1, var_dict2, val_context=""):
+def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
   var_dict_res = {}
   for key,val in var_dict2.items():
     # Conflict
@@ -240,11 +240,11 @@ def var_dict_update(var_dict1, var_dict2, val_context=""):
       val_ori = var_dict1[key]
       # Recursively merge dictionnary
       if isinstance(val_ori, dict) and isinstance(val, dict):
-        val_context = f"{val_context}{key}."
-        var_dict_res[key] = var_dict_update(val_ori, val, val_context)
+        val_scope = f"{val_scope}{key}."
+        var_dict_res[key] = var_dict_update(val_ori, val, val_scope, context)
       else:
         var_dict_res[key] = val
-        throw_warning(f"Variable '{val_context}{key}' got overwritten from '{val_ori}' to '{val}'.")
+        throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
     else:
       var_dict_res[key] = val
   return var_dict_res
@@ -272,7 +272,7 @@ def load_var_file(var_path):
 for var_path in global_var_paths:
   print(f"Loading global variables file '{var_path}'")
   var_dict = load_var_file(var_path)
-  global_vars = var_dict_update(global_vars, var_dict)
+  global_vars = var_dict_update(global_vars, var_dict, context=f" when loading '{var_path}'")
 
 
 # ┌─────────────────────┐
