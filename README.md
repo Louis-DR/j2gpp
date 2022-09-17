@@ -116,6 +116,22 @@ bar: 42
 
 Jinja2 supports variables types from python. The main types are None, Boolean, Integer, Float, String, Tuple, List and Dictionary. J2GPP provides many ways to set variables and not all types are supported by each format.
 
+### Command line define
+
+Defines passed by the command line are interpreted by the Python [ast.literal_eval()](https://docs.python.org/3/library/ast.html#ast.literal_eval) function which supports Python syntax and some additional types such as `set()`.
+
+``` shell
+j2gpp ./foo.c.j2 --define test_none=None             \
+                          test_bool=True             \
+                          test_int=42                \
+                          test_float=3.141592        \
+                          test_string1=lorem         \
+                          test_string2="lorem ipsum" \
+                          test_tuple="(1,2,3)"       \
+                          test_list="[1,2,3]"        \
+                          test_dict="{'key1': value1, 'key2': value2}"
+```
+
 ### YAML
 
 ``` yml
