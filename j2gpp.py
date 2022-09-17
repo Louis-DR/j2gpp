@@ -24,8 +24,9 @@ from utils import *
 
 j2gpp_version = "1.2.0"
 
+# Source templates
 sources = []
-global_var_paths = []
+# Global variables
 global_vars = {}
 
 
@@ -173,6 +174,7 @@ if args.define:
     print(" ",define)
 else: print("No global variables defined.")
 
+global_var_paths = []
 if args.varfile:
   print("Global variables files :")
   for var_path in args.varfile:
