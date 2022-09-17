@@ -1,6 +1,6 @@
 # j2gpp - Jinja2-based General Purpose Preprocessor
 
-`j2gpp` is a command-line tool for rendering templates using the Jinja2 syntax. It's intended purpose is to serve as a preprocessor for any programming or markup language with a unified syntax and flow accross languages.
+`j2gpp` is a command-line tool for rendering templates using the Jinja2 syntax. It's intended purpose is to serve as a preprocessor for any programming or markup language with a unified syntax and flow across languages.
 
 ## Installation
 
@@ -53,7 +53,7 @@ The following arguments can be added to the command for additional features. The
 | `-V/--varfile`          | Global variables files for all templates                       |
 | `--render-non-template` | Process also source files that are not recognized as templates |
 | `--force-glob`          | Glob UNIX-like patterns in path even when quoted               |
-| `--perf`                | Measure the execusion time for performance testing             |
+| `--perf`                | Measure the execution time for performance testing             |
 | `--version`             | Print J2GPP version and quits                                  |
 | `--license`             | Print J2GPP license and quits                                  |
 
@@ -204,7 +204,7 @@ test_dict:
 
 ### XML
 
-Note that XML expects a single root element. To avoid having to specify the root elemet when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
+Note that XML expects a single root element. To avoid having to specify the root element when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
 
 ```xml
 <_>

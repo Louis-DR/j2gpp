@@ -43,7 +43,7 @@ def load_yaml(var_path):
       try:
         var_dict = yaml.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
   return var_dict
@@ -56,7 +56,7 @@ def load_json(var_path):
       try:
         var_dict = json.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'json' to parse JSON variables files.")
   return var_dict
@@ -71,7 +71,7 @@ def load_xml(var_path):
         if '_' in var_dict.keys():
           var_dict = var_dict['_']
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
   return var_dict
@@ -227,7 +227,7 @@ def fetch_source_file(src_path, warn_non_template=False):
     }
     sources.append(src_dict)
   elif warn_non_template:
-    throw_warning(f"Source file '{src_path}' is not a tempalte.")
+    throw_warning(f"Source file '{src_path}' is not a template.")
 
 # Fetch directory of source files
 def fetch_source_directory(dir_path):
@@ -360,7 +360,7 @@ for src_dict in sources:
     else:
       throw_error(f"Cannot read '{var_path}'.")
   except Exception as exc:
-    throw_error(f"Exception occured while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+    throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   try:
     with open(out_path,'w') as out_file:
       out_file.write(src_res)
