@@ -22,7 +22,7 @@ from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
 from utils import *
 
-j2gpp_version = "1.1.0"
+j2gpp_version = "1.2.0"
 
 sources = []
 global_var_paths = []
