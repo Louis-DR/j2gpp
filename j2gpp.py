@@ -142,8 +142,9 @@ def load_env(var_path):
         var_dict[var] = val
   return var_dict
 
-def load_csv(var_path, delimiter=options['csv_delimiter']):
+def load_csv(var_path, delimiter=''):
   var_dict = {}
+  if not delimiter: delimiter = options['csv_delimiter']
   try:
     import csv
     with open(var_path) as var_file:
@@ -294,11 +295,6 @@ options['csv_dontstrip']       = args.csv_dontstrip
 options['render_non_template'] = args.render_non_template
 options['copy_non_template']   = args.copy_non_template
 options['force_glob']          = args.force_glob
-
-print("Special options enabled :")
-for option in options:
-  if option:
-    print(" ",option)
 
 # Jinja2 environment
 env = Environment(
