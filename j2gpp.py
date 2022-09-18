@@ -142,6 +142,9 @@ def load_csv(var_path, delimiter=csv_delimiter):
     throw_error("Could not import Python library 'csv' to parse CSV/TSV variables files.")
   return var_dict
 
+def load_tsv(var_path):
+  return load_csv(var_path, delimiter='\t')
+
 loaders = {
   'yaml': load_yaml,
   'yml':  load_yaml,
@@ -152,6 +155,7 @@ loaders = {
   'cfg':  load_ini,
   'env':  load_env,
   'csv':  load_csv,
+  'tsv':  load_tsv,
 }
 
 
