@@ -117,7 +117,7 @@ def load_env(var_path):
   var_dict = {}
   with open(var_path) as var_file:
     for line_nbr, line in enumerate(var_file):
-      if line:
+      if line and line != "\n":
         # Comment line
         if line[0] == '#':
           continue
