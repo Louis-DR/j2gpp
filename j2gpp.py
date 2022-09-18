@@ -43,7 +43,7 @@ def load_yaml(var_path):
       try:
         var_dict = yaml.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
   return var_dict
@@ -56,7 +56,7 @@ def load_json(var_path):
       try:
         var_dict = json.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'json' to parse JSON variables files.")
   return var_dict
@@ -71,16 +71,30 @@ def load_xml(var_path):
         if '_' in var_dict.keys():
           var_dict = var_dict['_']
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
+  return var_dict
+
+def load_toml(var_path):
+  var_dict = {}
+  try:
+    import toml
+    with open(var_path) as var_file:
+      try:
+        var_dict = toml.load(var_file)
+      except Exception as exc:
+        throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'toml' to parse TOML variables files.")
   return var_dict
 
 loaders = {
   'yaml': load_yaml,
   'yml':  load_yaml,
   'json': load_json,
-  'xml':  load_xml
+  'xml':  load_xml,
+  'toml': load_toml
 }
 
 
