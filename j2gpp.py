@@ -26,7 +26,8 @@ j2gpp_version = "1.2.0"
 sources = []
 global_var_paths = []
 global_vars = {}
-
+# CSV delimiter
+csv_delimiter = ","
 
 
 # ┌────────────────────────┐
@@ -122,13 +123,13 @@ def load_env(var_path):
         var_dict[var] = val
   return var_dict
 
-def load_csv(var_path, delimiter=','):
+def load_csv(var_path, delimiter=csv_delimiter):
   var_dict = {}
   try:
     import csv
     with open(var_path) as var_file:
       try:
-        csv_reader = csv.DictReader(var_file)
+        csv_reader = csv.DictReader(var_file, delimiter=delimiter)
         main_key = csv_reader.fieldnames[0]
         for row in csv_reader:
           key = row.pop(main_key)
@@ -161,15 +162,16 @@ loaders = {
 
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                          help="Path to library file",                                         nargs='*')
-argparser.add_argument("-O", "--outdir",  dest="outdir",  help="Output directory path"                                                  )
-argparser.add_argument("-o", "--output",  dest="output",  help="Output file path for single source template"                            )
-argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
-argparser.add_argument("-D", "--define",  dest="define",  help="Define global variables in the format name=value",             nargs='+')
-argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
-argparser.add_argument(      "--perf",    dest="perf",    help="Measure and display performance",                              action="store_true", default=False)
-argparser.add_argument(      "--version", dest="version", help="Print J2GPP version and quits",                                action="store_true", default=False)
-argparser.add_argument(      "--license", dest="license", help="Print J2GPP license and quits",                                action="store_true", default=False)
+argparser.add_argument("source",                                         help="Path to library file",                                         nargs='*')
+argparser.add_argument("-O", "--outdir",        dest="outdir",           help="Output directory path"                                                  )
+argparser.add_argument("-o", "--output",        dest="output",           help="Output file path for single source template"                            )
+argparser.add_argument("-I", "--incdir",        dest="incdir",           help="Include directories for include and import Jinja2 statements", nargs='+')
+argparser.add_argument("-D", "--define",        dest="define",           help="Define global variables in the format name=value",             nargs='+')
+argparser.add_argument("-V", "--varfile",       dest="varfile",          help="Global variables files",                                       nargs='+')
+argparser.add_argument(      "--csv_delimiter", dest="csv_delimiter",    help="CSV delimiter (default: ',')",                                          )
+argparser.add_argument(      "--perf",          dest="perf",             help="Measure and display performance",                              action="store_true", default=False)
+argparser.add_argument(      "--version",       dest="version",          help="Print J2GPP version and quits",                                action="store_true", default=False)
+argparser.add_argument(      "--license",       dest="license",          help="Print J2GPP license and quits",                                action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
 
 if args.version:
@@ -249,6 +251,10 @@ if args.varfile:
     print(" ",var_path)
     global_var_paths.append(var_path)
 else: print("No global variables file provided.")
+
+if args.csv_delimiter:
+  csv_delimiter = args.csv_delimiter
+  print(f"CSV delimiter : {csv_delimiter}.")
 
 # Jinja2 environment
 env = Environment(
