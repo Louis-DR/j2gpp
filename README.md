@@ -123,7 +123,15 @@ bar: 42
 
 Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
 
+`--csv-delimiter` followed by a string will change the delimiter used to parse CSV variables files. The default is "`,`".
+
+`--csv-escapechar` followed by a character will set the escape character used to parse CSV variables files. There is no escape character by default.
+
+`--csv-dontstrip` will disable the stripping of whitespace from CSV keys and values.
+
 `--render-non-template` forces every source file found to be rendered, even if they are not recognized as a template (by ending with a template extension). The resulting file will be saved in the location following the rules of regular templates, but instead of removing the template extension, they will have a suffix added before the file extensions. By default, this suffix is `_j2gpp`, but this can be replaced by whatever is specified after the flag argument.
+
+`--copy-non-template` will copy the source files that are not recognized as templates or the files in the source directories to the output directory when one is provided with the `--outdir` argument.
 
 `--force-glob` enables globbing UNIX-like patterns in the source files paths even if they are surrounded by quotes. This is disabled by default to allow processing files with `*` and `[...]` in their path. Paths provided without quotes are preprocessed by the shell and any wildcard or other patterns cannot be prevented.
 
@@ -177,6 +185,50 @@ But if we provide an output directory with the command `j2gpp ./test_dir/ --outd
     ├── sub_dir_1
     │   └── deep_dir
     │       └── template_1.txt
+    └── template_2.txt
+```
+
+We can also tell J2GPP to copy the non-template files with the command `j2gpp ./test_dir/ --outdir ./out_dir/ --copy-non-template`, then we will get :
+
+``` txt
+.
+├── test_dir
+│   ├── sub_dir_1
+│   │   ├── deep_dir
+│   │   │   └── template_1.txt.j2
+│   │   └── non_template_1.txt
+│   ├── sub_dir_2
+│   │   └── non_template_2.txt
+│   └── template_2.txt.j2
+└── out_dir
+    ├── sub_dir_1
+    │   ├── deep_dir
+    │   │   └── template_1.txt
+    │   └── non_template_1.txt
+    ├── sub_dir_2
+    │   └── non_template_2.txt
+    └── template_2.txt
+```
+
+Or even to process non-templates files as templates anyway with the command `j2gpp ./test_dir/ --outdir ./out_dir/ --render-non-template`, then we will get :
+
+``` txt
+.
+├── test_dir
+│   ├── sub_dir_1
+│   │   ├── deep_dir
+│   │   │   └── template_1.txt.j2
+│   │   └── non_template_1.txt
+│   ├── sub_dir_2
+│   │   └── non_template_2.txt
+│   └── template_2.txt.j2
+└── out_dir
+    ├── sub_dir_1
+    │   ├── deep_dir
+    │   │   └── template_1.txt
+    │   └── non_template_1_j2gpp.txt
+    ├── sub_dir_2
+    │   └── non_template_2_j2gpp.txt
     └── template_2.txt
 ```
 
