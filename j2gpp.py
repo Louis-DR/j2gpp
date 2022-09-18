@@ -14,7 +14,6 @@
 
 import argparse
 import glob
-import ast
 import os
 import errno
 import shutil
@@ -49,7 +48,7 @@ def load_yaml(var_path):
       try:
         var_dict = yaml.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
   return var_dict
@@ -62,7 +61,7 @@ def load_json(var_path):
       try:
         var_dict = json.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'json' to parse JSON variables files.")
   return var_dict
@@ -71,22 +70,118 @@ def load_xml(var_path):
   var_dict = {}
   try:
     import xmltodict
+    # Postprocessor to auto cast the values
+    def xml_postprocessor(path, key, value):
+      if value == "true": value = "True"
+      if value == "false": value = "False"
+      return key, auto_cast_str(value)
     with open(var_path) as var_file:
       try:
-        var_dict = xmltodict.parse(var_file.read())
+        var_dict = xmltodict.parse(var_file.read(), postprocessor=xml_postprocessor)
+        # If root element is '_', then remove this level
         if '_' in var_dict.keys():
           var_dict = var_dict['_']
       except Exception as exc:
-        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
   return var_dict
+
+def load_toml(var_path):
+  var_dict = {}
+  try:
+    import toml
+    with open(var_path) as var_file:
+      try:
+        var_dict = toml.load(var_file)
+      except Exception as exc:
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'toml' to parse TOML variables files.")
+  return var_dict
+
+def load_ini(var_path):
+  var_dict = {}
+  try:
+    import configparser
+    with open(var_path) as var_file:
+      try:
+        config = configparser.ConfigParser()
+        config.read_file(var_file)
+        for section in config.sections():
+          if section == '_':
+            for var,val in config.items(section):
+              var_dict[var] = auto_cast_str(val)
+          else:
+            var_dict[section] = dict(config.items(section))
+      except Exception as exc:
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'configparser' to parse INI/CFG variables files.")
+  return var_dict
+
+def load_env(var_path):
+  var_dict = {}
+  with open(var_path) as var_file:
+    for line_nbr, line in enumerate(var_file):
+      if line and line != "\n":
+        # Comment line
+        if line[0] == '#':
+          continue
+        # Syntax is var=value
+        if '=' not in line:
+          throw_error(f"Incorrect ENV file syntax '{line}' line {line_nbr} of file '{var_path}'.")
+          continue
+        var, val = line.split('=')
+        var = var.strip()
+        val = val.strip()
+        val = auto_cast_str(val)
+        # Handle conflits inside the file
+        if var in var_dict:
+          throw_warning(f"Variable '{var}' redefined from '{var_dict[var]}' to '{val}' in file '{var_path}'.")
+        var_dict[var] = val
+  return var_dict
+
+def load_csv(var_path, delimiter=options['csv_delimiter']):
+  var_dict = {}
+  try:
+    import csv
+    with open(var_path) as var_file:
+      try:
+        csv_reader = csv.DictReader(var_file, delimiter=delimiter, escapechar=options['csv_escapechar'])
+        # First columns for keys
+        main_key = csv_reader.fieldnames[0]
+        for row in csv_reader:
+          var = row.pop(main_key)
+          # Strip whitespace around key and value
+          if not options['csv_dontstrip']:
+            row = {key.strip():val.strip() for key,val in row.items()}
+          # Auto cast values
+          row = {key:auto_cast_str(val) for key,val in row.items()}
+          # Handle conflits inside the file
+          if var in var_dict:
+            throw_warning(f"Row '{var}' redefined from '{var_dict[var]}' to '{row}' in file '{var_path}'.")
+          var_dict[var] = row
+      except Exception as exc:
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'csv' to parse CSV/TSV variables files.")
+  return var_dict
+
+def load_tsv(var_path):
+  return load_csv(var_path, delimiter='\t')
 
 loaders = {
   'yaml': load_yaml,
   'yml':  load_yaml,
   'json': load_json,
-  'xml':  load_xml
+  'xml':  load_xml,
+  'toml': load_toml,
+  'ini':  load_ini,
+  'cfg':  load_ini,
+  'env':  load_env,
+  'csv':  load_csv,
+  'tsv':  load_tsv,
 }
 
 
@@ -103,8 +198,11 @@ argparser.add_argument("-o", "--output",              dest="output",            
 argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
 argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
 argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
-argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
+argparser.add_argument(      "--csv_delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
+argparser.add_argument(      "--csv_escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
+argparser.add_argument(      "--csv_dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                              )
 argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
+argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
 argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
 argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                action="store_true", default=False)
 argparser.add_argument(      "--version",             dest="version",             help="Print J2GPP version and quits",                                  action="store_true", default=False)
@@ -190,9 +288,17 @@ if args.varfile:
     global_var_paths.append(var_path)
 else: print("No global variables file provided.")
 
-options['copy_non_template']   = args.copy_non_template
+options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
+options['csv_escapechar']      = args.csv_escapechar
+options['csv_dontstrip']       = args.csv_dontstrip
 options['render_non_template'] = args.render_non_template
+options['copy_non_template']   = args.copy_non_template
 options['force_glob']          = args.force_glob
+
+print("Special options enabled :")
+for option in options:
+  if option:
+    print(" ",option)
 
 # Jinja2 environment
 env = Environment(
@@ -351,10 +457,7 @@ if defines:
     var, val = define.split('=')
     var_dict = {}
     # Evaluate value to correct type
-    try:
-      val = ast.literal_eval(val)
-    except:
-      pass
+    val = auto_cast_str(val)
     # Interpret dot as dictionary depth
     var_keys = var.split('.')[::-1]
     var_dict = {var_keys[0]:val}

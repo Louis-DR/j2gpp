@@ -51,7 +51,11 @@ The following arguments can be added to the command for additional features. The
 | `-I/--incdir`           | Include search directory for include and import statements     |
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
+| `--csv-delimiter`       | CSV delimiter (default: ',')                                   |
+| `--csv-escapechar`      | CSV escape character (default: None)                           |
+| `--csv-dontstrip`       | Disable stripping whitespace of CSV values                     |
 | `--render-non-template` | Process also source files that are not recognized as templates |
+| `--copy-non-template`   | Copy source files that are not templates to output directory   |
 | `--force-glob`          | Glob UNIX-like patterns in path even when quoted               |
 | `--perf`                | Measure the execution time for performance testing             |
 | `--version`             | Print J2GPP version and quits                                  |
@@ -101,7 +105,7 @@ j2gpp ./foo.c.j2 --define bar=42
 
 ### Loading global variables from files
 
-You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON and XML. Global variables loaded from files are overwritten by variables defined in the command line.
+You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
@@ -210,7 +214,7 @@ test_int: 42
 test_float: 3.141592
 
 test_string1: lorem ipsum
-test_string2: ^
+test_string2:
   single
   line
   text
@@ -259,7 +263,7 @@ test_dict:
 
 Note that XML expects a single root element. To avoid having to specify the root element when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
 
-```xml
+``` xml
 <_>
   <test_none></test_none>
 
@@ -281,4 +285,87 @@ Note that XML expects a single root element. To avoid having to specify the root
     <key3>value3</key3>
   </test_dict>
 </_>
+```
+
+### TOML
+
+``` toml
+test_bool1 = true
+test_bool2 = false
+
+test_int = 42
+test_float = 3.141592
+
+test_string1 = "lorem ipsum"
+test_string2 = """
+multi
+line
+text"""
+
+test_list = [1,2,3]
+
+[test_dict]
+key1 = "value1"
+key2 = "value2"
+key3 = "value3"
+```
+
+### INI/CFG
+
+Note that XML expects data to be divided in sections with a header in square brackets. To avoid having to specify the root element when using the variables in a template, J2GPP automatically flattens the section whose header is "`_`".
+
+``` ini
+[_]
+test_bool1 = True
+test_bool2 = False
+
+test_int = 42
+test_float = 3.141592
+
+test_string = "lorem ipsum"
+
+test_list = [1,2,3]
+
+[test_dict]
+key1 = value1
+key2 = value2
+key3 = value3
+```
+
+### ENV
+
+``` env
+test_bool1 = True
+test_bool2 = False
+
+test_int = 42
+test_float = 3.141592
+
+test_string = lorem ipsum
+
+test_list = [1,2,3]
+
+test_dict = {'key1':'value1','key2':'value2','key3':'value3'}
+```
+
+### CSV/TSV
+
+CSV and TSV are interpreted as a list of objects with the same attributes. They are converted to a list of dictionaries whose name is the first cell of each line and the keys are the headers of each column.
+
+CSV and TSV use the same loader, just with different delimiters. A different delimiter can be provided with the argument `--csv-delimiter`. To use the delimiter in a value, it can be escaped by defining an escape character with the argument `csv-escapechar`, for instance the backslash "`\`".
+
+By default, the whitespace around the keys and values in the CSV is stripped. This behaviour can be disabled with the argument `csv-dontstrip`.
+
+``` csv
+keys,key1,key2,key3
+test_dict1,1,2,3
+test_dict2,11,12,13
+test_dict3,21,22,23
+```
+
+``` tsv
+keys  key1  key2  key3
+test_dict1  1  2  3
+test_dict2  11  12  13
+test_dict3  21  22  23
 ```
