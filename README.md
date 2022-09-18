@@ -264,3 +264,19 @@ key1 = value1
 key2 = value2
 key3 = value3
 ```
+
+# ENV
+
+``` env
+test_bool1 = True
+test_bool2 = False
+
+test_int = 42
+test_float = 3.141592
+
+test_string = lorem ipsum
+
+test_list = [1,2,3]
+
+test_dict = {'key1':'value1','key2':'value2','key3':'value3'}
+```
