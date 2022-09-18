@@ -106,7 +106,12 @@ def load_ini(var_path):
       try:
         config = configparser.ConfigParser()
         config.read_file(var_file)
-        var_dict = {s:dict(config.items(s)) for s in config.sections()}
+        for section in config.sections():
+          if section == '_':
+            for var,val in config.items(section):
+              var_dict[var] = auto_cast_str(val)
+          else:
+            var_dict[section] = dict(config.items(section))
       except Exception as exc:
         throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
