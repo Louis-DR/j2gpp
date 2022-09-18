@@ -30,6 +30,7 @@ global_vars = {}
 csv_delimiter = ","
 
 
+
 # ┌────────────────────────┐
 # │ Variable files loaders │
 # └────────────────────────┘
