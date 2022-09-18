@@ -89,12 +89,29 @@ def load_toml(var_path):
     throw_error("Could not import Python library 'toml' to parse TOML variables files.")
   return var_dict
 
+def load_ini(var_path):
+  var_dict = {}
+  try:
+    import configparser
+    with open(var_path) as var_file:
+      try:
+        config = configparser.ConfigParser()
+        config.read_file(var_file)
+        var_dict = {s:dict(config.items(s)) for s in config.sections()}
+      except Exception as exc:
+        throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'configparser' to parse INI/CFG variables files.")
+  return var_dict
+
 loaders = {
   'yaml': load_yaml,
   'yml':  load_yaml,
   'json': load_json,
   'xml':  load_xml,
-  'toml': load_toml
+  'toml': load_toml,
+  'ini':  load_ini,
+  'cfg':  load_ini
 }
 
 
