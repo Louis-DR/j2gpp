@@ -29,6 +29,7 @@ global_vars = {}
 # CSV options
 csv_delimiter = ","
 csv_escapechar = None
+csv_dontstrip = False
 
 
 
@@ -144,11 +145,13 @@ def load_csv(var_path, delimiter=csv_delimiter):
         # First columns for keys
         main_key = csv_reader.fieldnames[0]
         for row in csv_reader:
-          key = row.pop(main_key)
+          var = row.pop(main_key)
+          if not csv_dontstrip:
+            row = {key.strip():val.strip() for key,val in row.items()}
           # Handle conflits inside the file
-          if key in var_dict:
-            throw_warning(f"Row with key '{key}' redefined from '{var_dict[key]}' to '{row}' in file '{var_path}'.")
-          var_dict[key] = row
+          if var in var_dict:
+            throw_warning(f"Row '{var}' redefined from '{var_dict[var]}' to '{row}' in file '{var_path}'.")
+          var_dict[var] = row
       except Exception as exc:
         throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
@@ -187,6 +190,7 @@ argparser.add_argument("-D", "--define",           dest="define",           help
 argparser.add_argument("-V", "--varfile",          dest="varfile",          help="Global variables files",                                       nargs='+')
 argparser.add_argument(      "--csv_delimiter",    dest="csv_delimiter",    help="CSV delimiter (default: ',')",                                          )
 argparser.add_argument(      "--csv_escapechar",   dest="csv_escapechar",   help="CSV escape character (default: None)",                                  )
+argparser.add_argument(      "--csv_dontstrip",    dest="csv_dontstrip",    help="Disable stripping whitespace of CSV values",                            )
 argparser.add_argument(      "--perf",             dest="perf",             help="Measure and display performance",                              action="store_true", default=False)
 argparser.add_argument(      "--version",          dest="version",          help="Print J2GPP version and quits",                                action="store_true", default=False)
 argparser.add_argument(      "--license",          dest="license",          help="Print J2GPP license and quits",                                action="store_true", default=False)
@@ -273,6 +277,14 @@ else: print("No global variables file provided.")
 if args.csv_delimiter:
   csv_delimiter = args.csv_delimiter
   print(f"CSV delimiter : {csv_delimiter}.")
+
+if args.csv_escapechar:
+  csv_escapechar = args.csv_escapechar
+  print(f"CSV escape character : {csv_escapechar}.")
+
+if args.csv_dontstrip:
+  csv_dontstrip = args.csv_dontstrip
+  print(f"CSV auto whitespace stripping is disabled.")
 
 # Jinja2 environment
 env = Environment(
