@@ -117,6 +117,8 @@ def load_env(var_path):
         var = var.strip()
         val = val.strip()
         val = auto_cast_str(val)
+        if var in var_dict:
+          throw_warning(f"Variable '{var}' redefined from '{var_dict[var]}' to '{val}' in file '{var_path}'.")
         var_dict[var] = val
   return var_dict
 
@@ -130,6 +132,8 @@ def load_csv(var_path, delimiter=','):
         main_key = csv_reader.fieldnames[0]
         for row in csv_reader:
           key = row.pop(main_key)
+          if key in var_dict:
+            throw_warning(f"Row with key '{key}' redefined from '{var_dict[key]}' to '{row}' in file '{var_path}'.")
           var_dict[key] = row
       except Exception as exc:
         throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
