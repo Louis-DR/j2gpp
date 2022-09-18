@@ -1,6 +1,6 @@
 # j2gpp - Jinja2-based General Purpose Preprocessor
 
-`j2gpp` is a command-line tool for rendering templates using the Jinja2 syntax. It's intended purpose is to serve as a preprocessor for any programming or markup language with a unified syntax and flow accross languages.
+`j2gpp` is a command-line tool for rendering templates using the Jinja2 syntax. It's intended purpose is to serve as a preprocessor for any programming or markup language with a unified syntax and flow across languages.
 
 ## Installation
 
@@ -8,7 +8,7 @@ Simply download the latest executable for your platform from the [release page](
 
 ## Basic usage
 
-`j2gpp` requires at least one source be provided. The source paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Template file names must end with the `.j2` extension which will be stripped at render.
+`j2gpp` requires at least one source be provided. The source paths can be files or directories, relative or absolute, and can use UNIX-style patterns such as wildcards. Template file names must end with the `.j2` extension which will be stripped at render.
 
 For more information about the Jinja2 syntax, see the documentation at [jinja.palletsprojects.com](https://jinja.palletsprojects.com/).
 
@@ -44,16 +44,18 @@ int main() {
 
 The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
 
-| Argument       | Description                                                |
-| -------------- | ---------------------------------------------------------- |
-| `-O/--outdir`  | Output directory for all rendered templates                |
-| `-o/--output`  | Output file for single template                            |
-| `-I/--incdir`  | Include search directory for include and import statements |
-| `-D/--define`  | Inline global variables for all templates                  |
-| `-V/--varfile` | Global variables files for all templates                   |
-| `--perf`       | Measure the execusion time for performance testing         |
-| `--version`    | Print J2GPP version and quits                              |
-| `--license`    | Print J2GPP license and quits                              |
+| Argument                | Description                                                    |
+| ----------------------- | -------------------------------------------------------------- |
+| `-O/--outdir`           | Output directory for all rendered templates                    |
+| `-o/--output`           | Output file for single template                                |
+| `-I/--incdir`           | Include search directory for include and import statements     |
+| `-D/--define`           | Inline global variables for all templates                      |
+| `-V/--varfile`          | Global variables files for all templates                       |
+| `--render-non-template` | Process also source files that are not recognized as templates |
+| `--force-glob`          | Glob UNIX-like patterns in path even when quoted               |
+| `--perf`                | Measure the execution time for performance testing             |
+| `--version`             | Print J2GPP version and quits                                  |
+| `--license`             | Print J2GPP license and quits                                  |
 
 ## Command line arguments
 
@@ -111,6 +113,67 @@ With the variables file `qux.yml` :
 
 ``` yml
 bar: 42
+```
+
+### Option flags
+
+Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
+
+`--render-non-template` forces every source file found to be rendered, even if they are not recognized as a template (by ending with a template extension). The resulting file will be saved in the location following the rules of regular templates, but instead of removing the template extension, they will have a suffix added before the file extensions. By default, this suffix is `_j2gpp`, but this can be replaced by whatever is specified after the flag argument.
+
+`--force-glob` enables globbing UNIX-like patterns in the source files paths even if they are surrounded by quotes. This is disabled by default to allow processing files with `*` and `[...]` in their path. Paths provided without quotes are preprocessed by the shell and any wildcard or other patterns cannot be prevented.
+
+## Process directories
+
+When the source path provided corresponds to a directory, J2GPP will look for any template files in the source directory tree. If no output directory argument is provided, the rendered files will be written next to the source templates. If an output directory is provided, the source directory tree structure will be copied to the output directory with only the rendered files.
+
+For instance, suppose we have the following directory structure :
+
+``` txt
+.
+└── test_dir
+    ├── sub_dir_1
+    │   ├── deep_dir
+    │   │   └── template_1.txt.j2
+    │   └── non_template_1.txt
+    ├── sub_dir_2
+    │   └── non_template_2.txt
+    └── template_2.txt.j2
+```
+
+When we execute the command `j2gpp ./test_dir/`, we will get :
+
+``` txt
+.
+└── test_dir
+    ├── sub_dir_1
+    │   ├── deep_dir
+    │   │   ├── template_1.txt
+    │   │   └── template_1.txt.j2
+    │   └── non_template_1.txt
+    ├── sub_dir_2
+    │   └── non_template_2.txt
+    ├── template_2.txt
+    └── template_2.txt.j2
+```
+
+But if we provide an output directory with the command `j2gpp ./test_dir/ --outdir ./out_dir/`, we will get :
+
+``` txt
+.
+├── test_dir
+│   ├── sub_dir_1
+│   │   ├── deep_dir
+│   │   │   └── template_1.txt.j2
+│   │   └── non_template_1.txt
+│   ├── sub_dir_2
+│   │   └── non_template_2.txt
+│   └── template_2.txt.j2
+└── out_dir
+    ├── sub_dir_1
+    │   └── deep_dir
+    │       └── template_1.txt
+    └── template_2.txt
 ```
 
 ## Supported formats for variables
@@ -194,7 +257,7 @@ test_dict:
 
 ### XML
 
-Note that XML expects a single root element. To avoid having to specify the root elemet when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
+Note that XML expects a single root element. To avoid having to specify the root element when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
 
 ```xml
 <_>

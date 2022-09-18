@@ -17,6 +17,7 @@ import glob
 import ast
 import os
 import errno
+import shutil
 from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
@@ -24,9 +25,14 @@ from utils import *
 
 j2gpp_version = "1.2.0"
 
+# Source templates
 sources = []
-global_var_paths = []
+# Non-template files to copy
+to_copy= []
+# Global variables
 global_vars = {}
+# Special options
+options = {}
 
 
 
@@ -43,7 +49,7 @@ def load_yaml(var_path):
       try:
         var_dict = yaml.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'ruamel.yaml' to parse YAML variables files.")
   return var_dict
@@ -56,7 +62,7 @@ def load_json(var_path):
       try:
         var_dict = json.load(var_file)
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'json' to parse JSON variables files.")
   return var_dict
@@ -71,7 +77,7 @@ def load_xml(var_path):
         if '_' in var_dict.keys():
           var_dict = var_dict['_']
       except Exception as exc:
-        throw_error(f"Exception occured while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
+        throw_error(f"Exception occurred while loading {var_path} : \n  {type(exc).__name__}\n{intend_text(exc)}")
   except ImportError:
     throw_error("Could not import Python library 'xmltodict' to parse XML variables files.")
   return var_dict
@@ -91,15 +97,18 @@ loaders = {
 
 # Creating arguments
 argparser = argparse.ArgumentParser()
-argparser.add_argument("source",                          help="Path to library file",                                         nargs='*')
-argparser.add_argument("-O", "--outdir",  dest="outdir",  help="Output directory path"                                                  )
-argparser.add_argument("-o", "--output",  dest="output",  help="Output file path for single source template"                            )
-argparser.add_argument("-I", "--incdir",  dest="incdir",  help="Include directories for include and import Jinja2 statements", nargs='+')
-argparser.add_argument("-D", "--define",  dest="define",  help="Define global variables in the format name=value",             nargs='+')
-argparser.add_argument("-V", "--varfile", dest="varfile", help="Global variables files",                                       nargs='+')
-argparser.add_argument(      "--perf",    dest="perf",    help="Measure and display performance",                              action="store_true", default=False)
-argparser.add_argument(      "--version", dest="version", help="Print J2GPP version and quits",                                action="store_true", default=False)
-argparser.add_argument(      "--license", dest="license", help="Print J2GPP license and quits",                                action="store_true", default=False)
+argparser.add_argument("source",                                                  help="Source template files or directories to render",                 nargs='*')
+argparser.add_argument("-O", "--outdir",              dest="outdir",              help="Output directory path"                                                    )
+argparser.add_argument("-o", "--output",              dest="output",              help="Output file path for single source template"                              )
+argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
+argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
+argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
+argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
+argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
+argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
+argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                action="store_true", default=False)
+argparser.add_argument(      "--version",             dest="version",             help="Print J2GPP version and quits",                                  action="store_true", default=False)
+argparser.add_argument(      "--license",             dest="license",             help="Print J2GPP license and quits",                                  action="store_true", default=False)
 args, args_unknown = argparser.parse_known_args()
 
 if args.version:
@@ -171,6 +180,7 @@ if args.define:
     print(" ",define)
 else: print("No global variables defined.")
 
+global_var_paths = []
 if args.varfile:
   print("Global variables files :")
   for var_path in args.varfile:
@@ -179,6 +189,10 @@ if args.varfile:
     print(" ",var_path)
     global_var_paths.append(var_path)
 else: print("No global variables file provided.")
+
+options['copy_non_template']   = args.copy_non_template
+options['render_non_template'] = args.render_non_template
+options['force_glob']          = args.force_glob
 
 # Jinja2 environment
 env = Environment(
@@ -193,28 +207,87 @@ env = Environment(
 
 throw_h2("Fetching source files")
 
+# Fetch source template file
+def fetch_source_file(src_path, dir_path="", warn_non_template=False):
+  # Only keep files ending with .j2 extension
+  if src_path.endswith('.j2') or options['copy_non_template'] or options['render_non_template']:
+
+    # Output file name
+    if src_path.endswith('.j2'):
+      print(f"Found template source {src_path}")
+      # Strip .j2 extension for output path
+      out_path = src_path[:-3]
+    elif options['copy_non_template']:
+      print(f"Found non-template file {src_path}")
+      out_path = src_path
+    elif options['render_non_template']:
+      print(f"Found non-template source file {src_path}")
+      # Add the option suffix before file extensions if present
+      if '.' in src_path:
+        out_path = src_path.replace('.', options['render_non_template']+'.', 1)
+      else:
+        out_path = src_path + options['render_non_template']
+
+    # Providing output directory
+    if out_dir:
+      if dir_path:
+        out_path = os.path.join(out_dir, os.path.relpath(out_path, dir_path))
+      else:
+        out_path = os.path.join(out_dir, os.path.basename(out_path))
+
+    # Providing output file name
+    if one_out_path:
+      out_path = one_out_path
+
+    # Dict structure for each source template
+    src_dict = {
+      'src_path': src_path,
+      'out_path': out_path
+    }
+    if options['copy_non_template']:
+      to_copy.append(src_dict)
+    else:
+      sources.append(src_dict)
+  elif warn_non_template:
+    throw_warning(f"Source file '{src_path}' is not a template.")
+
+# Fetch directory of source files
+def fetch_source_directory(dir_path):
+  # Read and execute permission required
+  if not os.access(dir_path, os.R_OK | os.X_OK):
+    throw_error(f"Missing access permissions for source directory '{dir_path}'.")
+  else:
+    print(f"Found source directory {dir_path}")
+    for subdir, dirs, files in os.walk(dir_path):
+      for src_path in files:
+        abs_path = os.path.join(subdir, src_path)
+        fetch_source_file(abs_path, dir_path)
+
+# Fetch source file or directory
+def fetch_source(src_path, warn_non_template=False):
+  if os.path.isdir(src_path):
+    fetch_source_directory(src_path)
+  elif os.path.isfile(src_path):
+    fetch_source_file(src_path, warn_non_template=warn_non_template)
+  else:
+    throw_error(f"Unresolved source '{src_path}'.")
+
 # Collecting source templates paths
 for raw_path in arg_source:
-  # Glob to apply UNIX-style path patterns
-  for glob_path in glob.glob(raw_path):
-    abs_path = os.path.abspath(glob_path)
-    # Only keep files ending with .j2 extension
-    if os.path.isfile(abs_path) and abs_path.endswith('.j2'):
-      print(f"Found template source {abs_path}")
-      # Strip .j2 extension for output path
-      out_path = abs_path[:-3]
-      # Providing output directory
-      if out_dir:
-        out_path = os.path.join(out_dir, os.path.basename(out_path))
-      # Providing output file name
-      if one_out_path:
-        out_path = one_out_path
-      # Dict structure for each source template
-      src_dict = {
-        'src_path': abs_path,
-        'out_path': out_path
-      }
-      sources.append(src_dict)
+  if options['force_glob']:
+    # Glob to apply UNIX-style path patterns
+    for glob_path in glob.glob(raw_path):
+      abs_path = os.path.abspath(glob_path)
+      fetch_source(abs_path)
+  else:
+    abs_path = os.path.abspath(raw_path)
+    fetch_source(abs_path, warn_non_template=True)
+
+# Some checking
+if len(sources) == 0 and len(to_copy) == 0:
+  throw_error(f"No source template found.")
+elif one_out_path and len(sources) > 1:
+  throw_error(f"Multiple source templates provided alongside -o/--output argument.")
 
 
 
@@ -300,32 +373,52 @@ throw_h2("Rendering templates")
 
 # Render all templates
 for src_dict in sources:
-  print(f"Rendering {src_dict['src_path']} \n       to {src_dict['out_path']}")
   src_path = src_dict['src_path']
   out_path = src_dict['out_path']
+  print(f"Rendering {src_path} \n       to {out_path}")
   src_res = ""
   try:
     with open(src_path,'r') as src_file:
       src_res = env.from_string(src_file.read()).render(global_vars)
   except OSError as exc:
     if exc.errno == errno.ENOENT:
-      throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
+      throw_error(f"Cannot read '{src_path}' : file doesn't exist.")
     elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot read '{var_path}' : missing read permission.")
+      throw_error(f"Cannot read '{src_path}' : missing read permission.")
     else:
-      throw_error(f"Cannot read '{var_path}'.")
+      throw_error(f"Cannot read '{src_path}'.")
   except Exception as exc:
-    throw_error(f"Exception occured while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+    throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   try:
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path,'w') as out_file:
       out_file.write(src_res)
   except OSError as exc:
     if exc.errno == errno.EISDIR:
-      throw_error(f"Cannot write '{var_path}' : path is a directory.")
+      throw_error(f"Cannot write '{out_path}' : path is a directory.")
     elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot write '{var_path}' : missing write permission.")
+      throw_error(f"Cannot write '{out_path}' : missing write permission.")
     else:
-      throw_error(f"Cannot write '{var_path}'.")
+      throw_error(f"Cannot write '{out_path}'.")
+
+# If option is set, copy the non-template files
+if options['copy_non_template']:
+  for cpy_dict in to_copy:
+    cpy_path = cpy_dict['src_path']
+    out_path = cpy_dict['out_path']
+    print(f"Copying {cpy_path} \n     to {out_path}")
+    try:
+      os.makedirs(os.path.dirname(out_path), exist_ok=True)
+      shutil.copyfile(cpy_path, out_path)
+    except shutil.SameFileError as exc:
+      throw_error(f"Cannot write '{out_path}' : source and destination paths are identical.")
+    except OSError as exc:
+      if exc.errno == errno.EISDIR:
+        throw_error(f"Cannot write '{out_path}' : path is a directory.")
+      elif exc.errno == errno.EACCES:
+        throw_error(f"Cannot write '{out_path}' : missing write permission.")
+      else:
+        throw_error(f"Cannot write '{out_path}'.")
 
 
 
