@@ -190,9 +190,9 @@ if args.varfile:
     global_var_paths.append(var_path)
 else: print("No global variables file provided.")
 
-options['force_glob']          = args.force_glob
 options['copy_non_template']   = args.copy_non_template
 options['render_non_template'] = args.render_non_template
+options['force_glob']          = args.force_glob
 
 # Jinja2 environment
 env = Environment(
@@ -406,7 +406,7 @@ if options['copy_non_template']:
   for cpy_dict in to_copy:
     cpy_path = cpy_dict['src_path']
     out_path = cpy_dict['out_path']
-    print(f"Copying {cpy_path} \n       to {out_path}")
+    print(f"Copying {cpy_path} \n     to {out_path}")
     try:
       os.makedirs(os.path.dirname(out_path), exist_ok=True)
       shutil.copyfile(cpy_path, out_path)
