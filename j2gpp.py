@@ -17,6 +17,7 @@ import glob
 import ast
 import os
 import errno
+import shutil
 from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
@@ -26,8 +27,12 @@ j2gpp_version = "1.2.0"
 
 # Source templates
 sources = []
+# Non-template files to copy
+to_copy= []
 # Global variables
 global_vars = {}
+# Special options
+options = {}
 
 
 
@@ -98,6 +103,7 @@ argparser.add_argument("-o", "--output",              dest="output",            
 argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
 argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
 argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
+argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
 argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
 argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
 argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                action="store_true", default=False)
@@ -184,8 +190,8 @@ if args.varfile:
     global_var_paths.append(var_path)
 else: print("No global variables file provided.")
 
-options = {}
 options['force_glob']          = args.force_glob
+options['copy_non_template']   = args.copy_non_template
 options['render_non_template'] = args.render_non_template
 
 # Jinja2 environment
@@ -204,19 +210,23 @@ throw_h2("Fetching source files")
 # Fetch source template file
 def fetch_source_file(src_path, dir_path="", warn_non_template=False):
   # Only keep files ending with .j2 extension
-  if src_path.endswith('.j2') or options['render_non_template']:
-    print(f"Found template source {src_path}")
+  if src_path.endswith('.j2') or options['copy_non_template'] or options['render_non_template']:
 
-    # Output file name if we render non-templates sources
-    if options['render_non_template'] and not src_path.endswith('.j2'):
+    # Output file name
+    if src_path.endswith('.j2'):
+      print(f"Found template source {src_path}")
+      # Strip .j2 extension for output path
+      out_path = src_path[:-3]
+    elif options['copy_non_template']:
+      print(f"Found non-template file {src_path}")
+      out_path = src_path
+    elif options['render_non_template']:
+      print(f"Found non-template source file {src_path}")
       # Add the option suffix before file extensions if present
       if '.' in src_path:
         out_path = src_path.replace('.', options['render_non_template']+'.', 1)
       else:
         out_path = src_path + options['render_non_template']
-    else:
-      # Strip .j2 extension for output path
-      out_path = src_path[:-3]
 
     # Providing output directory
     if out_dir:
@@ -234,7 +244,10 @@ def fetch_source_file(src_path, dir_path="", warn_non_template=False):
       'src_path': src_path,
       'out_path': out_path
     }
-    sources.append(src_dict)
+    if options['copy_non_template']:
+      to_copy.append(src_dict)
+    else:
+      sources.append(src_dict)
   elif warn_non_template:
     throw_warning(f"Source file '{src_path}' is not a template.")
 
@@ -354,9 +367,9 @@ throw_h2("Rendering templates")
 
 # Render all templates
 for src_dict in sources:
-  print(f"Rendering {src_dict['src_path']} \n       to {src_dict['out_path']}")
   src_path = src_dict['src_path']
   out_path = src_dict['out_path']
+  print(f"Rendering {src_path} \n       to {out_path}")
   src_res = ""
   try:
     with open(src_path,'r') as src_file:
@@ -382,7 +395,24 @@ for src_dict in sources:
     else:
       throw_error(f"Cannot write '{out_path}'.")
 
-
+# If option is set, copy the non-template files
+if options['copy_non_template']:
+  for cpy_dict in to_copy:
+    cpy_path = cpy_dict['src_path']
+    out_path = cpy_dict['out_path']
+    print(f"Copying {cpy_path} \n       to {out_path}")
+    try:
+      os.makedirs(os.path.dirname(out_path), exist_ok=True)
+      shutil.copyfile(cpy_path, out_path)
+    except shutil.SameFileError as exc:
+      throw_error(f"Cannot write '{out_path}' : source and destination paths are identical.")
+    except OSError as exc:
+      if exc.errno == errno.EISDIR:
+        throw_error(f"Cannot write '{out_path}' : path is a directory.")
+      elif exc.errno == errno.EACCES:
+        throw_error(f"Cannot write '{out_path}' : missing write permission.")
+      else:
+        throw_error(f"Cannot write '{out_path}'.")
 
 # ┌─────┐
 # │ End │
