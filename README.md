@@ -265,7 +265,7 @@ key2 = value2
 key3 = value3
 ```
 
-# ENV
+### ENV
 
 ``` env
 test_bool1 = True
@@ -279,4 +279,24 @@ test_string = lorem ipsum
 test_list = [1,2,3]
 
 test_dict = {'key1':'value1','key2':'value2','key3':'value3'}
+```
+
+### CSV/TSV
+
+CSV and TSV are interpreted as a list of objects with the same attributes. They are converted to a list of dictionaries whose name is the first cell of each line and the keys are the headers of each column.
+
+CSV and TSV use the same loader, just with different delimiters. A different delimiter can be provided with the argument `--csv_delimiter`.
+
+``` csv
+keys,key1,key2,key3
+test_dict1,1,2,3
+test_dict2,11,12,13
+test_dict3,21,22,23
+```
+
+``` tsv
+keys  key1  key2  key3
+test_dict1  1  2  3
+test_dict2  11  12  13
+test_dict3  21  22  23
 ```
