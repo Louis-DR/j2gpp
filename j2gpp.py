@@ -74,6 +74,7 @@ def load_xml(var_path):
     with open(var_path) as var_file:
       try:
         var_dict = xmltodict.parse(var_file.read(), postprocessor=xml_postprocessor)
+        # If root element is '_', then remove this level
         if '_' in var_dict.keys():
           var_dict = var_dict['_']
       except Exception as exc:
@@ -115,8 +116,10 @@ def load_env(var_path):
   with open(var_path) as var_file:
     for line_nbr, line in enumerate(var_file):
       if line:
+        # Comment line
         if line[0] == '#':
           continue
+        # Syntax is var=value
         if '=' not in line:
           throw_error(f"Incorrect ENV file syntax '{line}' line {line_nbr} of file '{var_path}'.")
           continue
@@ -124,6 +127,7 @@ def load_env(var_path):
         var = var.strip()
         val = val.strip()
         val = auto_cast_str(val)
+        # Handle conflits inside the file
         if var in var_dict:
           throw_warning(f"Variable '{var}' redefined from '{var_dict[var]}' to '{val}' in file '{var_path}'.")
         var_dict[var] = val
@@ -136,9 +140,11 @@ def load_csv(var_path, delimiter=csv_delimiter):
     with open(var_path) as var_file:
       try:
         csv_reader = csv.DictReader(var_file, delimiter=delimiter)
+        # First columns for keys
         main_key = csv_reader.fieldnames[0]
         for row in csv_reader:
           key = row.pop(main_key)
+          # Handle conflits inside the file
           if key in var_dict:
             throw_warning(f"Row with key '{key}' redefined from '{var_dict[key]}' to '{row}' in file '{var_path}'.")
           var_dict[key] = row
