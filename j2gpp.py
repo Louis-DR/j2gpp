@@ -363,11 +363,11 @@ for src_dict in sources:
       src_res = env.from_string(src_file.read()).render(global_vars)
   except OSError as exc:
     if exc.errno == errno.ENOENT:
-      throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
+      throw_error(f"Cannot read '{src_path}' : file doesn't exist.")
     elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot read '{var_path}' : missing read permission.")
+      throw_error(f"Cannot read '{src_path}' : missing read permission.")
     else:
-      throw_error(f"Cannot read '{var_path}'.")
+      throw_error(f"Cannot read '{src_path}'.")
   except Exception as exc:
     throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   try:
@@ -376,11 +376,11 @@ for src_dict in sources:
       out_file.write(src_res)
   except OSError as exc:
     if exc.errno == errno.EISDIR:
-      throw_error(f"Cannot write '{var_path}' : path is a directory.")
+      throw_error(f"Cannot write '{out_path}' : path is a directory.")
     elif exc.errno == errno.EACCES:
-      throw_error(f"Cannot write '{var_path}' : missing write permission.")
+      throw_error(f"Cannot write '{out_path}' : missing write permission.")
     else:
-      throw_error(f"Cannot write '{var_path}'.")
+      throw_error(f"Cannot write '{out_path}'.")
 
 
 
