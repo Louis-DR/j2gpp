@@ -120,6 +120,23 @@ def load_env(var_path):
         var_dict[var] = val
   return var_dict
 
+def load_csv(var_path, delimiter=','):
+  var_dict = {}
+  try:
+    import csv
+    with open(var_path) as var_file:
+      try:
+        csv_reader = csv.DictReader(var_file)
+        main_key = csv_reader.fieldnames[0]
+        for row in csv_reader:
+          key = row.pop(main_key)
+          var_dict[key] = row
+      except Exception as exc:
+        throw_error(f"Exception occured while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'csv' to parse CSV/TSV variables files.")
+  return var_dict
+
 loaders = {
   'yaml': load_yaml,
   'yml':  load_yaml,
@@ -129,6 +146,7 @@ loaders = {
   'ini':  load_ini,
   'cfg':  load_ini,
   'env':  load_env,
+  'csv':  load_csv,
 }
 
 
