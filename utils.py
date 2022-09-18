@@ -12,6 +12,7 @@
 
 
 import time
+import ast
 
 
 
@@ -140,6 +141,13 @@ def str_isfloat(str):
   except ValueError:
     return False
 
+# Cast to Python type according to syntax
+def auto_cast_str(val):
+  try:
+    val = ast.literal_eval(val)
+  except:
+    pass
+  return val
 
 
 # ┌─────────────┐

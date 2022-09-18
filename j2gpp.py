@@ -14,7 +14,6 @@
 
 import argparse
 import glob
-import ast
 import os
 import errno
 from platform import python_version
@@ -104,6 +103,23 @@ def load_ini(var_path):
     throw_error("Could not import Python library 'configparser' to parse INI/CFG variables files.")
   return var_dict
 
+def load_env(var_path):
+  var_dict = {}
+  with open(var_path) as var_file:
+    for line_nbr, line in enumerate(var_file):
+      if line:
+        if line[0] == '#':
+          continue
+        if '=' not in line:
+          throw_error(f"Incorrect ENV file syntax '{line}' line {line_nbr} of file '{var_path}'.")
+          continue
+        var, val = line.split('=')
+        var = var.strip()
+        val = val.strip()
+        val = auto_cast_str(val)
+        var_dict[var] = val
+  return var_dict
+
 loaders = {
   'yaml': load_yaml,
   'yml':  load_yaml,
@@ -111,7 +127,8 @@ loaders = {
   'xml':  load_xml,
   'toml': load_toml,
   'ini':  load_ini,
-  'cfg':  load_ini
+  'cfg':  load_ini,
+  'env':  load_env,
 }
 
 
@@ -309,10 +326,7 @@ if defines:
     var, val = define.split('=')
     var_dict = {}
     # Evaluate value to correct type
-    try:
-      val = ast.literal_eval(val)
-    except:
-      pass
+    val = auto_cast_str(val)
     # Interpret dot as dictionary depth
     var_keys = var.split('.')[::-1]
     var_dict = {var_keys[0]:val}
