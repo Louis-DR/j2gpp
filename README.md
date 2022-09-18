@@ -147,7 +147,7 @@ test_int: 42
 test_float: 3.141592
 
 test_string1: lorem ipsum
-test_string2: ^
+test_string2:
   single
   line
   text
