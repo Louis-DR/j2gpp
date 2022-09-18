@@ -66,9 +66,14 @@ def load_xml(var_path):
   var_dict = {}
   try:
     import xmltodict
+    # Postprocessor to auto cast the values
+    def xml_postprocessor(path, key, value):
+      if value == "true": value = "True"
+      if value == "false": value = "False"
+      return key, auto_cast_str(value)
     with open(var_path) as var_file:
       try:
-        var_dict = xmltodict.parse(var_file.read())
+        var_dict = xmltodict.parse(var_file.read(), postprocessor=xml_postprocessor)
         if '_' in var_dict.keys():
           var_dict = var_dict['_']
       except Exception as exc:
