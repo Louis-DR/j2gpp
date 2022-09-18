@@ -202,10 +202,11 @@ env = Environment(
 throw_h2("Fetching source files")
 
 # Fetch source template file
-def fetch_source_file(src_path, warn_non_template=False):
+def fetch_source_file(src_path, dir_path="", warn_non_template=False):
   # Only keep files ending with .j2 extension
   if src_path.endswith('.j2') or options['render_non_template']:
     print(f"Found template source {src_path}")
+
     # Output file name if we render non-templates sources
     if options['render_non_template'] and not src_path.endswith('.j2'):
       # Add the option suffix before file extensions if present
@@ -216,12 +217,18 @@ def fetch_source_file(src_path, warn_non_template=False):
     else:
       # Strip .j2 extension for output path
       out_path = src_path[:-3]
+
     # Providing output directory
     if out_dir:
-      out_path = os.path.join(out_dir, os.path.basename(out_path))
+      if dir_path:
+        out_path = os.path.join(out_dir, os.path.relpath(out_path, dir_path))
+      else:
+        out_path = os.path.join(out_dir, os.path.basename(out_path))
+
     # Providing output file name
     if one_out_path:
       out_path = one_out_path
+
     # Dict structure for each source template
     src_dict = {
       'src_path': src_path,
@@ -241,14 +248,14 @@ def fetch_source_directory(dir_path):
     for subdir, dirs, files in os.walk(dir_path):
       for src_path in files:
         abs_path = os.path.join(subdir, src_path)
-        fetch_source_file(abs_path)
+        fetch_source_file(abs_path, dir_path)
 
 # Fetch source file or directory
 def fetch_source(src_path, warn_non_template=False):
   if os.path.isdir(src_path):
     fetch_source_directory(src_path)
   elif os.path.isfile(src_path):
-    fetch_source_file(src_path, warn_non_template)
+    fetch_source_file(src_path, warn_non_template=warn_non_template)
   else:
     throw_error(f"Unresolved source '{src_path}'.")
 
@@ -364,6 +371,7 @@ for src_dict in sources:
   except Exception as exc:
     throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
   try:
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path,'w') as out_file:
       out_file.write(src_res)
   except OSError as exc:
