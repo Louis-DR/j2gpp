@@ -146,8 +146,11 @@ def load_csv(var_path, delimiter=csv_delimiter):
         main_key = csv_reader.fieldnames[0]
         for row in csv_reader:
           var = row.pop(main_key)
+          # Strip whitespace around key and value
           if not csv_dontstrip:
             row = {key.strip():val.strip() for key,val in row.items()}
+          # Auto cast values
+          row = {key:auto_cast_str(val) for key,val in row.items()}
           # Handle conflits inside the file
           if var in var_dict:
             throw_warning(f"Row '{var}' redefined from '{var_dict[var]}' to '{row}' in file '{var_path}'.")
