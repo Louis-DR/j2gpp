@@ -194,7 +194,7 @@ test_dict:
 
 ### XML
 
-Note that XML expects a single root element. To avoid having to specify the root elemet when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
+Note that XML expects a single root element. To avoid having to specify the root element when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
 
 ``` xml
 <_>
@@ -241,4 +241,26 @@ test_list = [1,2,3]
 key1 = "value1"
 key2 = "value2"
 key3 = "value3"
+```
+
+### INI/CFG
+
+Note that XML expects data to be divided in sections with a header in square brackets. To avoid having to specify the root element when using the variables in a template, J2GPP automatically flattens the section whose header is "`_`".
+
+``` ini
+[_]
+test_bool1 = True
+test_bool2 = False
+
+test_int = 42
+test_float = 3.141592
+
+test_string = "lorem ipsum"
+
+test_list = [1,2,3]
+
+[test_dict]
+key1 = value1
+key2 = value2
+key3 = value3
 ```
