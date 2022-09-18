@@ -99,7 +99,7 @@ j2gpp ./foo.c.j2 --define bar=42
 
 ### Loading global variables from files
 
-You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON and XML. Global variables loaded from files are overwritten by variables defined in the command line.
+You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
@@ -196,7 +196,7 @@ test_dict:
 
 Note that XML expects a single root element. To avoid having to specify the root elemet when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
 
-```xml
+``` xml
 <_>
   <test_none></test_none>
 
@@ -218,4 +218,27 @@ Note that XML expects a single root element. To avoid having to specify the root
     <key3>value3</key3>
   </test_dict>
 </_>
+```
+
+### TOML
+
+``` toml
+test_bool1 = true
+test_bool2 = false
+
+test_int = 42
+test_float = 3.141592
+
+test_string1 = "lorem ipsum"
+test_string2 = """
+multi
+line
+text"""
+
+test_list = [1,2,3]
+
+[test_dict]
+key1 = "value1"
+key2 = "value2"
+key3 = "value3"
 ```
