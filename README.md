@@ -288,7 +288,7 @@ test_dict = {'key1':'value1','key2':'value2','key3':'value3'}
 
 CSV and TSV are interpreted as a list of objects with the same attributes. They are converted to a list of dictionaries whose name is the first cell of each line and the keys are the headers of each column.
 
-CSV and TSV use the same loader, just with different delimiters. A different delimiter can be provided with the argument `--csv_delimiter`. To use the delimiter in a value, it can be escaped by defining an escape character with the argument `csv_escapechar`, for instance the backslash `\`.
+CSV and TSV use the same loader, just with different delimiters. A different delimiter can be provided with the argument `--csv_delimiter`. To use the delimiter in a value, it can be escaped by defining an escape character with the argument `csv_escapechar`, for instance the backslash "`\`".
 
 By default, the whitespace around the keys and values in the CSV is stripped. This behaviour can be disabled with the argument `csv_dontstrip`.
 
