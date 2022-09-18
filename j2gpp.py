@@ -283,6 +283,12 @@ for raw_path in arg_source:
     abs_path = os.path.abspath(raw_path)
     fetch_source(abs_path, warn_non_template=True)
 
+# Some checking
+if len(sources) == 0 and len(to_copy) == 0:
+  throw_error(f"No source template found.")
+elif one_out_path and len(sources) > 1:
+  throw_error(f"Multiple source templates provided alongside -o/--output argument.")
+
 
 
 # ┌───────────────────┐
@@ -413,6 +419,8 @@ if options['copy_non_template']:
         throw_error(f"Cannot write '{out_path}' : missing write permission.")
       else:
         throw_error(f"Cannot write '{out_path}'.")
+
+
 
 # ┌─────┐
 # │ End │
