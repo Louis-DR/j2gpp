@@ -14,13 +14,16 @@
 from setuptools import setup, find_packages
 
 setup(name         = 'j2gpp',
-      version      = '1.3.1',
+      version      = '1.3.3',
       description  = 'A Jinja2-based General Purpose Preprocessor',
       keywords     = ['j2gpp', 'jinja2', 'preprocessor'],
       url          = 'https://github.com/Louis-DR/j2gpp',
       author       = 'Louis Duret-Robert',
       author_email = 'louisduret@gmail.com',
       license      = 'MIT',
+
+      long_description              = open('README.md').read(),
+      long_description_content_type = 'text/markdown',
 
       packages     = find_packages(),
       entry_points = {
