@@ -4,7 +4,11 @@
 
 ## Installation
 
-Simply download the latest executable for your platform from the [release page](https://github.com/Louis-DR/j2gpp/releases), unzip it to the desired installation directory and add to your PATH.
+With `Python >= 3.6`, Install from Pypi :
+
+``` shell
+pip install j2gpp
+```
 
 ## Basic usage
 
