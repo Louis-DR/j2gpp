@@ -4,7 +4,7 @@
 
 ## Installation
 
-With `Python >= 3.6`, Install from Pypi :
+With `Python >= 3.7`, Install from Pypi :
 
 ``` shell
 pip install j2gpp
@@ -55,7 +55,7 @@ The following arguments can be added to the command for additional features. The
 | `-I/--incdir`           | Include search directory for include and import statements     |
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
-| `--csv-delimiter`       | CSV delimiter (default: ',')                                   |
+| `--csv-delimiter`       | CSV delimiter (default: '`,`')                                 |
 | `--csv-escapechar`      | CSV escape character (default: None)                           |
 | `--csv-dontstrip`       | Disable stripping whitespace of CSV values                     |
 | `--render-non-template` | Process also source files that are not recognized as templates |
@@ -408,9 +408,9 @@ test_dict = {'key1':'value1','key2':'value2','key3':'value3'}
 
 CSV and TSV are interpreted as a list of objects with the same attributes. They are converted to a list of dictionaries whose name is the first cell of each line and the keys are the headers of each column.
 
-CSV and TSV use the same loader, just with different delimiters. A different delimiter can be provided with the argument `--csv-delimiter`. To use the delimiter in a value, it can be escaped by defining an escape character with the argument `csv-escapechar`, for instance the backslash "`\`".
+CSV and TSV use the same loader, just with different delimiters. A different delimiter can be provided with the argument `--csv-delimiter`. To use the delimiter in a value, it can be escaped by defining an escape character with the argument `--csv-escapechar`, for instance the backslash "`\`".
 
-By default, the whitespace around the keys and values in the CSV is stripped. This behaviour can be disabled with the argument `csv-dontstrip`.
+By default, the whitespace around the keys and values in the CSV is stripped. This behaviour can be disabled with the argument `--csv-dontstrip`.
 
 ``` csv
 keys,key1,key2,key3
