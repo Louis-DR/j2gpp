@@ -204,7 +204,8 @@ def main():
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
-  argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                              )
+  argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
+  argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                action="store_true", default=False)
   argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
   argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
   argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
@@ -291,6 +292,11 @@ def main():
       print(" ",var_path)
       global_var_paths.append(var_path)
   else: print("No global variables file provided.")
+
+  envvar_raw = None
+  if args.envvar:
+    print("Getting environment variables as global variables.")
+    envvar_raw = os.environ
 
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
@@ -438,6 +444,15 @@ def main():
     else:
       throw_error(f"Cannot read '{var_path}' : unsupported format.")
     return var_dict
+
+  # Loading global variables from environment variables
+  if envvar_raw:
+    print(f"Loading global variables from environment variables.")
+    for var, val in envvar_raw.items():
+      # Evaluate value to correct type
+      var_dict = {var:auto_cast_str(val)}
+      # Merge with global variables dictionary
+      global_vars = var_dict_update(global_vars, var_dict, context=f" when loading environment variables")
 
   # Loading global variables from files
   for var_path in global_var_paths:
