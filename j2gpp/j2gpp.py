@@ -25,7 +25,7 @@ from j2gpp.utils import *
 
 def main():
 
-  j2gpp_version = "1.3.3"
+  j2gpp_version = "1.3.4"
 
   # Source templates
   sources = []
@@ -218,9 +218,7 @@ def main():
     exit()
 
   if args.license:
-    with open('LICENSE','r') as license_file:
-      license_text = license_file.read()
-      print("J2GPP is under",license_text)
+    print_license()
     exit()
 
   # Title after license and version argument parsing
