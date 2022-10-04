@@ -14,7 +14,7 @@ pip install j2gpp
 
 `j2gpp` requires at least one source be provided. The source paths can be files or directories, relative or absolute, and can use UNIX-style patterns such as wildcards. Template file names must end with the `.j2` extension which will be stripped at render.
 
-For more information about the Jinja2 syntax, see the documentation at [jinja.palletsprojects.com](https://jinja.palletsprojects.com/).
+For more information about the Jinja2 syntax, see the section below, or the documentation at [jinja.palletsprojects.com](https://jinja.palletsprojects.com/).
 
 For instance, suppose we have a templatized source file `foo.c.j2` :
 
@@ -41,7 +41,7 @@ The output is written to `foo.c` next to the source template :
 #include <stdio.h>
 
 int main() {
-  printf(Hello, world!);
+  printf("Hello, world!");
   return 0;
 }
 ```
@@ -424,4 +424,52 @@ keys  key1  key2  key3
 test_dict1  1  2  3
 test_dict2  11  12  13
 test_dict3  21  22  23
+```
+
+## Jinja2 syntax
+
+For more information about the Jinja2 syntax, see the documentation at [jinja.palletsprojects.com](https://jinja.palletsprojects.com/).
+
+The basic syntax uses `{%...%}` for statements that do not generate an output, `{{...}}` to print a value or variable, and `{#...#}` for comments removed during rendering.
+
+### Set and use variables
+
+Use variables files or the `set` command to set variables. Use `{{...}}` to print variables. You can also print values directly, or perform operations such as subscripting and math operations.
+
+``` python
+# Before
+{% set test_bool   = True %}
+{% set test_int    = 42 %}
+{% set test_float  = 3.141592 %}
+{% set test_string = "lorem ipsum" %}
+{% set test_tuple  = (1,2,3) %}
+{% set test_list   = [1,2,3] %}
+{% set test_dict   = {'key1':'value1','key2':'value2','key3':'value3'} %}
+
+test_bool     : {{test_bool}}
+test_int      : {{test_int}}
+test_float    : {{test_float}}
+test_string   : {{test_string}}
+test_tuple    : {{test_tuple}}
+test_tuple_el : {{test_tuple[0]}}
+test_list     : {{test_list}}
+test_list_el  : {{test_list[0]}}
+test_dict     : {{test_dict}}
+test_dict_el  : {{test_dict['key1']}}
+test_dict_el  : {{test_dict.key1}}
+```
+
+``` python
+# After
+test_bool     : True
+test_int      : 42
+test_float    : 3.141592
+test_string   : lorem ipsum
+test_tuple    : (1, 2, 3)
+test_tuple_el : 1
+test_list     : [1, 2, 3]
+test_list_el  : 1
+test_dict     : {'key1': 'value1', 'key2': 'value2', 'key3': 'value3'}
+test_dict_el  : value1
+test_dict_el  : value1
 ```
