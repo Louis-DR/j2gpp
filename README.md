@@ -24,7 +24,7 @@ For instance, suppose we have a templatized source file `foo.c.j2` :
 {% set message = "Hello, world!" %}
 
 int main() {
-  printf({{message}});
+  printf("{{message}}");
   return 0;
 }
 ```
