@@ -135,6 +135,15 @@ export BAR=42
 j2gpp ./foo.c.j2 --envvar
 ```
 
+If a string is provided after the `--envvar` argument, the environment variables will be stored in an object of the name provided instead of at the root.
+
+For instance, with the following command, the variable `ENV.BAR` will have the value `42` when rendering the template `foo.c.j2`.
+
+``` shell
+export BAR=42
+j2gpp ./foo.c.j2 --envvar ENV
+```
+
 ### Option flags
 
 Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
