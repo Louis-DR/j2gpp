@@ -518,6 +518,7 @@ def main():
     out_path = src_dict['out_path']
     print(f"Rendering {src_path} \n       to {out_path}")
     src_res = ""
+
     # Add context variables specific to this template
     src_vars = global_vars.copy()
     src_context_vars = {
@@ -525,10 +526,13 @@ def main():
       '__output_path__': out_path,
     }
     src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {{src_path}}")
+
+    # Render template to string
     try:
       with open(src_path,'r') as src_file:
         src_res = env.from_string(src_file.read()).render(src_vars)
     except OSError as exc:
+      # Catch file read exceptions
       if exc.errno == errno.ENOENT:
         throw_error(f"Cannot read '{src_path}' : file doesn't exist.")
       elif exc.errno == errno.EACCES:
@@ -536,12 +540,16 @@ def main():
       else:
         throw_error(f"Cannot read '{src_path}'.")
     except Exception as exc:
+      # Catch all other exceptions such as Jinja2 errors
       throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+
+    # Write the rendered file
     try:
       os.makedirs(os.path.dirname(out_path), exist_ok=True)
       with open(out_path,'w') as out_file:
         out_file.write(src_res)
     except OSError as exc:
+      # Catch file write exceptions
       if exc.errno == errno.EISDIR:
         throw_error(f"Cannot write '{out_path}' : path is a directory.")
       elif exc.errno == errno.EACCES:
@@ -561,6 +569,7 @@ def main():
       except shutil.SameFileError as exc:
         throw_error(f"Cannot write '{out_path}' : source and destination paths are identical.")
       except OSError as exc:
+        # Catch file write exceptions
         if exc.errno == errno.EISDIR:
           throw_error(f"Cannot write '{out_path}' : path is a directory.")
         elif exc.errno == errno.EACCES:
