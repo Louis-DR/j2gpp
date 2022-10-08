@@ -202,7 +202,7 @@ def main():
   argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
-  argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                action="store_true", default=False)
+  argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -294,9 +294,11 @@ def main():
   else: print("No global variables file provided.")
 
   envvar_raw = None
-  if args.envvar:
+  envvar_obj = None
+  if args.envvar is not None:
     print("Getting environment variables as global variables.")
     envvar_raw = os.environ
+    envvar_obj = args.envvar
 
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
@@ -448,11 +450,15 @@ def main():
   # Loading global variables from environment variables
   if envvar_raw:
     print(f"Loading global variables from environment variables.")
+    envvar_dict = {}
     for var, val in envvar_raw.items():
       # Evaluate value to correct type
-      var_dict = {var:auto_cast_str(val)}
-      # Merge with global variables dictionary
-      global_vars = var_dict_update(global_vars, var_dict, context=f" when loading environment variables")
+      envvar_dict[var] = auto_cast_str(val)
+    # Store in root object if envvar argument provided
+    if envvar_obj:
+      envvar_dict = {envvar_obj: envvar_dict}
+    # Merge with global variables dictionary
+    global_vars = var_dict_update(global_vars, envvar_dict, context=f" when loading environment variables")
 
   # Loading global variables from files
   for var_path in global_var_paths:
