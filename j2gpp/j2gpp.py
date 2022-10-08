@@ -518,9 +518,16 @@ def main():
     out_path = src_dict['out_path']
     print(f"Rendering {src_path} \n       to {out_path}")
     src_res = ""
+    # Add context variables specific to this template
+    src_vars = global_vars.copy()
+    src_context_vars = {
+      '__source_path__': src_path,
+      '__output_path__': out_path,
+    }
+    src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {{src_path}}")
     try:
       with open(src_path,'r') as src_file:
-        src_res = env.from_string(src_file.read()).render(global_vars)
+        src_res = env.from_string(src_file.read()).render(src_vars)
     except OSError as exc:
       if exc.errno == errno.ENOENT:
         throw_error(f"Cannot read '{src_path}' : file doesn't exist.")
