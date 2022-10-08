@@ -55,6 +55,7 @@ The following arguments can be added to the command for additional features. The
 | `-I/--incdir`           | Include search directory for include and import statements     |
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
+| `--envvar`              | Loads environment variables as global variables                |
 | `--csv-delimiter`       | CSV delimiter (default: '`,`')                                 |
 | `--csv-escapechar`      | CSV escape character (default: None)                           |
 | `--csv-dontstrip`       | Disable stripping whitespace of CSV values                     |
@@ -121,6 +122,17 @@ With the variables file `qux.yml` :
 
 ``` yml
 bar: 42
+```
+
+### Loading global variables from environment
+
+You can import the environment variables of the shell as global variables using the `--envvar` argument. The name of the variables will be that of the environment variable and the value will be cast automatically to the proper Python/Jinja2 type.
+
+For instance, with the following command, the variable `BAR` will have the value `42` when rendering the template `foo.c.j2`.
+
+``` shell
+export BAR=42
+j2gpp ./foo.c.j2 --envvar
 ```
 
 ### Option flags
