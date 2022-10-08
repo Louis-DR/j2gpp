@@ -160,6 +160,24 @@ Some arguments are flags to enable or disable special features. This is more adv
 
 `--force-glob` enables globbing UNIX-like patterns in the source files paths even if they are surrounded by quotes. This is disabled by default to allow processing files with `*` and `[...]` in their path. Paths provided without quotes are preprocessed by the shell and any wildcard or other patterns cannot be prevented.
 
+### Context variables
+
+Useful context global variables are added before any other variable is loaded.
+
+| Variable                | Description                                   |
+| ----------------------- | --------------------------------------------- |
+| `__python_version__`    | Python version                                |
+| `__jinja2_version__`    | Jinja2 version                                |
+| `__j2gpp_version__`     | J2GPP version                                 |
+| `__user__`              | Name of the current user                      |
+| `__pid__`               | Process ID of the current process             |
+| `__ppid__`              | Process ID of the parent process              |
+| `__working_directory__` | Working directory                             |
+| `__date__`              | Date in the format `DD-MM-YYYY`               |
+| `__date_inv__`          | Date in the format `YYYY-MM-DD`               |
+| `__time__`              | Time in the format `hh:mm:ss`                 |
+| `__datetime__`          | Timestamp in the format `YYYY-MM-DD hh:mm:ss` |
+
 ## Process directories
 
 When the source path provided corresponds to a directory, J2GPP will look for any template files in the source directory tree. If no output directory argument is provided, the rendered files will be written next to the source templates. If an output directory is provided, the source directory tree structure will be copied to the output directory with only the rendered files.
