@@ -55,6 +55,7 @@ The following arguments can be added to the command for additional features. The
 | `-I/--incdir`           | Include search directory for include and import statements     |
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
+| `--envvar`              | Loads environment variables as global variables                |
 | `--csv-delimiter`       | CSV delimiter (default: '`,`')                                 |
 | `--csv-escapechar`      | CSV escape character (default: None)                           |
 | `--csv-dontstrip`       | Disable stripping whitespace of CSV values                     |
@@ -123,6 +124,26 @@ With the variables file `qux.yml` :
 bar: 42
 ```
 
+### Loading global variables from environment
+
+You can import the environment variables of the shell as global variables using the `--envvar` argument. The name of the variables will be that of the environment variable and the value will be cast automatically to the proper Python/Jinja2 type.
+
+For instance, with the following command, the variable `BAR` will have the value `42` when rendering the template `foo.c.j2`.
+
+``` shell
+export BAR=42
+j2gpp ./foo.c.j2 --envvar
+```
+
+If a string is provided after the `--envvar` argument, the environment variables will be stored in an object of the name provided instead of at the root.
+
+For instance, with the following command, the variable `ENV.BAR` will have the value `42` when rendering the template `foo.c.j2`.
+
+``` shell
+export BAR=42
+j2gpp ./foo.c.j2 --envvar ENV
+```
+
 ### Option flags
 
 Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
@@ -138,6 +159,27 @@ Some arguments are flags to enable or disable special features. This is more adv
 `--copy-non-template` will copy the source files that are not recognized as templates or the files in the source directories to the output directory when one is provided with the `--outdir` argument.
 
 `--force-glob` enables globbing UNIX-like patterns in the source files paths even if they are surrounded by quotes. This is disabled by default to allow processing files with `*` and `[...]` in their path. Paths provided without quotes are preprocessed by the shell and any wildcard or other patterns cannot be prevented.
+
+### Context variables
+
+Useful context variables are added before any other variable is loaded. Some are global for all templates rendered, and some are template-specific.
+
+| Variable                | Scope    | Description                                   |
+| ----------------------- | -------- | --------------------------------------------- |
+| `__python_version__`    | Global   | Python version                                |
+| `__jinja2_version__`    | Global   | Jinja2 version                                |
+| `__j2gpp_version__`     | Global   | J2GPP version                                 |
+| `__user__`              | Global   | Name of the current user                      |
+| `__pid__`               | Global   | Process ID of the current process             |
+| `__ppid__`              | Global   | Process ID of the parent process              |
+| `__working_directory__` | Global   | Working directory                             |
+| `__output_directory__`  | Global   | Output directory                              |
+| `__date__`              | Global   | Date in the format `DD-MM-YYYY`               |
+| `__date_inv__`          | Global   | Date in the format `YYYY-MM-DD`               |
+| `__time__`              | Global   | Time in the format `hh:mm:ss`                 |
+| `__datetime__`          | Global   | Timestamp in the format `YYYY-MM-DD hh:mm:ss` |
+| `__source_path__`       | Template | Path of the source template file              |
+| `__output_path__`       | Template | Path where the template is rendered           |
 
 ## Process directories
 

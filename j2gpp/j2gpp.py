@@ -18,6 +18,7 @@ import glob
 import os
 import errno
 import shutil
+from datetime import datetime
 from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
@@ -202,9 +203,10 @@ def main():
   argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
+  argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
-  argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                              )
+  argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
   argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
   argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
   argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
@@ -289,6 +291,13 @@ def main():
       print(" ",var_path)
       global_var_paths.append(var_path)
   else: print("No global variables file provided.")
+
+  envvar_raw = None
+  envvar_obj = None
+  if args.envvar is not None:
+    print("Getting environment variables as global variables.")
+    envvar_raw = os.environ
+    envvar_obj = args.envvar
 
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
@@ -437,6 +446,37 @@ def main():
       throw_error(f"Cannot read '{var_path}' : unsupported format.")
     return var_dict
 
+  # Setting context global variables
+  print(f"Setting context global variables.")
+  context_dict = {
+    '__python_version__'    : python_version(),
+    '__jinja2_version__'    : jinja2_version,
+    '__j2gpp_version__'     : j2gpp_version,
+    '__user__'              : os.getlogin(),
+    '__pid__'               : os.getpid(),
+    '__ppid__'              : os.getppid(),
+    '__working_directory__' : os.getcwd(),
+    '__output_directory__'  : out_dir if out_dir else os.getcwd(),
+    '__date__'              : datetime.now().strftime("%d-%m-%Y"),
+    '__date_inv__'          : datetime.now().strftime("%Y-%m-%d"),
+    '__time__'              : datetime.now().strftime("%H:%M:%S"),
+    '__datetime__'          : datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+  }
+  global_vars = var_dict_update(global_vars, context_dict, context=f" when setting context variables")
+
+  # Loading global variables from environment variables
+  if envvar_raw:
+    print(f"Loading global variables from environment variables.")
+    envvar_dict = {}
+    for var, val in envvar_raw.items():
+      # Evaluate value to correct type
+      envvar_dict[var] = auto_cast_str(val)
+    # Store in root object if envvar argument provided
+    if envvar_obj:
+      envvar_dict = {envvar_obj: envvar_dict}
+    # Merge with global variables dictionary
+    global_vars = var_dict_update(global_vars, envvar_dict, context=f" when loading environment variables")
+
   # Loading global variables from files
   for var_path in global_var_paths:
     print(f"Loading global variables file '{var_path}'")
@@ -477,10 +517,21 @@ def main():
     out_path = src_dict['out_path']
     print(f"Rendering {src_path} \n       to {out_path}")
     src_res = ""
+
+    # Add context variables specific to this template
+    src_vars = global_vars.copy()
+    src_context_vars = {
+      '__source_path__': src_path,
+      '__output_path__': out_path,
+    }
+    src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {{src_path}}")
+
+    # Render template to string
     try:
       with open(src_path,'r') as src_file:
-        src_res = env.from_string(src_file.read()).render(global_vars)
+        src_res = env.from_string(src_file.read()).render(src_vars)
     except OSError as exc:
+      # Catch file read exceptions
       if exc.errno == errno.ENOENT:
         throw_error(f"Cannot read '{src_path}' : file doesn't exist.")
       elif exc.errno == errno.EACCES:
@@ -488,12 +539,16 @@ def main():
       else:
         throw_error(f"Cannot read '{src_path}'.")
     except Exception as exc:
+      # Catch all other exceptions such as Jinja2 errors
       throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+
+    # Write the rendered file
     try:
       os.makedirs(os.path.dirname(out_path), exist_ok=True)
       with open(out_path,'w') as out_file:
         out_file.write(src_res)
     except OSError as exc:
+      # Catch file write exceptions
       if exc.errno == errno.EISDIR:
         throw_error(f"Cannot write '{out_path}' : path is a directory.")
       elif exc.errno == errno.EACCES:
@@ -513,6 +568,7 @@ def main():
       except shutil.SameFileError as exc:
         throw_error(f"Cannot write '{out_path}' : source and destination paths are identical.")
       except OSError as exc:
+        # Catch file write exceptions
         if exc.errno == errno.EISDIR:
           throw_error(f"Cannot write '{out_path}' : path is a directory.")
         elif exc.errno == errno.EACCES:
