@@ -458,6 +458,7 @@ def main():
     '__pid__'               : os.getpid(),
     '__ppid__'              : os.getppid(),
     '__working_directory__' : os.getcwd(),
+    '__output_directory__'  : out_dir if out_dir else os.getcwd(),
     '__date__'              : datetime.now().strftime("%d-%m-%Y"),
     '__date_inv__'          : datetime.now().strftime("%Y-%m-%d"),
     '__time__'              : datetime.now().strftime("%H:%M:%S"),

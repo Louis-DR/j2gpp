@@ -173,6 +173,7 @@ Useful context variables are added before any other variable is loaded. Some are
 | `__pid__`               | Global   | Process ID of the current process             |
 | `__ppid__`              | Global   | Process ID of the parent process              |
 | `__working_directory__` | Global   | Working directory                             |
+| `__output_directory__`  | Global   | Output directory                              |
 | `__date__`              | Global   | Date in the format `DD-MM-YYYY`               |
 | `__date_inv__`          | Global   | Date in the format `YYYY-MM-DD`               |
 | `__time__`              | Global   | Time in the format `hh:mm:ss`                 |
