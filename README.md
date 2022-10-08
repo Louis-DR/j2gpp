@@ -162,21 +162,23 @@ Some arguments are flags to enable or disable special features. This is more adv
 
 ### Context variables
 
-Useful context global variables are added before any other variable is loaded.
+Useful context variables are added before any other variable is loaded. Some are global for all templates rendered, and some are template-specific.
 
-| Variable                | Description                                   |
-| ----------------------- | --------------------------------------------- |
-| `__python_version__`    | Python version                                |
-| `__jinja2_version__`    | Jinja2 version                                |
-| `__j2gpp_version__`     | J2GPP version                                 |
-| `__user__`              | Name of the current user                      |
-| `__pid__`               | Process ID of the current process             |
-| `__ppid__`              | Process ID of the parent process              |
-| `__working_directory__` | Working directory                             |
-| `__date__`              | Date in the format `DD-MM-YYYY`               |
-| `__date_inv__`          | Date in the format `YYYY-MM-DD`               |
-| `__time__`              | Time in the format `hh:mm:ss`                 |
-| `__datetime__`          | Timestamp in the format `YYYY-MM-DD hh:mm:ss` |
+| Variable                | Scope    | Description                                   |
+| ----------------------- | -------- | --------------------------------------------- |
+| `__python_version__`    | Global   | Python version                                |
+| `__jinja2_version__`    | Global   | Jinja2 version                                |
+| `__j2gpp_version__`     | Global   | J2GPP version                                 |
+| `__user__`              | Global   | Name of the current user                      |
+| `__pid__`               | Global   | Process ID of the current process             |
+| `__ppid__`              | Global   | Process ID of the parent process              |
+| `__working_directory__` | Global   | Working directory                             |
+| `__date__`              | Global   | Date in the format `DD-MM-YYYY`               |
+| `__date_inv__`          | Global   | Date in the format `YYYY-MM-DD`               |
+| `__time__`              | Global   | Time in the format `hh:mm:ss`                 |
+| `__datetime__`          | Global   | Timestamp in the format `YYYY-MM-DD hh:mm:ss` |
+| `__source_path__`       | Template | Path of the source template file              |
+| `__output_path__`       | Template | Path where the template is rendered           |
 
 ## Process directories
 
