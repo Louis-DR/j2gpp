@@ -18,6 +18,7 @@ import glob
 import os
 import errno
 import shutil
+from datetime import datetime
 from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
@@ -446,6 +447,23 @@ def main():
     else:
       throw_error(f"Cannot read '{var_path}' : unsupported format.")
     return var_dict
+
+  # Setting context global variables
+  print(f"Setting context global variables.")
+  context_dict = {
+    '__python_version__'    : python_version(),
+    '__jinja2_version__'    : jinja2_version,
+    '__j2gpp_version__'     : j2gpp_version,
+    '__user__'              : os.getlogin(),
+    '__pid__'               : os.getpid(),
+    '__ppid__'              : os.getppid(),
+    '__working_directory__' : os.getcwd(),
+    '__date__'              : datetime.now().strftime("%d-%m-%Y"),
+    '__date_inv__'          : datetime.now().strftime("%Y-%m-%d"),
+    '__time__'              : datetime.now().strftime("%H:%M:%S"),
+    '__datetime__'          : datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+  }
+  global_vars = var_dict_update(global_vars, context_dict, context=f" when setting context variables")
 
   # Loading global variables from environment variables
   if envvar_raw:
