@@ -204,6 +204,9 @@ def main():
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
+  argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
+  argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
+  argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -229,20 +232,24 @@ def main():
   print(f"Jinja2 version :",jinja2_version)
   print(f"J2GPP  version :",j2gpp_version)
 
-  # Parsing arguments
+  # Parsing command line arguments
   throw_h2("Parsing command line arguments")
 
+  # Enable performance monitor
   if args.perf:
     perf_counter = perf_counter_start()
 
+  # Report unknown command line arguments
   if args_unknown:
     throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
 
+  # Source files and directories
   arg_source = args.source
   if not arg_source:
     throw_error("Must provide at least one source template.")
     exit()
 
+  # Output directory
   out_dir = ""
   if args.outdir:
     # Get full path
@@ -254,6 +261,7 @@ def main():
   else:
     print("Output directory :\n ",os.getcwd())
 
+  # Output file if single source template
   one_out_path = ""
   if args.output:
     # Get full path
@@ -264,6 +272,7 @@ def main():
       os.makedirs(one_out_dir)
     print("Output file :",out_dir)
 
+  # Jinja2 include directories
   inc_dirs = []
   if args.incdir:
     print("Include directories :")
@@ -274,6 +283,7 @@ def main():
       inc_dirs.append(inc_dir)
   else: print("No include directory provided.")
 
+  # Global variable defines
   defines = []
   if args.define:
     defines = args.define
@@ -282,6 +292,7 @@ def main():
       print(" ",define)
   else: print("No global variables defined.")
 
+  # Global variable files
   global_var_paths = []
   if args.varfile:
     print("Global variables files :")
@@ -292,6 +303,7 @@ def main():
       global_var_paths.append(var_path)
   else: print("No global variables file provided.")
 
+  # Loading environment variables as global variables
   envvar_raw = None
   envvar_obj = None
   if args.envvar is not None:
@@ -299,12 +311,33 @@ def main():
     envvar_raw = os.environ
     envvar_obj = args.envvar
 
+  # Other options
+  options['overwrite_outdir']    = args.overwrite_outdir
+  options['warn_overwrite']      = args.warn_overwrite
+  options['no_overwrite']        = args.no_overwrite
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
   options['render_non_template'] = args.render_non_template
   options['copy_non_template']   = args.copy_non_template
   options['force_glob']          = args.force_glob
+
+  # Error checking command line options
+  if options['overwrite_outdir'] and not out_dir:
+    throw_warning("Overwrite output directory option enabled but no output directory provided. Option --overwrite-outdir is ignored.")
+    options['overwrite_outdir'] = False
+
+  if options['warn_overwrite'] and options['no_overwrite']:
+    throw_warning("Incompatible --warn-overwrite and --no-overwrite options. Option --warn-overwrite is ignored.")
+    options['warn_overwrite'] = False
+
+  if options['overwrite_outdir'] and options['no_overwrite']:
+    throw_warning("Incompatible --overwrite-outdir and --no-overwrite options. Option --no-overwrite is ignored.")
+    options['no_overwrite'] = False
+
+  if options['render_non_template'] and options['copy_non_template']:
+    throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy-non-template is ignored.")
+    options['copy_non_template'] = False
 
   # Jinja2 environment
   env = Environment(
@@ -321,47 +354,49 @@ def main():
 
   # Fetch source template file
   def fetch_source_file(src_path, dir_path="", warn_non_template=False):
-    # Only keep files ending with .j2 extension
-    if src_path.endswith('.j2') or options['copy_non_template'] or options['render_non_template']:
+    # Templates end with .j2 extension
+    is_template = src_path.endswith('.j2')
 
-      # Output file name
-      if src_path.endswith('.j2'):
-        print(f"Found template source {src_path}")
-        # Strip .j2 extension for output path
-        out_path = src_path[:-3]
-      elif options['copy_non_template']:
-        print(f"Found non-template file {src_path}")
-        out_path = src_path
-      elif options['render_non_template']:
-        print(f"Found non-template source file {src_path}")
-        # Add the option suffix before file extensions if present
-        if '.' in src_path:
-          out_path = src_path.replace('.', options['render_non_template']+'.', 1)
-        else:
-          out_path = src_path + options['render_non_template']
-
-      # Providing output directory
-      if out_dir:
-        if dir_path:
-          out_path = os.path.join(out_dir, os.path.relpath(out_path, dir_path))
-        else:
-          out_path = os.path.join(out_dir, os.path.basename(out_path))
-
-      # Providing output file name
-      if one_out_path:
-        out_path = one_out_path
-
-      # Dict structure for each source template
-      src_dict = {
-        'src_path': src_path,
-        'out_path': out_path
-      }
-      if options['copy_non_template']:
-        to_copy.append(src_dict)
+    # Output file name
+    if is_template:
+      print(f"Found template source {src_path}")
+      # Strip .j2 extension for output path
+      out_path = src_path[:-3]
+    elif options['copy_non_template']:
+      print(f"Found non-template file {src_path}")
+      out_path = src_path
+    elif options['render_non_template']:
+      print(f"Found non-template source file {src_path}")
+      # Add the option suffix before file extensions if present
+      if '.' in src_path:
+        out_path = src_path.replace('.', options['render_non_template']+'.', 1)
       else:
-        sources.append(src_dict)
-    elif warn_non_template:
-      throw_warning(f"Source file '{src_path}' is not a template.")
+        out_path = src_path + options['render_non_template']
+    else:
+      if warn_non_template:
+        throw_warning(f"Source file '{src_path}' is not a template.")
+      return
+
+    # Providing output directory
+    if out_dir:
+      if dir_path:
+        out_path = os.path.join(out_dir, os.path.relpath(out_path, dir_path))
+      else:
+        out_path = os.path.join(out_dir, os.path.basename(out_path))
+
+    # Providing output file name
+    if one_out_path:
+      out_path = one_out_path
+
+    # Dict structure for each source template
+    src_dict = {
+      'src_path': src_path,
+      'out_path': out_path
+    }
+    if not is_template and options['copy_non_template']:
+      to_copy.append(src_dict)
+    else:
+      sources.append(src_dict)
 
   # Fetch directory of source files
   def fetch_source_directory(dir_path):
@@ -511,6 +546,14 @@ def main():
 
   throw_h2("Rendering templates")
 
+  # Option to overwrite the output directory
+  if options['overwrite_outdir']:
+    print(f"Overwriting output directory.")
+    try:
+      shutil.rmtree(out_dir)
+    except Exception as exc:
+      throw_error(f"Cannot remove output directory '{out_dir}'.")
+
   # Render all templates
   for src_dict in sources:
     src_path = src_dict['src_path']
@@ -542,6 +585,15 @@ def main():
       # Catch all other exceptions such as Jinja2 errors
       throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
 
+    # If file already exists
+    if os.path.exists(out_path):
+      print("File already exists")
+      if options['warn_overwrite']:
+        throw_warning(f"Output file '{out_path}' already exists and will be overwritten.")
+      elif options['no_overwrite']:
+        throw_warning(f"Output file '{out_path}' already exists and will not be overwritten.")
+        continue
+
     # Write the rendered file
     try:
       os.makedirs(os.path.dirname(out_path), exist_ok=True)
@@ -562,6 +614,17 @@ def main():
       cpy_path = cpy_dict['src_path']
       out_path = cpy_dict['out_path']
       print(f"Copying {cpy_path} \n     to {out_path}")
+
+      # If file already exists
+      if os.path.exists(out_path):
+        print("File already exists")
+        if options['warn_overwrite']:
+          throw_warning(f"Output file '{out_path}' already exists and will be overwritten.")
+        elif options['no_overwrite']:
+          throw_warning(f"Output file '{out_path}' already exists and will not be overwritten.")
+          continue
+
+      # Copying the file
       try:
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
         shutil.copyfile(cpy_path, out_path)

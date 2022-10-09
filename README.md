@@ -56,6 +56,9 @@ The following arguments can be added to the command for additional features. The
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
 | `--envvar`              | Loads environment variables as global variables                |
+| `--overwrite-outdir`    | Overwrite output directory                                     |
+| `--warn-overwrite`      | Warn when overwriting files                                    |
+| `--no-overwrite`        | Prevent overwriting files                                      |
 | `--csv-delimiter`       | CSV delimiter (default: '`,`')                                 |
 | `--csv-escapechar`      | CSV escape character (default: None)                           |
 | `--csv-dontstrip`       | Disable stripping whitespace of CSV values                     |
