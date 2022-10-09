@@ -326,47 +326,49 @@ def main():
 
   # Fetch source template file
   def fetch_source_file(src_path, dir_path="", warn_non_template=False):
-    # Only keep files ending with .j2 extension
-    if src_path.endswith('.j2') or options['copy_non_template'] or options['render_non_template']:
+    # Templates end with .j2 extension
+    is_template = src_path.endswith('.j2')
 
-      # Output file name
-      if src_path.endswith('.j2'):
-        print(f"Found template source {src_path}")
-        # Strip .j2 extension for output path
-        out_path = src_path[:-3]
-      elif options['copy_non_template']:
-        print(f"Found non-template file {src_path}")
-        out_path = src_path
-      elif options['render_non_template']:
-        print(f"Found non-template source file {src_path}")
-        # Add the option suffix before file extensions if present
-        if '.' in src_path:
-          out_path = src_path.replace('.', options['render_non_template']+'.', 1)
-        else:
-          out_path = src_path + options['render_non_template']
-
-      # Providing output directory
-      if out_dir:
-        if dir_path:
-          out_path = os.path.join(out_dir, os.path.relpath(out_path, dir_path))
-        else:
-          out_path = os.path.join(out_dir, os.path.basename(out_path))
-
-      # Providing output file name
-      if one_out_path:
-        out_path = one_out_path
-
-      # Dict structure for each source template
-      src_dict = {
-        'src_path': src_path,
-        'out_path': out_path
-      }
-      if options['copy_non_template']:
-        to_copy.append(src_dict)
+    # Output file name
+    if is_template:
+      print(f"Found template source {src_path}")
+      # Strip .j2 extension for output path
+      out_path = src_path[:-3]
+    elif options['copy_non_template']:
+      print(f"Found non-template file {src_path}")
+      out_path = src_path
+    elif options['render_non_template']:
+      print(f"Found non-template source file {src_path}")
+      # Add the option suffix before file extensions if present
+      if '.' in src_path:
+        out_path = src_path.replace('.', options['render_non_template']+'.', 1)
       else:
-        sources.append(src_dict)
-    elif warn_non_template:
-      throw_warning(f"Source file '{src_path}' is not a template.")
+        out_path = src_path + options['render_non_template']
+    else:
+      if warn_non_template:
+        throw_warning(f"Source file '{src_path}' is not a template.")
+      return
+
+    # Providing output directory
+    if out_dir:
+      if dir_path:
+        out_path = os.path.join(out_dir, os.path.relpath(out_path, dir_path))
+      else:
+        out_path = os.path.join(out_dir, os.path.basename(out_path))
+
+    # Providing output file name
+    if one_out_path:
+      out_path = one_out_path
+
+    # Dict structure for each source template
+    src_dict = {
+      'src_path': src_path,
+      'out_path': out_path
+    }
+    if not is_template and options['copy_non_template']:
+      to_copy.append(src_dict)
+    else:
+      sources.append(src_dict)
 
   # Fetch directory of source files
   def fetch_source_directory(dir_path):
