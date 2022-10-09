@@ -230,20 +230,24 @@ def main():
   print(f"Jinja2 version :",jinja2_version)
   print(f"J2GPP  version :",j2gpp_version)
 
-  # Parsing arguments
+  # Parsing command line arguments
   throw_h2("Parsing command line arguments")
 
+  # Enable performance monitor
   if args.perf:
     perf_counter = perf_counter_start()
 
+  # Report unknown command line arguments
   if args_unknown:
     throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
 
+  # Source files and directories
   arg_source = args.source
   if not arg_source:
     throw_error("Must provide at least one source template.")
     exit()
 
+  # Output directory
   out_dir = ""
   if args.outdir:
     # Get full path
@@ -255,6 +259,7 @@ def main():
   else:
     print("Output directory :\n ",os.getcwd())
 
+  # Output file if single source template
   one_out_path = ""
   if args.output:
     # Get full path
@@ -265,6 +270,7 @@ def main():
       os.makedirs(one_out_dir)
     print("Output file :",out_dir)
 
+  # Jinja2 include directories
   inc_dirs = []
   if args.incdir:
     print("Include directories :")
@@ -275,6 +281,7 @@ def main():
       inc_dirs.append(inc_dir)
   else: print("No include directory provided.")
 
+  # Global variable defines
   defines = []
   if args.define:
     defines = args.define
@@ -283,6 +290,7 @@ def main():
       print(" ",define)
   else: print("No global variables defined.")
 
+  # Global variable files
   global_var_paths = []
   if args.varfile:
     print("Global variables files :")
@@ -293,6 +301,7 @@ def main():
       global_var_paths.append(var_path)
   else: print("No global variables file provided.")
 
+  # Loading environment variables as global variables
   envvar_raw = None
   envvar_obj = None
   if args.envvar is not None:
