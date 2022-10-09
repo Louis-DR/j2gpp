@@ -26,7 +26,7 @@ from j2gpp.utils import *
 
 def main():
 
-  j2gpp_version = "1.4.0"
+  j2gpp_version = "1.5.0"
 
   # Source templates
   sources = []
