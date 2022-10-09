@@ -204,6 +204,7 @@ def main():
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
+  argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -299,12 +300,16 @@ def main():
     envvar_raw = os.environ
     envvar_obj = args.envvar
 
+  options['overwrite_outdir']    = args.overwrite_outdir
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
   options['render_non_template'] = args.render_non_template
   options['copy_non_template']   = args.copy_non_template
   options['force_glob']          = args.force_glob
+
+  if options['overwrite_outdir'] and not out_dir:
+    throw_warning("Overwrite output directory option enabled but no output directory provided.")
 
   # Jinja2 environment
   env = Environment(
@@ -510,6 +515,14 @@ def main():
   # └─────────────────────┘
 
   throw_h2("Rendering templates")
+
+  # Option to overwrite the output directory
+  if options['overwrite_outdir']:
+    print(f"Overwriting output directory.")
+    try:
+      shutil.rmtree(out_dir)
+    except Exception as exc:
+      throw_error(f"Cannot remove output directory '{out_dir}'.")
 
   # Render all templates
   for src_dict in sources:
