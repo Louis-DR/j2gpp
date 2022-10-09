@@ -300,6 +300,7 @@ def main():
     envvar_raw = os.environ
     envvar_obj = args.envvar
 
+  # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
@@ -308,8 +309,12 @@ def main():
   options['copy_non_template']   = args.copy_non_template
   options['force_glob']          = args.force_glob
 
+  # Error checking options provided
   if options['overwrite_outdir'] and not out_dir:
-    throw_warning("Overwrite output directory option enabled but no output directory provided.")
+    throw_warning("Overwrite output directory option enabled but no output directory provided. Option --overwrite-outdir is ignored.")
+
+  if options['render_non_template'] and options['copy_non_template']:
+    throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy_non_template is ignored.")
 
   # Jinja2 environment
   env = Environment(
