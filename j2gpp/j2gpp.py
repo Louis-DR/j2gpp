@@ -323,12 +323,15 @@ def main():
   # Error checking command line options
   if options['overwrite_outdir'] and not out_dir:
     throw_warning("Overwrite output directory option enabled but no output directory provided. Option --overwrite-outdir is ignored.")
+    options['overwrite_outdir'] = False
 
   if options['overwrite_outdir'] and options['no_overwrite']:
     throw_warning("Incompatible --overwrite-outdir and --no-overwrite options. Option --no-overwrite is ignored.")
+    options['no_overwrite'] = False
 
   if options['render_non_template'] and options['copy_non_template']:
-    throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy_non_template is ignored.")
+    throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy-non-template is ignored.")
+    options['copy_non_template'] = False
 
   # Jinja2 environment
   env = Environment(
