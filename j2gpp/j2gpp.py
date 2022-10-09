@@ -614,6 +614,17 @@ def main():
       cpy_path = cpy_dict['src_path']
       out_path = cpy_dict['out_path']
       print(f"Copying {cpy_path} \n     to {out_path}")
+
+      # If file already exists
+      if os.path.exists(out_path):
+        print("File already exists")
+        if options['warn_overwrite']:
+          throw_warning(f"Output file '{out_path}' already exists and will be overwritten.")
+        elif options['no_overwrite']:
+          throw_warning(f"Output file '{out_path}' already exists and will not be overwritten.")
+          continue
+
+      # Copying the file
       try:
         os.makedirs(os.path.dirname(out_path), exist_ok=True)
         shutil.copyfile(cpy_path, out_path)
