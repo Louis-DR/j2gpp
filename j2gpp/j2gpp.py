@@ -205,6 +205,7 @@ def main():
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
+  argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting when rendering files",                       action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -311,6 +312,7 @@ def main():
 
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
+  options['no_overwrite']        = args.no_overwrite
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
@@ -318,9 +320,12 @@ def main():
   options['copy_non_template']   = args.copy_non_template
   options['force_glob']          = args.force_glob
 
-  # Error checking options provided
+  # Error checking command line options
   if options['overwrite_outdir'] and not out_dir:
     throw_warning("Overwrite output directory option enabled but no output directory provided. Option --overwrite-outdir is ignored.")
+
+  if options['overwrite_outdir'] and options['no_overwrite']:
+    throw_warning("Incompatible --overwrite-outdir and --no-overwrite options. Option --no-overwrite is ignored.")
 
   if options['render_non_template'] and options['copy_non_template']:
     throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy_non_template is ignored.")
@@ -570,6 +575,13 @@ def main():
     except Exception as exc:
       # Catch all other exceptions such as Jinja2 errors
       throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+
+    # If file already exists
+    if os.path.exists(out_path):
+      print("File already exists")
+      if options['no_overwrite']:
+        throw_warning(f"Output file '{out_path}' already exists and will not be overwritten.")
+        continue
 
     # Write the rendered file
     try:
