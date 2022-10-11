@@ -15,6 +15,7 @@
 
 import argparse
 import glob
+import imp
 import os
 import errno
 import shutil
@@ -204,6 +205,7 @@ def main():
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
+  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a python file",                   nargs='+')
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
@@ -311,6 +313,16 @@ def main():
     envvar_raw = os.environ
     envvar_obj = args.envvar
 
+  # Custom Jinja2 filters
+  filter_paths = []
+  if args.filters:
+    print("Extra Jinja2 filter files :")
+    for filter_path in args.filters:
+      # Get full path
+      filter_path = os.path.expandvars(os.path.expanduser(os.path.abspath(filter_path)))
+      print(" ", filter_path)
+      filter_paths.append(filter_path)
+
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
@@ -343,6 +355,25 @@ def main():
   env = Environment(
     loader=FileSystemLoader(inc_dirs)
   )
+
+
+
+  # ┌───────────────────────┐
+  # │ Loading Jinja2 extras │
+  # └───────────────────────┘
+
+  throw_h2("Loading Jinja2 extras")
+
+  if filter_paths:
+    filters = {}
+    for filter_path in filter_paths:
+      filter_module = imp.load_source("", filter_path)
+      for filter_name in dir(filter_module):
+        if filter_name[0] != '_':
+          print(f"Loading filter '{filter_name}' from '{filter_path}'.")
+          filter_function = getattr(filter_module, filter_name)
+          filters[filter_name] = filter_function
+    env.filters.update(filters)
 
 
 
@@ -587,7 +618,6 @@ def main():
 
     # If file already exists
     if os.path.exists(out_path):
-      print("File already exists")
       if options['warn_overwrite']:
         throw_warning(f"Output file '{out_path}' already exists and will be overwritten.")
       elif options['no_overwrite']:
