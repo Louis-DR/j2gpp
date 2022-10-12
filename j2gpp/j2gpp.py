@@ -215,6 +215,7 @@ def main():
   argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
   argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
   argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
+  argparser.add_argument(      "--debug-vars",          dest="debug_vars",          help="Display available variables at the top of rendered templates",   action="store_true", default=False)
   argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                action="store_true", default=False)
   argparser.add_argument(      "--version",             dest="version",             help="Print J2GPP version and quits",                                  action="store_true", default=False)
   argparser.add_argument(      "--license",             dest="license",             help="Print J2GPP license and quits",                                  action="store_true", default=False)
@@ -322,6 +323,11 @@ def main():
       filter_path = os.path.expandvars(os.path.expanduser(os.path.abspath(filter_path)))
       print(" ", filter_path)
       filter_paths.append(filter_path)
+
+  # Debug mode
+  debug_vars = args.debug_vars
+  if debug_vars:
+    print("Debug enabled : display available variables at the top of the rendered templates.")
 
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
@@ -600,10 +606,14 @@ def main():
     }
     src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {{src_path}}")
 
+    # Output variables for debug purposes
+    if debug_vars:
+      src_res += str(src_vars) + 10*'\n'
+
     # Render template to string
     try:
       with open(src_path,'r') as src_file:
-        src_res = env.from_string(src_file.read()).render(src_vars)
+        src_res += env.from_string(src_file.read()).render(src_vars)
     except OSError as exc:
       # Catch file read exceptions
       if exc.errno == errno.ENOENT:
