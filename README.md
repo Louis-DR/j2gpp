@@ -24,7 +24,7 @@ For instance, suppose we have a templatized source file `foo.c.j2` :
 {% set message = "Hello, world!" %}
 
 int main() {
-  printf({{message}});
+  printf("{{message}}");
   return 0;
 }
 ```
@@ -41,7 +41,7 @@ The output is written to `foo.c` next to the source template :
 #include <stdio.h>
 
 int main() {
-  printf(Hello, world!);
+  printf("Hello, world!");
   return 0;
 }
 ```
