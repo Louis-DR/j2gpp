@@ -206,6 +206,7 @@ def main():
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
   argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a python file",                   nargs='+')
+  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a python file",                     nargs='+')
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
@@ -324,6 +325,16 @@ def main():
       print(" ", filter_path)
       filter_paths.append(filter_path)
 
+  # Custom Jinja2 tests
+  test_paths = []
+  if args.tests:
+    print("Extra Jinja2 test files :")
+    for test_path in args.tests:
+      # Get full path
+      test_path = os.path.expandvars(os.path.expanduser(os.path.abspath(test_path)))
+      print(" ", test_path)
+      test_paths.append(test_path)
+
   # Debug mode
   debug_vars = args.debug_vars
   if debug_vars:
@@ -380,6 +391,17 @@ def main():
           filter_function = getattr(filter_module, filter_name)
           filters[filter_name] = filter_function
     env.filters.update(filters)
+
+  if test_paths:
+    tests = {}
+    for test_path in test_paths:
+      test_module = imp.load_source("", test_path)
+      for test_name in dir(test_module):
+        if test_name[0] != '_':
+          print(f"Loading test '{test_name}' from '{test_path}'.")
+          test_function = getattr(test_module, test_name)
+          tests[test_name] = test_function
+    env.tests.update(tests)
 
 
 
