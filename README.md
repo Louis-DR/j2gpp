@@ -169,7 +169,7 @@ def right_ajust(s, length=0):
 
 You can import custom Jinja2 tests by providing Python files with the `--tests` argument. All functions defined in the python files will be available as Jinja2 tests in the templates.
 
-For instance, with the following command and python file, the test `theanswer` will be available when rendering the template `foo.c.j2`.
+For instance, with the following command and python file, the test `prime` will be available when rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --tests ./bar.py
