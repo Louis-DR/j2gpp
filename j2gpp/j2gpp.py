@@ -28,7 +28,7 @@ from j2gpp.filters import extra_filters
 
 def main():
 
-  j2gpp_version = "1.5.0"
+  j2gpp_version = "1.6.0"
 
   # Source templates
   sources = []
