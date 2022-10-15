@@ -56,6 +56,8 @@ The following arguments can be added to the command for additional features. The
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
 | `--envvar`              | Loads environment variables as global variables                |
+| `--filters`             | Load extra Jinja2 filters from a python file                   |
+| `--tests`               | Load extra Jinja2 tests from a python file                     |
 | `--overwrite-outdir`    | Overwrite output directory                                     |
 | `--warn-overwrite`      | Warn when overwriting files                                    |
 | `--no-overwrite`        | Prevent overwriting files                                      |
@@ -145,6 +147,43 @@ For instance, with the following command, the variable `ENV.BAR` will have the v
 ``` shell
 export BAR=42
 j2gpp ./foo.c.j2 --envvar ENV
+```
+
+### Loading custom Jinja2 filters
+
+You can import custom Jinja2 filters by providing Python files with the `--filters` argument. All functions defined in the python files will be available as Jinja2 filters in the templates.
+
+For instance, with the following command and python file, the filter `right_ajust` will be available when rendering the template `foo.c.j2`.
+
+``` shell
+j2gpp ./foo.c.j2 --filters ./bar.py
+```
+
+``` python
+# bar.py
+def right_ajust(s, length=0):
+  return s.rjust(length)
+```
+
+### Loading custom Jinja2 tests
+
+You can import custom Jinja2 tests by providing Python files with the `--tests` argument. All functions defined in the python files will be available as Jinja2 tests in the templates.
+
+For instance, with the following command and python file, the test `theanswer` will be available when rendering the template `foo.c.j2`.
+
+``` shell
+j2gpp ./foo.c.j2 --tests ./bar.py
+```
+
+``` python
+# bar.py
+import math
+def prime(x):
+  if x<=1: return False
+  for i in range(2,int(math.sqrt(x))+1):
+    if (x%i) == 0:
+      return False
+  return True
 ```
 
 ### Option flags
