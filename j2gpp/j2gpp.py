@@ -15,6 +15,7 @@
 
 import argparse
 import glob
+import imp
 import os
 import errno
 import shutil
@@ -23,6 +24,7 @@ from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
 from j2gpp.utils import *
+from j2gpp.filters import extra_filters
 
 def main():
 
@@ -204,6 +206,8 @@ def main():
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
+  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a python file",                   nargs='+')
+  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a python file",                     nargs='+')
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
@@ -213,6 +217,7 @@ def main():
   argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
   argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
   argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
+  argparser.add_argument(      "--debug-vars",          dest="debug_vars",          help="Display available variables at the top of rendered templates",   action="store_true", default=False)
   argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                action="store_true", default=False)
   argparser.add_argument(      "--version",             dest="version",             help="Print J2GPP version and quits",                                  action="store_true", default=False)
   argparser.add_argument(      "--license",             dest="license",             help="Print J2GPP license and quits",                                  action="store_true", default=False)
@@ -311,6 +316,31 @@ def main():
     envvar_raw = os.environ
     envvar_obj = args.envvar
 
+  # Custom Jinja2 filters
+  filter_paths = []
+  if args.filters:
+    print("Extra Jinja2 filter files :")
+    for filter_path in args.filters:
+      # Get full path
+      filter_path = os.path.expandvars(os.path.expanduser(os.path.abspath(filter_path)))
+      print(" ", filter_path)
+      filter_paths.append(filter_path)
+
+  # Custom Jinja2 tests
+  test_paths = []
+  if args.tests:
+    print("Extra Jinja2 test files :")
+    for test_path in args.tests:
+      # Get full path
+      test_path = os.path.expandvars(os.path.expanduser(os.path.abspath(test_path)))
+      print(" ", test_path)
+      test_paths.append(test_path)
+
+  # Debug mode
+  debug_vars = args.debug_vars
+  if debug_vars:
+    print("Debug enabled : display available variables at the top of the rendered templates.")
+
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
@@ -343,6 +373,43 @@ def main():
   env = Environment(
     loader=FileSystemLoader(inc_dirs)
   )
+
+
+
+  # ┌───────────────────────┐
+  # │ Loading Jinja2 extras │
+  # └───────────────────────┘
+
+  throw_h2("Loading Jinja2 extras")
+
+  print("Loading J2GPP built-in filters.")
+  env.filters.update(extra_filters)
+
+  if filter_paths:
+    filters = {}
+    for filter_path in filter_paths:
+      filter_module = imp.load_source("", filter_path)
+      for filter_name in dir(filter_module):
+        if filter_name[0] != '_':
+          print(f"Loading filter '{filter_name}' from '{filter_path}'.")
+          filter_function = getattr(filter_module, filter_name)
+          # Check if function, else could be module or variable
+          if callable(filter_function):
+            filters[filter_name] = filter_function
+    env.filters.update(filters)
+
+  if test_paths:
+    tests = {}
+    for test_path in test_paths:
+      test_module = imp.load_source("", test_path)
+      for test_name in dir(test_module):
+        if test_name[0] != '_':
+          test_function = getattr(test_module, test_name)
+          # Check if function, else could be module or variable
+          if callable(test_function):
+            print(f"Loading test '{test_name}' from '{test_path}'.")
+            tests[test_name] = test_function
+    env.tests.update(tests)
 
 
 
@@ -569,10 +636,14 @@ def main():
     }
     src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {{src_path}}")
 
+    # Output variables for debug purposes
+    if debug_vars:
+      src_res += str(src_vars) + 10*'\n'
+
     # Render template to string
     try:
       with open(src_path,'r') as src_file:
-        src_res = env.from_string(src_file.read()).render(src_vars)
+        src_res += env.from_string(src_file.read()).render(src_vars)
     except OSError as exc:
       # Catch file read exceptions
       if exc.errno == errno.ENOENT:
@@ -587,7 +658,6 @@ def main():
 
     # If file already exists
     if os.path.exists(out_path):
-      print("File already exists")
       if options['warn_overwrite']:
         throw_warning(f"Output file '{out_path}' already exists and will be overwritten.")
       elif options['no_overwrite']:

@@ -24,7 +24,7 @@ For instance, suppose we have a templatized source file `foo.c.j2` :
 {% set message = "Hello, world!" %}
 
 int main() {
-  printf({{message}});
+  printf("{{message}}");
   return 0;
 }
 ```
@@ -41,7 +41,7 @@ The output is written to `foo.c` next to the source template :
 #include <stdio.h>
 
 int main() {
-  printf(Hello, world!);
+  printf("Hello, world!");
   return 0;
 }
 ```
@@ -56,6 +56,8 @@ The following arguments can be added to the command for additional features. The
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
 | `--envvar`              | Loads environment variables as global variables                |
+| `--filters`             | Load extra Jinja2 filters from a python file                   |
+| `--tests`               | Load extra Jinja2 tests from a python file                     |
 | `--overwrite-outdir`    | Overwrite output directory                                     |
 | `--warn-overwrite`      | Warn when overwriting files                                    |
 | `--no-overwrite`        | Prevent overwriting files                                      |
@@ -147,6 +149,43 @@ export BAR=42
 j2gpp ./foo.c.j2 --envvar ENV
 ```
 
+### Loading custom Jinja2 filters
+
+You can import custom Jinja2 filters by providing Python files with the `--filters` argument. All functions defined in the python files will be available as Jinja2 filters in the templates.
+
+For instance, with the following command and python file, the filter `right_ajust` will be available when rendering the template `foo.c.j2`.
+
+``` shell
+j2gpp ./foo.c.j2 --filters ./bar.py
+```
+
+``` python
+# bar.py
+def right_ajust(s, length=0):
+  return s.rjust(length)
+```
+
+### Loading custom Jinja2 tests
+
+You can import custom Jinja2 tests by providing Python files with the `--tests` argument. All functions defined in the python files will be available as Jinja2 tests in the templates.
+
+For instance, with the following command and python file, the test `prime` will be available when rendering the template `foo.c.j2`.
+
+``` shell
+j2gpp ./foo.c.j2 --tests ./bar.py
+```
+
+``` python
+# bar.py
+import math
+def prime(x):
+  if x<=1: return False
+  for i in range(2,int(math.sqrt(x))+1):
+    if (x%i) == 0:
+      return False
+  return True
+```
+
 ### Option flags
 
 Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
@@ -183,6 +222,24 @@ Useful context variables are added before any other variable is loaded. Some are
 | `__datetime__`          | Global   | Timestamp in the format `YYYY-MM-DD hh:mm:ss` |
 | `__source_path__`       | Template | Path of the source template file              |
 | `__output_path__`       | Template | Path where the template is rendered           |
+
+### Built-in filters
+
+In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/en/latest/templates/#builtin-filters), J2GPP also defines many useful filter functions.
+
+All functions from the Python libraries `math` and `statistics` are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
+
+An operation can be applied to all elements of a list with the filters `list_add`, `list_sub`, `list_mult`, `list_div`, `list_mod`, `list_rem` and `list_exp` respectively for the Python operators `+`, `-`, `*`, `/`, `%`, `//` and `**`.
+
+Text alignment can be controlled with the Python functions `ljust`, `rjust` and `center`.
+
+Case and formatting can be controlled with the Python functions `title` and `swapcase`, or the added functions `camel`, `pascal`, `snake` and `kebab`. `camel` and `pascal` will remove the underscores and hyphens by default but leave the dots ; that behaviour can be changed by providing the filter arguments `remove_underscore`, `remove_hyphen` and `remove_dot` as `True` or `False`. `snake` and `kebab` will group capitalized letters and preserve capitalization by default ; that behaviour can be changed by providing the filter arguments `preserve_caps` and `group_caps` as `True` or `False`.
+
+When using a list of dictionaries with a key in common, you can get the list element with the minimum or maximum value of that attribute using the filters `el_of_max_attr` or `el_of_min_attr`.
+
+When using two-level dictionaries, the key corresponding to the minimum or maximum with regards to a specified attribute using the filters `key_of_max_attr` or `key_of_min_attr`.
+
+You can count the number of occurrences of a value in a list using the `count` filter.
 
 ## Process directories
 
