@@ -77,16 +77,16 @@ extra_filters['pascal'] = pascal
 re_caps_boundary       = re.compile(r'(?<!^)(?=[A-Z])')
 re_caps_boundary_group = re.compile(r'(?<!^)(?<![A-Z])(?=[A-Z])')
 
-def snake(s, preserve_caps=False, group_caps=True):
+def snake(s, preserve_caps=True, group_caps=True):
   if group_caps: s = re_caps_boundary_group.sub('_', s)
   else: s = re_caps_boundary.sub('_', s)
-  if preserve_caps: s = s.lower()
+  if not preserve_caps: s = s.lower()
   return s
 
-def kebab(s, preserve_caps=False, group_caps=True):
+def kebab(s, preserve_caps=True, group_caps=True):
   if group_caps: s = re_caps_boundary_group.sub('-', s)
   else: s = re_caps_boundary.sub('-', s)
-  if preserve_caps: s = s.lower()
+  if not preserve_caps: s = s.lower()
   return s
 
 extra_filters['snake'] = snake
@@ -98,7 +98,11 @@ extra_filters['kebab'] = kebab
 # │ Dictionary and list │
 # └─────────────────────┘
 
-# Max and min based on sub attribute
+# Element max and min based on sub attribute
+extra_filters['el_of_max_attr'] = lambda L,attr : max(L, key = lambda el : el[attr])
+extra_filters['el_of_min_attr'] = lambda L,attr : min(L, key = lambda el : el[attr])
+
+# Key of max and min based on sub attribute
 extra_filters['key_of_max_attr'] = lambda d,attr : max(d, key = lambda key : d[key][attr])
 extra_filters['key_of_min_attr'] = lambda d,attr : min(d, key = lambda key : d[key][attr])
 
