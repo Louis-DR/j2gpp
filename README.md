@@ -223,6 +223,24 @@ Useful context variables are added before any other variable is loaded. Some are
 | `__source_path__`       | Template | Path of the source template file              |
 | `__output_path__`       | Template | Path where the template is rendered           |
 
+### Built-in filters
+
+In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/en/latest/templates/#builtin-filters), J2GPP also defines many useful filter functions.
+
+All functions from the Python libraries `math` and `statistics` are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
+
+An operation can be applied to all elements of a list with the filters `list_add`, `list_sub`, `list_mult`, `list_div`, `list_mod`, `list_rem` and `list_exp` respectively for the Python operators `+`, `-`, `*`, `/`, `%`, `//` and `**`.
+
+Text alignment can be controlled with the Python functions `ljust`, `rjust` and `center`.
+
+Case and formatting can be controlled with the Python functions `title` and `swapcase`, or the added functions `camel`, `pascal`, `snake` and `kebab`. `camel` and `pascal` will remove the underscores and hyphens by default but leave the dots ; that behaviour can be changed by providing the filter arguments `remove_underscore`, `remove_hyphen` and `remove_dot` as `True` or `False`. `snake` and `kebab` will group capitalized letters and preserve capitalization by default ; that behaviour can be changed by providing the filter arguments `preserve_caps` and `group_caps` as `True` or `False`.
+
+When using a list of dictionaries with a key in common, you can get the list element with the minimum or maximum value of that attribute using the filters `el_of_max_attr` or `el_of_min_attr`.
+
+When using two-level dictionaries, the key corresponding to the minimum or maximum with regards to a specified attribute using the filters `key_of_max_attr` or `key_of_min_attr`.
+
+You can count the number of occurrences of a value in a list using the `count` filter.
+
 ## Process directories
 
 When the source path provided corresponds to a directory, J2GPP will look for any template files in the source directory tree. If no output directory argument is provided, the rendered files will be written next to the source templates. If an output directory is provided, the source directory tree structure will be copied to the output directory with only the rendered files.
