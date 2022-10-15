@@ -24,6 +24,7 @@ from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
 from j2gpp.utils import *
+from j2gpp.filters import extra_filters
 
 def main():
 
@@ -380,6 +381,9 @@ def main():
   # └───────────────────────┘
 
   throw_h2("Loading Jinja2 extras")
+
+  print("Loading J2GPP built-in filters.")
+  env.filters.update(extra_filters)
 
   if filter_paths:
     filters = {}
