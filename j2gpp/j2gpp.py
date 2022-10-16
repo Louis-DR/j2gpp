@@ -206,8 +206,9 @@ def main():
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
-  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a python file",                   nargs='+')
-  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a python file",                     nargs='+')
+  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a Python file",                   nargs='+')
+  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a Python file",                     nargs='+')
+  argparser.add_argument(      "--vars-post-processor", dest="vars_post_processor", help="Load a Python function to process variables after loading",      nargs=2  )
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
@@ -336,6 +337,13 @@ def main():
       print(" ", test_path)
       test_paths.append(test_path)
 
+  # Variables files post processor
+  vars_post_processor = None
+  if args.vars_post_processor:
+    vars_post_processor = args.vars_post_processor
+    vars_post_processor[0] = os.path.expandvars(os.path.expanduser(os.path.abspath(vars_post_processor[0])))
+    print(f"Variables files post processor :\n  {args.vars_post_processor[1]} from {args.vars_post_processor[0]}")
+
   # Debug mode
   debug_vars = args.debug_vars
   if debug_vars:
@@ -376,15 +384,16 @@ def main():
 
 
 
-  # ┌───────────────────────┐
-  # │ Loading Jinja2 extras │
-  # └───────────────────────┘
+  # ┌────────────────────────┐
+  # │ Loading plugin scripts │
+  # └────────────────────────┘
 
-  throw_h2("Loading Jinja2 extras")
+  throw_h2("Loading plugin scripts")
 
   print("Loading J2GPP built-in filters.")
   env.filters.update(extra_filters)
 
+  # Extra Jinja2 filters
   if filter_paths:
     filters = {}
     for filter_path in filter_paths:
@@ -398,6 +407,7 @@ def main():
             filters[filter_name] = filter_function
     env.filters.update(filters)
 
+  # Extra Jinja2 tests
   if test_paths:
     tests = {}
     for test_path in test_paths:
@@ -410,6 +420,25 @@ def main():
             print(f"Loading test '{test_name}' from '{test_path}'.")
             tests[test_name] = test_function
     env.tests.update(tests)
+
+  # Variables files post processor
+  postproc_function = None
+  if vars_post_processor:
+    postproc_path = vars_post_processor[0]
+    postproc_name = vars_post_processor[1]
+    print(f"Loading variable postprocessor function '{postproc_name}' from '{postproc_path}'.")
+    try:
+      postproc_module = imp.load_source("", postproc_path)
+      postproc_function = getattr(postproc_module, postproc_name)
+      if not callable(postproc_function):
+        throw_error(f"Object '{postproc_name}' from '{postproc_path}' is not a function.")
+        postproc_function = None
+    except FileNotFoundError as exc:
+      throw_error(f"Script file '{postproc_path}' doesn't exist or cannot be read.")
+      postproc_function = None
+    except AttributeError as exc:
+      throw_error(f"Function '{postproc_name}' cannot be found in script '{postproc_path}'.")
+      postproc_function = None
 
 
 
@@ -554,6 +583,8 @@ def main():
   # Process the variables directory after loading
   def vars_postprocessor(var_dict, context_file=None):
     rec_hierarchical_vars(var_dict, context_file)
+    if postproc_function:
+      postproc_function(var_dict)
 
   # Load variables from a file and return the dictionary
   def load_var_file(var_path):
