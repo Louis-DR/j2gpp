@@ -558,6 +558,17 @@ def main():
         var_dict_res[key] = val
     return var_dict_res
 
+  # Check that attributes names are valid Python identifier that can be accessed in Jinja2
+  def rec_check_valid_identifier(var_dict, context_file=None, val_scope=""):
+    for key, val in var_dict.items():
+      # Valid identifier contains only alphanumeric letters and underscores, and cannot start with a number
+      if not key.isidentifier():
+        throw_warning(f"Variable '{val_scope}{key}' from '{context_file}' is not a valid Python identifier and may not be accessible in the templates.")
+      if isinstance(val, dict):
+        val_scope = f"{val_scope}{key}."
+        # Traverse the dictionary recursively
+        rec_check_valid_identifier(val, context_file, val_scope)
+
   # Handle hierarchical includes of variables files
   load_var_file = None
   def rec_hierarchical_vars(var_dict, context_file=None):
@@ -577,14 +588,18 @@ def main():
           # Update the variables dictionary
           var_dict = var_dict_update(var_dict, inc_var_dict, context=f" when including '{var_path}' from '{context_file}'")
       elif isinstance(val, dict):
-        # Traverse the entire peth of the dictionary recursively
+        # Traverse the dictionary recursively
         rec_hierarchical_vars(val, context_file)
 
   # Process the variables directory after loading
   def vars_postprocessor(var_dict, context_file=None):
+    # Include variables files from others
     rec_hierarchical_vars(var_dict, context_file)
+    # User postprocessor function
     if postproc_function:
       postproc_function(var_dict)
+    # Check attributes are valid identifier
+    rec_check_valid_identifier(var_dict, context_file)
 
   # Load variables from a file and return the dictionary
   def load_var_file(var_path):
