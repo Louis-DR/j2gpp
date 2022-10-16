@@ -513,7 +513,7 @@ def main():
 
   # Merge two dictionaries
   def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
-    var_dict_res = var_dict1.copy()
+    var_dict_res = var_dict1
     for key,val in var_dict2.items():
       # Conflict
       if key in var_dict1.keys() and var_dict1[key] != val:
@@ -529,6 +529,32 @@ def main():
         var_dict_res[key] = val
     return var_dict_res
 
+  # Handle hierarchical includes of variables files
+  load_var_file = None
+  def rec_hierarchical_vars(var_dict, context_file=None):
+    for key,val in var_dict.copy().items():
+      if key == "__j2gpp_include__":
+        # Remove include statement
+        del var_dict[key]
+        # If single include then make list
+        if not isinstance(val,list):
+          val = [val]
+        for var_path in val:
+          # Get full path
+          var_path = os.path.expandvars(os.path.expanduser(os.path.abspath(var_path)))
+          print(f"Including variables file '{var_path}' from '{context_file}'.")
+          # Recursively load the variable file (including its preprocessing)
+          inc_var_dict = load_var_file(var_path)
+          # Update the variables dictionary
+          var_dict = var_dict_update(var_dict, inc_var_dict, context=f" when including '{var_path}' from '{context_file}'")
+      elif isinstance(val, dict):
+        # Traverse the entire peth of the dictionary recursively
+        rec_hierarchical_vars(val, context_file)
+
+  # Process the variables directory after loading
+  def vars_postprocessor(var_dict, context_file=None):
+    rec_hierarchical_vars(var_dict, context_file)
+
   # Load variables from a file and return the dictionary
   def load_var_file(var_path):
     var_dict = {}
@@ -537,6 +563,7 @@ def main():
       loader = loaders[var_format]
       try:
         var_dict = loader(var_path)
+        vars_postprocessor(var_dict, var_path)
       except OSError as exc:
         if exc.errno == errno.ENOENT:
           throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
