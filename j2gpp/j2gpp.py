@@ -540,9 +540,9 @@ def main():
         if not isinstance(val,list):
           val = [val]
         for var_path in val:
-          # Get full path
-          var_path = os.path.expandvars(os.path.expanduser(os.path.abspath(var_path)))
-          print(f"Including variables file '{var_path}' from '{context_file}'.")
+          # Get full path relative to parent file
+          var_path = os.path.join(os.path.dirname(context_file),var_path)
+          print(f"Including variables file '{var_path}'\n                    from '{context_file}'.")
           # Recursively load the variable file (including its preprocessing)
           inc_var_dict = load_var_file(var_path)
           # Update the variables dictionary
