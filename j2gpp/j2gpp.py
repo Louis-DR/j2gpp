@@ -212,6 +212,7 @@ def main():
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
+  argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -353,6 +354,7 @@ def main():
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
   options['no_overwrite']        = args.no_overwrite
+  options['no_check_identifier'] = args.no_check_identifier
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
@@ -599,7 +601,8 @@ def main():
     if postproc_function:
       postproc_function(var_dict)
     # Check attributes are valid identifier
-    rec_check_valid_identifier(var_dict, context_file)
+    if not options['no_check_identifier']:
+      rec_check_valid_identifier(var_dict, context_file)
 
   # Load variables from a file and return the dictionary
   def load_var_file(var_path):
