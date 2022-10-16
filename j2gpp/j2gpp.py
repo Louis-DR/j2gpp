@@ -17,6 +17,7 @@ import argparse
 import glob
 import imp
 import os
+import re
 import errno
 import shutil
 from datetime import datetime
@@ -213,6 +214,7 @@ def main():
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
   argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
+  argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",    action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -355,6 +357,7 @@ def main():
   options['warn_overwrite']      = args.warn_overwrite
   options['no_overwrite']        = args.no_overwrite
   options['no_check_identifier'] = args.no_check_identifier
+  options['fix_identifiers']     = args.fix_identifiers
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
@@ -374,6 +377,10 @@ def main():
   if options['overwrite_outdir'] and options['no_overwrite']:
     throw_warning("Incompatible --overwrite-outdir and --no-overwrite options. Option --no-overwrite is ignored.")
     options['no_overwrite'] = False
+
+  if options['no_check_identifier'] and options['fix_identifiers']:
+    throw_warning("Incompatible --no-check-identifier and --fix-identifiers options. Option --no-check-identifier is ignored.")
+    options['no_check_identifier'] = False
 
   if options['render_non_template'] and options['copy_non_template']:
     throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy-non-template is ignored.")
@@ -562,14 +569,20 @@ def main():
 
   # Check that attributes names are valid Python identifier that can be accessed in Jinja2
   def rec_check_valid_identifier(var_dict, context_file=None, val_scope=""):
-    for key, val in var_dict.items():
+    for key, val in var_dict.copy().items():
       # Valid identifier contains only alphanumeric letters and underscores, and cannot start with a number
       if not key.isidentifier():
-        throw_warning(f"Variable '{val_scope}{key}' from '{context_file}' is not a valid Python identifier and may not be accessible in the templates.")
+        if options['fix_identifiers']:
+          key_valid = re.sub('\W|^(?=\d)','_', key)
+          var_dict[key_valid] = val
+          del var_dict[key]
+          key = key_valid
+        else:
+          throw_warning(f"Variable '{val_scope}{key}' from '{context_file}' is not a valid Python identifier and may not be accessible in the templates.")
       if isinstance(val, dict):
         val_scope = f"{val_scope}{key}."
         # Traverse the dictionary recursively
-        rec_check_valid_identifier(val, context_file, val_scope)
+        rec_check_valid_identifier(var_dict[key], context_file, val_scope)
 
   # Handle hierarchical includes of variables files
   load_var_file = None
