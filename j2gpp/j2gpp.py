@@ -17,6 +17,7 @@ import argparse
 import glob
 import imp
 import os
+import re
 import errno
 import shutil
 from datetime import datetime
@@ -206,11 +207,14 @@ def main():
   argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
   argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
-  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a python file",                   nargs='+')
-  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a python file",                     nargs='+')
+  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a Python file",                   nargs='+')
+  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a Python file",                     nargs='+')
+  argparser.add_argument(      "--vars-post-processor", dest="vars_post_processor", help="Load a Python function to process variables after loading",      nargs=2  )
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
+  argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
+  argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",    action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -336,6 +340,13 @@ def main():
       print(" ", test_path)
       test_paths.append(test_path)
 
+  # Variables files post processor
+  vars_post_processor = None
+  if args.vars_post_processor:
+    vars_post_processor = args.vars_post_processor
+    vars_post_processor[0] = os.path.expandvars(os.path.expanduser(os.path.abspath(vars_post_processor[0])))
+    print(f"Variables files post processor :\n  {args.vars_post_processor[1]} from {args.vars_post_processor[0]}")
+
   # Debug mode
   debug_vars = args.debug_vars
   if debug_vars:
@@ -345,6 +356,8 @@ def main():
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
   options['no_overwrite']        = args.no_overwrite
+  options['no_check_identifier'] = args.no_check_identifier
+  options['fix_identifiers']     = args.fix_identifiers
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
@@ -365,6 +378,10 @@ def main():
     throw_warning("Incompatible --overwrite-outdir and --no-overwrite options. Option --no-overwrite is ignored.")
     options['no_overwrite'] = False
 
+  if options['no_check_identifier'] and options['fix_identifiers']:
+    throw_warning("Incompatible --no-check-identifier and --fix-identifiers options. Option --no-check-identifier is ignored.")
+    options['no_check_identifier'] = False
+
   if options['render_non_template'] and options['copy_non_template']:
     throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy-non-template is ignored.")
     options['copy_non_template'] = False
@@ -376,15 +393,16 @@ def main():
 
 
 
-  # ┌───────────────────────┐
-  # │ Loading Jinja2 extras │
-  # └───────────────────────┘
+  # ┌────────────────────────┐
+  # │ Loading plugin scripts │
+  # └────────────────────────┘
 
-  throw_h2("Loading Jinja2 extras")
+  throw_h2("Loading plugin scripts")
 
   print("Loading J2GPP built-in filters.")
   env.filters.update(extra_filters)
 
+  # Extra Jinja2 filters
   if filter_paths:
     filters = {}
     for filter_path in filter_paths:
@@ -398,6 +416,7 @@ def main():
             filters[filter_name] = filter_function
     env.filters.update(filters)
 
+  # Extra Jinja2 tests
   if test_paths:
     tests = {}
     for test_path in test_paths:
@@ -410,6 +429,25 @@ def main():
             print(f"Loading test '{test_name}' from '{test_path}'.")
             tests[test_name] = test_function
     env.tests.update(tests)
+
+  # Variables files post processor
+  postproc_function = None
+  if vars_post_processor:
+    postproc_path = vars_post_processor[0]
+    postproc_name = vars_post_processor[1]
+    print(f"Loading variable postprocessor function '{postproc_name}' from '{postproc_path}'.")
+    try:
+      postproc_module = imp.load_source("", postproc_path)
+      postproc_function = getattr(postproc_module, postproc_name)
+      if not callable(postproc_function):
+        throw_error(f"Object '{postproc_name}' from '{postproc_path}' is not a function.")
+        postproc_function = None
+    except FileNotFoundError as exc:
+      throw_error(f"Script file '{postproc_path}' doesn't exist or cannot be read.")
+      postproc_function = None
+    except AttributeError as exc:
+      throw_error(f"Function '{postproc_name}' cannot be found in script '{postproc_path}'.")
+      postproc_function = None
 
 
 
@@ -513,7 +551,7 @@ def main():
 
   # Merge two dictionaries
   def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
-    var_dict_res = var_dict1.copy()
+    var_dict_res = var_dict1
     for key,val in var_dict2.items():
       # Conflict
       if key in var_dict1.keys() and var_dict1[key] != val:
@@ -529,6 +567,56 @@ def main():
         var_dict_res[key] = val
     return var_dict_res
 
+  # Check that attributes names are valid Python identifier that can be accessed in Jinja2
+  def rec_check_valid_identifier(var_dict, context_file=None, val_scope=""):
+    for key, val in var_dict.copy().items():
+      # Valid identifier contains only alphanumeric letters and underscores, and cannot start with a number
+      if not key.isidentifier():
+        if options['fix_identifiers']:
+          key_valid = re.sub('\W|^(?=\d)','_', key)
+          var_dict[key_valid] = val
+          del var_dict[key]
+          key = key_valid
+        else:
+          throw_warning(f"Variable '{val_scope}{key}' from '{context_file}' is not a valid Python identifier and may not be accessible in the templates.")
+      if isinstance(val, dict):
+        val_scope = f"{val_scope}{key}."
+        # Traverse the dictionary recursively
+        rec_check_valid_identifier(var_dict[key], context_file, val_scope)
+
+  # Handle hierarchical includes of variables files
+  load_var_file = None
+  def rec_hierarchical_vars(var_dict, context_file=None):
+    for key,val in var_dict.copy().items():
+      if key == "__j2gpp_include__":
+        # Remove include statement
+        del var_dict[key]
+        # If single include then make list
+        if not isinstance(val,list):
+          val = [val]
+        for var_path in val:
+          # Get full path relative to parent file
+          var_path = os.path.join(os.path.dirname(context_file),var_path)
+          print(f"Including variables file '{var_path}'\n                    from '{context_file}'.")
+          # Recursively load the variable file (including its preprocessing)
+          inc_var_dict = load_var_file(var_path)
+          # Update the variables dictionary
+          var_dict = var_dict_update(var_dict, inc_var_dict, context=f" when including '{var_path}' from '{context_file}'")
+      elif isinstance(val, dict):
+        # Traverse the dictionary recursively
+        rec_hierarchical_vars(val, context_file)
+
+  # Process the variables directory after loading
+  def vars_postprocessor(var_dict, context_file=None):
+    # Include variables files from others
+    rec_hierarchical_vars(var_dict, context_file)
+    # User postprocessor function
+    if postproc_function:
+      postproc_function(var_dict)
+    # Check attributes are valid identifier
+    if not options['no_check_identifier']:
+      rec_check_valid_identifier(var_dict, context_file)
+
   # Load variables from a file and return the dictionary
   def load_var_file(var_path):
     var_dict = {}
@@ -537,6 +625,7 @@ def main():
       loader = loaders[var_format]
       try:
         var_dict = loader(var_path)
+        vars_postprocessor(var_dict, var_path)
       except OSError as exc:
         if exc.errno == errno.ENOENT:
           throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
