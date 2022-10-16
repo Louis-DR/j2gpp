@@ -56,11 +56,14 @@ The following arguments can be added to the command for additional features. The
 | `-D/--define`           | Inline global variables for all templates                      |
 | `-V/--varfile`          | Global variables files for all templates                       |
 | `--envvar`              | Loads environment variables as global variables                |
-| `--filters`             | Load extra Jinja2 filters from a python file                   |
-| `--tests`               | Load extra Jinja2 tests from a python file                     |
+| `--filters`             | Load extra Jinja2 filters from a Python file                   |
+| `--tests`               | Load extra Jinja2 tests from a Python file                     |
+| `--vars-post-processor` | Load a Python function to process variables after loading      |
 | `--overwrite-outdir`    | Overwrite output directory                                     |
 | `--warn-overwrite`      | Warn when overwriting files                                    |
 | `--no-overwrite`        | Prevent overwriting files                                      |
+| `--no-check-identifier` | Disable warning when attributes are not valid identifiers      |
+| `--fix-identifiers`     | Replace invalid characters from identifiers with underscore    |
 | `--csv-delimiter`       | CSV delimiter (default: '`,`')                                 |
 | `--csv-escapechar`      | CSV escape character (default: None)                           |
 | `--csv-dontstrip`       | Disable stripping whitespace of CSV values                     |
@@ -184,6 +187,24 @@ def prime(x):
     if (x%i) == 0:
       return False
   return True
+```
+
+### Post-processing variables files
+
+You can perform transformations on the dictionary returned after processing a variables files by providing a Python function with the argument `--vars-post-processor`. It takes two arguments, the first is the path to the Python script, and the second is the name of the function to use. The function must take in a single argument, the variables dictionary, and modify it as a reference (not return the modified dictionary).
+
+For instance, with the following command and python file, the variable dictionary loaded from the file `qux.yml` will be processed by the function `shout_values()` before rendering the template `foo.c.j2`.
+
+``` shell
+j2gpp ./foo.c.j2 --varfile ./qux.yml --vars-post-processor ./bar.py shout_values
+```
+
+``` python
+# bar.py
+def shout_values(var_dict):
+  for key,val in var_dict.items():
+    if isinstance(val, str):
+      var_dict[key] = val.upper()
 ```
 
 ### Option flags
