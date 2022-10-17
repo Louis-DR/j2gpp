@@ -26,6 +26,7 @@ from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
 from j2gpp.utils import *
 from j2gpp.filters import extra_filters
+from j2gpp.tests import extra_tests
 
 def main():
 
@@ -401,6 +402,9 @@ def main():
 
   print("Loading J2GPP built-in filters.")
   env.filters.update(extra_filters)
+
+  print("Loading J2GPP built-in tests.")
+  env.tests.update(extra_tests)
 
   # Extra Jinja2 filters
   if filter_paths:
