@@ -211,15 +211,25 @@ def shout_values(var_dict):
 
 Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
 
+`--overwrite-outdir` cleans the output directory before rendering the templates and copying any other files.
+
+`--warn-overwrite` enables warnings triggered whenever a file is overwritten.
+
+`--no-overwrite` prevents any file from being overwritten, and triggers a warning when that happens.
+
+`--no-check-identifier` disables the ckecking that the variables names and attributes are valid Python identifiers. Root variables with a name not passing this check will not be accessible in Jinja2 templates.
+
+`--fix-identifiers` fixes variables and attributes names that are not valid Python identifiers by replacing incorrect characters by underscores, and if the first character is a number, an underscore is added before.
+
 `--csv-delimiter` followed by a string will change the delimiter used to parse CSV variables files. The default is "`,`".
 
-`--csv-escapechar` followed by a character will set the escape character used to parse CSV variables files. There is no escape character by default.
+`--csv-escapechar` followed by a character sets the escape character used to parse CSV variables files. There is no escape character by default.
 
-`--csv-dontstrip` will disable the stripping of whitespace from CSV keys and values.
+`--csv-dontstrip` disables the stripping of whitespace from CSV keys and values.
 
 `--render-non-template` forces every source file found to be rendered, even if they are not recognized as a template (by ending with a template extension). The resulting file will be saved in the location following the rules of regular templates, but instead of removing the template extension, they will have a suffix added before the file extensions. By default, this suffix is `_j2gpp`, but this can be replaced by whatever is specified after the flag argument.
 
-`--copy-non-template` will copy the source files that are not recognized as templates or the files in the source directories to the output directory when one is provided with the `--outdir` argument.
+`--copy-non-template` enables the copying of the source files that are not recognized as templates or the files in the source directories to the output directory when one is provided with the `--outdir` argument.
 
 `--force-glob` enables globbing UNIX-like patterns in the source files paths even if they are surrounded by quotes. This is disabled by default to allow processing files with `*` and `[...]` in their path. Paths provided without quotes are preprocessed by the shell and any wildcard or other patterns cannot be prevented.
 
