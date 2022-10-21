@@ -501,7 +501,7 @@ key3 = "value3"
 
 ### INI/CFG
 
-Note that XML expects data to be divided in sections with a header in square brackets. To avoid having to specify the root element when using the variables in a template, J2GPP automatically flattens the section whose header is "`_`".
+Note that INI file expects data to be divided in sections with a header in square brackets. To avoid having to specify the root element when using the variables in a template, J2GPP automatically flattens the section whose header is "`_`".
 
 ``` ini
 [_]
