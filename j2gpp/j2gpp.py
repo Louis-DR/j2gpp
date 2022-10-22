@@ -740,9 +740,9 @@ def main():
     if options['no_chdir']:
       pass
     elif options['chdir_src']:
-      os.chdir(src_dirpath)
+      change_working_directory(src_dirpath)
     else:
-      os.chdir(out_dirpath)
+      change_working_directory(out_dirpath)
 
     # Add context variables specific to this template
     src_vars = global_vars.copy()
@@ -795,7 +795,7 @@ def main():
         throw_error(f"Cannot write '{out_path}'.")
 
   # Restore command working directory
-  os.chdir(pwd)
+  change_working_directory(pwd)
 
   # If option is set, copy the non-template files
   if options['copy_non_template']:

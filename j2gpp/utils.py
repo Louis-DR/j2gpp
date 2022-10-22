@@ -13,6 +13,8 @@
 
 import time
 import ast
+import os
+import errno
 
 
 
@@ -188,3 +190,21 @@ def perf_counter_stop(start_time):
 
 def perf_counter_print(counter_time):
   print(f"Execution time : {counter_time}ns")
+
+
+
+# ┌───────────────────────┐
+# │ Files and directories │
+# └───────────────────────┘
+
+# Change working directory with exception handling
+def change_working_directory(dir_path):
+  try:
+    os.chdir(dir_path)
+  except OSError as exc:
+    if exc.errno == errno.ENOENT:
+      throw_error(f"Cannot change working directory to '{dir_path}' : directory doesn't exist.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot change working directory to '{dir_path}' : missing permissions.")
+    else:
+      throw_error(f"Cannot change working directory to '{dir_path}'.")
