@@ -241,6 +241,9 @@ def main():
   print(f"Jinja2 version :",jinja2_version)
   print(f"J2GPP  version :",j2gpp_version)
 
+  # Backup command working directory
+  pwd = os.getcwd()
+
   # Parsing command line arguments
   throw_h2("Parsing command line arguments")
 
@@ -717,6 +720,10 @@ def main():
     print(f"Rendering {src_path} \n       to {out_path}")
     src_res = ""
 
+    # Change working directory to output directory for filters and accessory functions
+    out_dirpath = os.dirname(out_path)
+    os.chdir(out_dirpath)
+
     # Add context variables specific to this template
     src_vars = global_vars.copy()
     src_context_vars = {
@@ -732,6 +739,7 @@ def main():
     # Render template to string
     try:
       with open(src_path,'r') as src_file:
+        # Jinja2 rendering from string
         src_res += env.from_string(src_file.read()).render(src_vars)
     except OSError as exc:
       # Catch file read exceptions
@@ -766,6 +774,9 @@ def main():
         throw_error(f"Cannot write '{out_path}' : missing write permission.")
       else:
         throw_error(f"Cannot write '{out_path}'.")
+
+  # Restore command working directory
+  os.chdir(pwd)
 
   # If option is set, copy the non-template files
   if options['copy_non_template']:
