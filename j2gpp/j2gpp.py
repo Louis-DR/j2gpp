@@ -718,10 +718,17 @@ def main():
     src_path = src_dict['src_path']
     out_path = src_dict['out_path']
     print(f"Rendering {src_path} \n       to {out_path}")
+    src_dirpath = os.path.dirname(src_path)
+    out_dirpath = os.path.dirname(out_path)
     src_res = ""
 
+    # Create directories for output path
+    try:
+      os.makedirs(out_dirpath, exist_ok=True)
+    except OSError as exc:
+        throw_error(f"Cannot create directory '{out_dirpath}'.")
+
     # Change working directory to output directory for filters and accessory functions
-    out_dirpath = os.dirname(out_path)
     os.chdir(out_dirpath)
 
     # Add context variables specific to this template
@@ -730,7 +737,7 @@ def main():
       '__source_path__': src_path,
       '__output_path__': out_path,
     }
-    src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {{src_path}}")
+    src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {src_path}")
 
     # Output variables for debug purposes
     if debug_vars:
@@ -763,7 +770,6 @@ def main():
 
     # Write the rendered file
     try:
-      os.makedirs(os.path.dirname(out_path), exist_ok=True)
       with open(out_path,'w') as out_file:
         out_file.write(src_res)
     except OSError as exc:
