@@ -215,6 +215,8 @@ def main():
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
   argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
   argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",    action="store_true", default=False)
+  argparser.add_argument(      "--chdir-src",           dest="chdir_src",           help="Change working directory to source before rendering ",           action="store_true", default=False)
+  argparser.add_argument(      "--no-chdir",            dest="no_chdir",            help="Disable changing working directory before rendering",            action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -361,6 +363,8 @@ def main():
   options['no_overwrite']        = args.no_overwrite
   options['no_check_identifier'] = args.no_check_identifier
   options['fix_identifiers']     = args.fix_identifiers
+  options['chdir_src']           = args.chdir_src
+  options['no_chdir']            = args.no_chdir
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
@@ -384,6 +388,10 @@ def main():
   if options['no_check_identifier'] and options['fix_identifiers']:
     throw_warning("Incompatible --no-check-identifier and --fix-identifiers options. Option --no-check-identifier is ignored.")
     options['no_check_identifier'] = False
+
+  if options['chdir_src'] and options['no_chdir']:
+    throw_warning("Incompatible --chdir-src and --no-chdir options. Option --no-chdir is ignored.")
+    options['no_chdir'] = False
 
   if options['render_non_template'] and options['copy_non_template']:
     throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy-non-template is ignored.")
@@ -729,7 +737,12 @@ def main():
         throw_error(f"Cannot create directory '{out_dirpath}'.")
 
     # Change working directory to output directory for filters and accessory functions
-    os.chdir(out_dirpath)
+    if options['no_chdir']:
+      pass
+    elif options['chdir_src']:
+      os.chdir(src_dirpath)
+    else:
+      os.chdir(out_dirpath)
 
     # Add context variables specific to this template
     src_vars = global_vars.copy()
