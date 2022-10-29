@@ -108,3 +108,26 @@ extra_filters['key_of_min_attr'] = lambda d,attr : min(d, key = lambda key : d[k
 
 # Count occurences in list
 extra_filters['count'] = lambda L,x : sum([l==x for l in L])
+
+
+
+# ┌─────────────┐
+# │ File output │
+# └─────────────┘
+
+# Write content of the block to a file
+def write(content, path):
+  with open(path, 'w') as file:
+    file.write(content)
+  return ""
+
+extra_filters['write'] = write
+
+
+# Append content of the block to a file
+def append(content, path):
+  with open(path, 'a') as file:
+    file.write(content)
+  return ""
+
+extra_filters['append'] = append
