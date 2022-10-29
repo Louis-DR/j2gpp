@@ -94,6 +94,149 @@ extra_filters['kebab'] = kebab
 
 
 
+# ┌──────────────────────┐
+# │ Paragraph formatting │
+# └──────────────────────┘
+
+# Removes pre-existing indentation and sets new one
+def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
+  indent = depth * ('\t' if tabs else ' '*spaces)
+  is_first = True
+
+  # Iterate line by line
+  lines = content.split('\n')
+  for idx,line in enumerate(lines):
+
+    # First line skipped according to argument
+    if is_first and not first:
+      is_first = False
+      continue
+
+    # Update the line with the correct indentation
+    line = line.lstrip()
+    if line != '' and not blank:
+      line = indent + line
+    lines[idx] = line
+
+  # Return paragraph of lines
+  return '\n'.join(lines)
+
+extra_filters['reindent'] = reindent
+
+
+# Removes pre-existing indentation and sets new indent based on rules
+def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=False, blank=False):
+  is_first = True
+  depth = 0
+  next_depth = 0
+
+  # Iterate line by line
+  lines = content.split('\n')
+  for idx,line in enumerate(lines):
+    depth = next_depth
+
+    # First line
+    if is_first:
+      is_first = False
+
+      # Count the indentation of the first line
+      if tabs:
+        line_strip = line.lstrip('\t')
+        depth = len(line) - len(line_strip)
+      else:
+        line_strip = line.lstrip(' ')
+        depth = math.ceil((len(line) - len(line_strip)) / spaces)
+
+      next_depth = depth
+      for start in starts:
+        next_depth += line.count(start)
+
+      # Skip first line according to argument
+      if not first:
+        continue
+
+    # Updated the depth information based on block delimiters
+    for end in ends:
+      depth -= line.count(end)
+    next_depth = depth
+    for start in starts:
+      next_depth += line.count(start)
+
+    # Update the line with the correct indentation
+    line = line.lstrip()
+    indent = depth * ('\t' if tabs else ' '*spaces)
+    if line != '' and not blank:
+      line = indent + line
+    lines[idx] = line
+
+  # Return paragraph of lines
+  return '\n'.join(lines)
+
+extra_filters['autoindent'] = autoindent
+
+
+# Align every line of the paragraph, left before §, right before §§
+def align(content, margin=1):
+  lines = content.split('\n')
+
+  # First split the line by column and measure the width of the columns
+  lines_objs = []
+  columns_widths = []
+  for line in lines:
+    line_obj = []
+    column_idx = 0
+    # First split at the right align boundaries
+    line_split_rjust = line.split('§§')
+    for rjust_idx, text_rjust in enumerate(line_split_rjust):
+      # Then split at the left align boundaries
+      text_rjust_split_ljust = text_rjust.split('§')
+      for ljust_idx, text in enumerate(text_rjust_split_ljust):
+        text = text.strip()
+        # Build object with dict for each column
+        if ljust_idx == len(text_rjust_split_ljust)-1 and rjust_idx != len(line_split_rjust)-1:
+          line_obj.append({
+            'text': text,
+            'just': 'right'
+          })
+        else:
+          line_obj.append({
+            'text': text,
+            'just': 'left'
+          })
+        # Update the column widths
+        column_width = len(text)
+        if column_idx == len(columns_widths):
+          columns_widths.append(column_width)
+        else:
+          columns_widths[column_idx] = max(columns_widths[column_idx], column_width)
+        column_idx += 1
+    lines_objs.append(line_obj)
+
+  # Then apply the alignment to all the lines
+  lines = []
+  for line_idx,line_obj in enumerate(lines_objs):
+    line = ""
+    for column_idx, column in enumerate(line_obj):
+      column_width = columns_widths[column_idx]
+      column_text = column['text']
+      column_just = column['just']
+      if column_idx == len(line_obj)-1:
+        line += column_text
+      elif column_just == 'left':
+        line += column_text.ljust(column_width)
+      else:
+        line += column_text.rjust(column_width)
+      if column_idx != len(line_obj)-1:
+        line += ' '*margin
+    lines.append(line)
+
+  # Return paragraph of lines
+  return '\n'.join(lines)
+
+extra_filters['align'] = align
+
+
+
 # ┌─────────────────────┐
 # │ Dictionary and list │
 # └─────────────────────┘

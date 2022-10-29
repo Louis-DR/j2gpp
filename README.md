@@ -266,6 +266,8 @@ Text alignment can be controlled with the Python functions `ljust`, `rjust` and 
 
 Case and formatting can be controlled with the Python functions `title` and `swapcase`, or the added functions `camel`, `pascal`, `snake` and `kebab`. `camel` and `pascal` will remove the underscores and hyphens by default but leave the dots ; that behaviour can be changed by providing the filter arguments `remove_underscore`, `remove_hyphen` and `remove_dot` as `True` or `False`. `snake` and `kebab` will group capitalized letters and preserve capitalization by default ; that behaviour can be changed by providing the filter arguments `preserve_caps` and `group_caps` as `True` or `False`.
 
+Paragraph formatting is facilitated by multiple filters that should be used on a `filter` block. `reindent` removes pre-existing indentation and sets new one. `autoindent` removes pre-existing indentation and sets new indent by incrementing and decrementing the depth based on start and end delimiters of blocks provided by the `starts` and `ends` lists of strings provided by argument (culry braces by default). `align` aligns every line of the paragraph by columns, left before `§`, right before `§§`.
+
 When using a list of dictionaries with a key in common, you can get the list element with the minimum or maximum value of that attribute using the filters `el_of_max_attr` or `el_of_min_attr`.
 
 When using two-level dictionaries, the key corresponding to the minimum or maximum with regards to a specified attribute using the filters `key_of_max_attr` or `key_of_min_attr`.
