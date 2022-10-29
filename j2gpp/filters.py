@@ -14,6 +14,9 @@
 import math
 import statistics
 import re
+import os
+import errno
+from j2gpp.utils import *
 
 extra_filters = {}
 
@@ -117,8 +120,22 @@ extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 
 # Write content of the block to a file
 def write(content, path, preserve=False):
-  with open(path, 'w') as file:
-    file.write(content)
+  # Get full path
+  path = os.path.expandvars(os.path.expanduser(os.path.abspath(path)))
+  print(f"Exporting block content to {path}")
+  # Write to file
+  try:
+    with open(path,'w') as file:
+      file.write(content)
+  except OSError as exc:
+    # Catch file write exceptions
+    if exc.errno == errno.EISDIR:
+      throw_error(f"Cannot write '{path}' : path is a directory.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot write '{path}' : missing write permission.")
+    else:
+      throw_error(f"Cannot write '{path}'.")
+  # Replacement in original file
   if preserve:
     return content
   else:
@@ -129,8 +146,22 @@ extra_filters['write'] = write
 
 # Append content of the block to a file
 def append(content, path, preserve=False):
-  with open(path, 'a') as file:
-    file.write(content)
+  # Get full path
+  path = os.path.expandvars(os.path.expanduser(os.path.abspath(path)))
+  print(f"Exporting block content to {path}")
+  # Append to file
+  try:
+    with open(path,'a') as file:
+      file.write(content)
+  except OSError as exc:
+    # Catch file write exceptions
+    if exc.errno == errno.EISDIR:
+      throw_error(f"Cannot write '{path}' : path is a directory.")
+    elif exc.errno == errno.EACCES:
+      throw_error(f"Cannot write '{path}' : missing write permission.")
+    else:
+      throw_error(f"Cannot write '{path}'.")
+  # Replacement in original file
   if preserve:
     return content
   else:
