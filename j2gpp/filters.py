@@ -175,6 +175,67 @@ def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=Fa
 extra_filters['autoindent'] = autoindent
 
 
+# Align every line of the paragraph, left before §, right before §§
+def align(content, margin=1):
+  lines = content.split('\n')
+
+  # First split the line by column and measure the width of the columns
+  lines_objs = []
+  columns_widths = []
+  for line in lines:
+    line_obj = []
+    column_idx = 0
+    # First split at the right align boundaries
+    line_split_rjust = line.split('§§')
+    for rjust_idx, text_rjust in enumerate(line_split_rjust):
+      # Then split at the left align boundaries
+      text_rjust_split_ljust = text_rjust.split('§')
+      for ljust_idx, text in enumerate(text_rjust_split_ljust):
+        text = text.strip()
+        # Build object with dict for each column
+        if ljust_idx == len(text_rjust_split_ljust)-1 and rjust_idx != len(line_split_rjust)-1:
+          line_obj.append({
+            'text': text,
+            'just': 'right'
+          })
+        else:
+          line_obj.append({
+            'text': text,
+            'just': 'left'
+          })
+        # Update the column widths
+        column_width = len(text)
+        if column_idx == len(columns_widths):
+          columns_widths.append(column_width)
+        else:
+          columns_widths[column_idx] = max(columns_widths[column_idx], column_width)
+        column_idx += 1
+    lines_objs.append(line_obj)
+
+  # Then apply the alignment to all the lines
+  lines = []
+  for line_idx,line_obj in enumerate(lines_objs):
+    line = ""
+    for column_idx, column in enumerate(line_obj):
+      column_width = columns_widths[column_idx]
+      column_text = column['text']
+      column_just = column['just']
+      if column_idx == len(line_obj)-1:
+        line += column_text
+      elif column_just == 'left':
+        line += column_text.ljust(column_width)
+      else:
+        line += column_text.rjust(column_width)
+      if column_idx != len(line_obj)-1:
+        line += ' '*margin
+    lines.append(line)
+
+  # Return paragraph of lines
+  return '\n'.join(lines)
+
+extra_filters['align'] = align
+
+
 
 # ┌─────────────────────┐
 # │ Dictionary and list │
