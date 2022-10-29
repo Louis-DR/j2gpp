@@ -116,18 +116,24 @@ extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 # └─────────────┘
 
 # Write content of the block to a file
-def write(content, path):
+def write(content, path, preserve=False):
   with open(path, 'w') as file:
     file.write(content)
-  return ""
+  if preserve:
+    return content
+  else:
+    return ""
 
 extra_filters['write'] = write
 
 
 # Append content of the block to a file
-def append(content, path):
+def append(content, path, preserve=False):
   with open(path, 'a') as file:
     file.write(content)
-  return ""
+  if preserve:
+    return content
+  else:
+    return ""
 
 extra_filters['append'] = append
