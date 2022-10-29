@@ -94,6 +94,29 @@ extra_filters['kebab'] = kebab
 
 
 
+# ┌──────────────────────┐
+# │ Paragraph formatting │
+# └──────────────────────┘
+
+# Removes pre-existing indentation and sets new one
+def reindent(content, levels=1, spaces=2, tabs=False, first=False, blank=False):
+  lines = content.split('\n')
+  indent = levels * ('\t' if tabs else ' '*spaces)
+  is_first = True
+  for idx,line in enumerate(lines):
+    if is_first and not first:
+      is_first = False
+      continue
+    line = line.lstrip()
+    if line != '' and not blank:
+      line = indent + line
+    lines[idx] = line
+  return '\n'.join(lines)
+
+extra_filters['reindent'] = reindent
+
+
+
 # ┌─────────────────────┐
 # │ Dictionary and list │
 # └─────────────────────┘
