@@ -215,6 +215,8 @@ def main():
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
   argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
   argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",    action="store_true", default=False)
+  argparser.add_argument(      "--chdir-src",           dest="chdir_src",           help="Change working directory to source before rendering ",           action="store_true", default=False)
+  argparser.add_argument(      "--no-chdir",            dest="no_chdir",            help="Disable changing working directory before rendering",            action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
   argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
   argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
@@ -240,6 +242,9 @@ def main():
   print(f"Python version :",python_version())
   print(f"Jinja2 version :",jinja2_version)
   print(f"J2GPP  version :",j2gpp_version)
+
+  # Backup command working directory
+  pwd = os.getcwd()
 
   # Parsing command line arguments
   throw_h2("Parsing command line arguments")
@@ -358,6 +363,8 @@ def main():
   options['no_overwrite']        = args.no_overwrite
   options['no_check_identifier'] = args.no_check_identifier
   options['fix_identifiers']     = args.fix_identifiers
+  options['chdir_src']           = args.chdir_src
+  options['no_chdir']            = args.no_chdir
   options['csv_delimiter']       = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escapechar']      = args.csv_escapechar
   options['csv_dontstrip']       = args.csv_dontstrip
@@ -381,6 +388,10 @@ def main():
   if options['no_check_identifier'] and options['fix_identifiers']:
     throw_warning("Incompatible --no-check-identifier and --fix-identifiers options. Option --no-check-identifier is ignored.")
     options['no_check_identifier'] = False
+
+  if options['chdir_src'] and options['no_chdir']:
+    throw_warning("Incompatible --chdir-src and --no-chdir options. Option --no-chdir is ignored.")
+    options['no_chdir'] = False
 
   if options['render_non_template'] and options['copy_non_template']:
     throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy-non-template is ignored.")
@@ -715,7 +726,23 @@ def main():
     src_path = src_dict['src_path']
     out_path = src_dict['out_path']
     print(f"Rendering {src_path} \n       to {out_path}")
+    src_dirpath = os.path.dirname(src_path)
+    out_dirpath = os.path.dirname(out_path)
     src_res = ""
+
+    # Create directories for output path
+    try:
+      os.makedirs(out_dirpath, exist_ok=True)
+    except OSError as exc:
+        throw_error(f"Cannot create directory '{out_dirpath}'.")
+
+    # Change working directory to output directory for filters and accessory functions
+    if options['no_chdir']:
+      pass
+    elif options['chdir_src']:
+      change_working_directory(src_dirpath)
+    else:
+      change_working_directory(out_dirpath)
 
     # Add context variables specific to this template
     src_vars = global_vars.copy()
@@ -723,7 +750,7 @@ def main():
       '__source_path__': src_path,
       '__output_path__': out_path,
     }
-    src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {{src_path}}")
+    src_vars = var_dict_update(src_vars, src_context_vars, context=f" when loading context variables for template {src_path}")
 
     # Output variables for debug purposes
     if debug_vars:
@@ -732,6 +759,7 @@ def main():
     # Render template to string
     try:
       with open(src_path,'r') as src_file:
+        # Jinja2 rendering from string
         src_res += env.from_string(src_file.read()).render(src_vars)
     except OSError as exc:
       # Catch file read exceptions
@@ -755,7 +783,6 @@ def main():
 
     # Write the rendered file
     try:
-      os.makedirs(os.path.dirname(out_path), exist_ok=True)
       with open(out_path,'w') as out_file:
         out_file.write(src_res)
     except OSError as exc:
@@ -766,6 +793,9 @@ def main():
         throw_error(f"Cannot write '{out_path}' : missing write permission.")
       else:
         throw_error(f"Cannot write '{out_path}'.")
+
+  # Restore command working directory
+  change_working_directory(pwd)
 
   # If option is set, copy the non-template files
   if options['copy_non_template']:

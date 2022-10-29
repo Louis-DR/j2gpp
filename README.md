@@ -274,6 +274,8 @@ When using two-level dictionaries, the key corresponding to the minimum or maxim
 
 You can count the number of occurrences of a value in a list using the `count` filter.
 
+The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`.
+
 ## Process directories
 
 When the source path provided corresponds to a directory, J2GPP will look for any template files in the source directory tree. If no output directory argument is provided, the rendered files will be written next to the source templates. If an output directory is provided, the source directory tree structure will be copied to the output directory with only the rendered files.
