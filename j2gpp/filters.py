@@ -99,9 +99,9 @@ extra_filters['kebab'] = kebab
 # └──────────────────────┘
 
 # Removes pre-existing indentation and sets new one
-def reindent(content, levels=1, spaces=2, tabs=False, first=False, blank=False):
+def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
   lines = content.split('\n')
-  indent = levels * ('\t' if tabs else ' '*spaces)
+  indent = depth * ('\t' if tabs else ' '*spaces)
   is_first = True
   for idx,line in enumerate(lines):
     if is_first and not first:
@@ -114,6 +114,41 @@ def reindent(content, levels=1, spaces=2, tabs=False, first=False, blank=False):
   return '\n'.join(lines)
 
 extra_filters['reindent'] = reindent
+
+# Removes pre-existing indentation and sets new indent based on rules
+def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=False, blank=False):
+  lines = content.split('\n')
+  is_first = True
+  depth = 0
+  next_depth = 0
+  for idx,line in enumerate(lines):
+    depth = next_depth
+    if is_first:
+      is_first = False
+      if tabs:
+        line_strip = line.lstrip('\t')
+        depth = len(line) - len(line_strip)
+      else:
+        line_strip = line.lstrip(' ')
+        depth = math.ceil((len(line) - len(line_strip)) / spaces)
+      next_depth = depth
+      for start in starts:
+        next_depth += line.count(start)
+      if not first:
+        continue
+    for end in ends:
+      depth -= line.count(end)
+    next_depth = depth
+    for start in starts:
+      next_depth += line.count(start)
+    line = line.lstrip()
+    indent = depth * ('\t' if tabs else ' '*spaces)
+    if line != '' and not blank:
+      line = indent + line
+    lines[idx] = line
+  return '\n'.join(lines)
+
+extra_filters['autoindent'] = autoindent
 
 
 
