@@ -100,52 +100,76 @@ extra_filters['kebab'] = kebab
 
 # Removes pre-existing indentation and sets new one
 def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
-  lines = content.split('\n')
   indent = depth * ('\t' if tabs else ' '*spaces)
   is_first = True
+
+  # Iterate line by line
+  lines = content.split('\n')
   for idx,line in enumerate(lines):
+
+    # First line skipped according to argument
     if is_first and not first:
       is_first = False
       continue
+
+    # Update the line with the correct indentation
     line = line.lstrip()
     if line != '' and not blank:
       line = indent + line
     lines[idx] = line
+
+  # Return paragraph of lines
   return '\n'.join(lines)
 
 extra_filters['reindent'] = reindent
 
+
 # Removes pre-existing indentation and sets new indent based on rules
 def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=False, blank=False):
-  lines = content.split('\n')
   is_first = True
   depth = 0
   next_depth = 0
+
+  # Iterate line by line
+  lines = content.split('\n')
   for idx,line in enumerate(lines):
     depth = next_depth
+
+    # First line
     if is_first:
       is_first = False
+
+      # Count the indentation of the first line
       if tabs:
         line_strip = line.lstrip('\t')
         depth = len(line) - len(line_strip)
       else:
         line_strip = line.lstrip(' ')
         depth = math.ceil((len(line) - len(line_strip)) / spaces)
+
       next_depth = depth
       for start in starts:
         next_depth += line.count(start)
+
+      # Skip first line according to argument
       if not first:
         continue
+
+    # Updated the depth information based on block delimiters
     for end in ends:
       depth -= line.count(end)
     next_depth = depth
     for start in starts:
       next_depth += line.count(start)
+
+    # Update the line with the correct indentation
     line = line.lstrip()
     indent = depth * ('\t' if tabs else ' '*spaces)
     if line != '' and not blank:
       line = indent + line
     lines[idx] = line
+
+  # Return paragraph of lines
   return '\n'.join(lines)
 
 extra_filters['autoindent'] = autoindent
