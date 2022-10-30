@@ -16,6 +16,7 @@ import statistics
 import re
 import os
 import errno
+import itertools
 from j2gpp.utils import *
 
 extra_filters = {}
@@ -194,7 +195,11 @@ def align(content, margin=1):
       # Then split at the left align boundaries
       text_rjust_split_ljust = text_rjust.split('§')
       for ljust_idx, text in enumerate(text_rjust_split_ljust):
-        text = text.strip()
+        # Preserve the indentation of the line
+        if column_idx == 0:
+          text = text.rstrip()
+        else:
+          text = text.strip()
         # Build object with dict for each column
         if ljust_idx == len(text_rjust_split_ljust)-1 and rjust_idx != len(line_split_rjust)-1:
           line_obj.append({
@@ -252,8 +257,29 @@ extra_filters['el_of_min_attr'] = lambda L,attr : min(L, key = lambda el : el[at
 extra_filters['key_of_max_attr'] = lambda d,attr : max(d, key = lambda key : d[key][attr])
 extra_filters['key_of_min_attr'] = lambda d,attr : min(d, key = lambda key : d[key][attr])
 
+# Accumulate elements of integer/float list
+extra_filters['accumulate'] = lambda L : itertools.accumulate(L)
+
 # Count occurences in list
 extra_filters['count'] = lambda L,x : sum([l==x for l in L])
+
+
+
+# ┌───────────────┐
+# │ Combinatorial │
+# └───────────────┘
+
+# Generators from itertools
+extra_filters['pairwise']                      = lambda L        : itertools.pairwise(L)
+extra_filters['product']                       = lambda L        : itertools.product(L)
+extra_filters['permutations']                  = lambda L,r=None : itertools.permutations(L,r)
+extra_filters['combinations']                  = lambda L,r      : itertools.combinations(L,r)
+extra_filters['combinations_with_replacement'] = lambda L,r      : itertools.combinations_with_replacement(L,r)
+
+# Generators with range of lengths
+extra_filters['permutations_range']                  = lambda L,start,stop : itertools.chain(*[itertools.permutations(L,x)                  for x in range(start,stop)])
+extra_filters['combinations_range']                  = lambda L,start,stop : itertools.chain(*[itertools.combinations(L,x)                  for x in range(start,stop)])
+extra_filters['combinations_with_replacement_range'] = lambda L,start,stop : itertools.chain(*[itertools.combinations_with_replacement(L,x) for x in range(start,stop)])
 
 
 
