@@ -14,7 +14,7 @@
 from setuptools import setup, find_packages
 
 setup(name         = 'j2gpp',
-      version      = '1.8.0',
+      version      = '1.8.1',
       description  = 'A Jinja2-based General Purpose Preprocessor',
       keywords     = ['j2gpp', 'jinja2', 'preprocessor'],
       url          = 'https://github.com/Louis-DR/j2gpp',

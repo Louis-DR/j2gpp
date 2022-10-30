@@ -29,7 +29,7 @@ from j2gpp.filters import extra_filters
 
 def main():
 
-  j2gpp_version = "1.8.0"
+  j2gpp_version = "1.8.1"
 
   # Source templates
   sources = []
