@@ -211,12 +211,14 @@ def align(content, margin=1):
             'text': text,
             'just': 'left'
           })
-        # Update the column widths
-        column_width = len(text)
-        if column_idx == len(columns_widths):
-          columns_widths.append(column_width)
-        else:
-          columns_widths[column_idx] = max(columns_widths[column_idx], column_width)
+        # Lines without alignment do not affect column width
+        if len(line_split_rjust) + len(text_rjust_split_ljust) > 2:
+          # Update the column widths
+          column_width = len(text)
+          if column_idx == len(columns_widths):
+            columns_widths.append(column_width)
+          else:
+            columns_widths[column_idx] = max(columns_widths[column_idx], column_width)
         column_idx += 1
     lines_objs.append(line_obj)
 
