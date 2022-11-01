@@ -289,8 +289,13 @@ extra_filters['combinations_with_replacement_range'] = lambda L,start,stop : ite
 # │ File output │
 # └─────────────┘
 
+# Flag
+write_source_toggle = True
+
 # Write content of the block to a file
-def write(content, path, preserve=False):
+def write(content, path, preserve=False, write_source=True):
+  global write_source_toggle
+  write_source_toggle &= write_source
   # Get full path
   path = os.path.expandvars(os.path.expanduser(os.path.abspath(path)))
   print(f"Exporting block content to {path}")
@@ -316,7 +321,9 @@ extra_filters['write'] = write
 
 
 # Append content of the block to a file
-def append(content, path, preserve=False):
+def append(content, path, preserve=False, write_source=True):
+  global write_source_toggle
+  write_source_toggle &= write_source
   # Get full path
   path = os.path.expandvars(os.path.expanduser(os.path.abspath(path)))
   print(f"Exporting block content to {path}")

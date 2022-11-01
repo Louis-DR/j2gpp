@@ -25,7 +25,7 @@ from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
 from j2gpp.utils import *
-from j2gpp.filters import extra_filters
+from j2gpp.filters import extra_filters, write_source_toggle
 from j2gpp.tests import extra_tests
 
 def main():
@@ -776,6 +776,10 @@ def main():
     except Exception as exc:
       # Catch all other exceptions such as Jinja2 errors
       throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+
+    if write_source_toggle:
+      print(f"Not writting file '{out_path}' becaused skipped by exported block.")
+      continue
 
     # If file already exists
     if os.path.exists(out_path):
