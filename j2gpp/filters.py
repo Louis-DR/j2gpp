@@ -289,11 +289,26 @@ extra_filters['combinations_with_replacement_range'] = lambda L,start,stop : ite
 # │ File output │
 # └─────────────┘
 
+# Flag to skip rendering source template according to export filter option
+write_source_toggle = [True]
+
 # Write content of the block to a file
-def write(content, path, preserve=False):
+def write(content, path, preserve=False, write_source=True):
+  # Skip source template according to argument option
+  global write_source_toggle
+  write_source_toggle[0] = write_source_toggle[0] and write_source
+
   # Get full path
   path = os.path.expandvars(os.path.expanduser(os.path.abspath(path)))
   print(f"Exporting block content to {path}")
+
+  # Create directories for output path
+  dirpath = os.path.dirname(path)
+  try:
+    os.makedirs(dirpath, exist_ok=True)
+  except OSError as exc:
+      throw_error(f"Cannot create directory '{dirpath}' to export block.")
+
   # Write to file
   try:
     with open(path,'w') as file:
@@ -306,6 +321,7 @@ def write(content, path, preserve=False):
       throw_error(f"Cannot write '{path}' : missing write permission.")
     else:
       throw_error(f"Cannot write '{path}'.")
+
   # Replacement in original file
   if preserve:
     return content
@@ -316,10 +332,22 @@ extra_filters['write'] = write
 
 
 # Append content of the block to a file
-def append(content, path, preserve=False):
+def append(content, path, preserve=False, write_source=True):
+  # Skip source template according to argument option
+  global write_source_toggle
+  write_source_toggle[0] = write_source_toggle[0] and write_source
+
   # Get full path
   path = os.path.expandvars(os.path.expanduser(os.path.abspath(path)))
   print(f"Exporting block content to {path}")
+
+  # Create directories for output path
+  dirpath = os.path.dirname(path)
+  try:
+    os.makedirs(dirpath, exist_ok=True)
+  except OSError as exc:
+      throw_error(f"Cannot create directory '{dirpath}' to export block.")
+
   # Append to file
   try:
     with open(path,'a') as file:
@@ -332,6 +360,7 @@ def append(content, path, preserve=False):
       throw_error(f"Cannot write '{path}' : missing write permission.")
     else:
       throw_error(f"Cannot write '{path}'.")
+
   # Replacement in original file
   if preserve:
     return content

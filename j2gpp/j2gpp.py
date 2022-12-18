@@ -25,7 +25,7 @@ from platform import python_version
 from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
 from j2gpp.utils import *
-from j2gpp.filters import extra_filters
+from j2gpp.filters import extra_filters, write_source_toggle
 from j2gpp.tests import extra_tests
 
 def main():
@@ -40,6 +40,8 @@ def main():
   global_vars = {}
   # Special options
   options = {}
+  # Flag to skip writing the original template
+  global write_source_toggle
 
 
 
@@ -734,6 +736,9 @@ def main():
     out_dirpath = os.path.dirname(out_path)
     src_res = ""
 
+    # Do render the source template, can be skipped by export filter option
+    write_source_toggle[0] = True
+
     # Create directories for output path
     try:
       os.makedirs(out_dirpath, exist_ok=True)
@@ -776,6 +781,10 @@ def main():
     except Exception as exc:
       # Catch all other exceptions such as Jinja2 errors
       throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+
+    if not write_source_toggle[0]:
+      print(f"Not writting file '{out_path}' becaused skipped by exported block.")
+      continue
 
     # If file already exists
     if os.path.exists(out_path):
