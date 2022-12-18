@@ -1,6 +1,43 @@
-# j2gpp - Jinja2-based General Purpose Preprocessor
+# J2GPP - Jinja2-based General Purpose Preprocessor
 
 `j2gpp` is a command-line tool for rendering templates using the Jinja2 syntax. It's intended purpose is to serve as a preprocessor for any programming or markup language with a unified syntax and flow across languages.
+
+- [J2GPP - Jinja2-based General Purpose Preprocessor](#j2gpp---jinja2-based-general-purpose-preprocessor)
+  - [Installation](#installation)
+  - [Basic usage](#basic-usage)
+  - [Command line arguments](#command-line-arguments)
+    - [Specify output directory](#specify-output-directory)
+    - [Specifying output file](#specifying-output-file)
+    - [Include search directory](#include-search-directory)
+    - [Passing global variables in command line](#passing-global-variables-in-command-line)
+    - [Loading global variables from files](#loading-global-variables-from-files)
+    - [Loading global variables from environment](#loading-global-variables-from-environment)
+    - [Loading custom Jinja2 filters](#loading-custom-jinja2-filters)
+    - [Loading custom Jinja2 tests](#loading-custom-jinja2-tests)
+    - [Post-processing variables files](#post-processing-variables-files)
+    - [Option flags](#option-flags)
+    - [Context variables](#context-variables)
+    - [Built-in filters](#built-in-filters)
+  - [Process directories](#process-directories)
+  - [Supported formats for variables](#supported-formats-for-variables)
+    - [Command line define](#command-line-define)
+    - [YAML](#yaml)
+    - [JSON](#json)
+    - [XML](#xml)
+    - [TOML](#toml)
+    - [INI/CFG](#inicfg)
+    - [ENV](#env)
+    - [CSV/TSV](#csvtsv)
+  - [Scripting in J2GPP templates](#scripting-in-j2gpp-templates)
+    - [Conditional and do extension](#conditional-and-do-extension)
+    - [Conditional and filters](#conditional-and-filters)
+    - [Writing files](#writing-files)
+      - [Write example](#write-example)
+      - [Append example](#append-example)
+      - [Path argument](#path-argument)
+      - [Writing to both files](#writing-to-both-files)
+      - [Skipping the parent file](#skipping-the-parent-file)
+
 
 ## Installation
 
