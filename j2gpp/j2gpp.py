@@ -404,6 +404,8 @@ def main():
   env = Environment(
     loader=FileSystemLoader(inc_dirs)
   )
+  env.add_extension('jinja2.ext.do')
+  env.add_extension('jinja2.ext.debug')
 
 
 

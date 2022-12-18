@@ -562,3 +562,186 @@ test_dict1  1  2  3
 test_dict2  11  12  13
 test_dict3  21  22  23
 ```
+
+## Scripting in J2GPP templates
+
+An advanced use of the template feature and filters of Jinja2 and J2GPP allow this tool to do some amount of scripting. The main features allowing this usage are explained in this section.
+
+### Conditional and do extension
+
+The basic Jinja2 feature of conditional blocks `if`/`elif`/`else` can be used alongside the `do` extension to more easily manipulate variables and complex objects such as Python dictionaries.
+
+Note that, if possible, it is preferable to process the variables after loading and before rendering by providing a Python function with the `--vars-post-processor` command line argument.
+
+### Conditional and filters
+
+As filters are Python functions, they can be very powerful, especially when coupled with the use of conditional blocks. However, Jinja2 optimizes processing by running some filters during the compilation phase, while conditional blocks are resolved at render time.
+
+To fix this, you can use the `@render_time_only` decorator to force a filter or test to execute at render time only. This decorator is [currently](https://github.com/pallets/jinja/pull/1759) only available by installing a custom fork of Jinja2 :
+
+``` shell
+git clone https://github.com/Louis-DR/jinja.git
+cd jinja
+pip3 install ./
+```
+
+### Writing files
+
+The J2GPP filters `write` and `append` allow exporting the content of a block to another file. This can be used for a file combining elements contributed by multiple templates, for alternative versions of a file from a single template, for generating small annex files to a large template, for generating a files for each element in a list, etc. When coupled with the `include` or `macro` statements with nested temlates, it allows for even more complex outputs.
+
+#### Write example
+
+For example, with the parent template `parent.txt.j2`:
+
+``` jinja2
+This will be rendered to the parent output file
+{% filter write("child.txt") %}
+This will be rendered to the child output file
+{% endfilter %}
+```
+
+``` shell
+>>> tree
+.
+└── parent.txt.j2
+
+>>> j2gpp ./parent.txt.j2
+[...]
+
+>>> tree
+.
+├── child.txt
+├── parent.txt
+└── parent.txt.j2
+
+>>> cat parent.txt
+This will be rendered to the parent output file
+
+>>> cat child.txt
+This will be rendered to the child output file
+```
+
+#### Append example
+
+If the file doesn't exists, the `append` filter will create it and be equivalent to `write`. However, if the file already exists, `write` will override it while `append` will append to the end of it. For example, with the parent template `parent.txt.j2`:
+
+``` jinja2
+This will be rendered to the parent output file
+{% filter append("child.txt") %}
+This will be rendered to the child output file
+{% endfilter %}
+```
+
+``` shell
+>>> tree
+.
+└── parent.txt.j2
+
+>>> j2gpp ./parent.txt.j2
+[...]
+
+>>> tree
+.
+├── child.txt
+├── parent.txt
+└── parent.txt.j2
+
+>>> cat parent.txt
+This will be rendered to the parent output file
+
+>>> cat child.txt
+This will be rendered to the child output file
+
+>>> j2gpp ./parent.txt.j2
+[...]
+
+>>> cat child.txt
+This will be rendered to the child output file
+This will be rendered to the child output file
+
+>>> j2gpp ./parent.txt.j2
+[...]
+
+>>> cat child.txt
+This will be rendered to the child output file
+This will be rendered to the child output file
+This will be rendered to the child output file
+```
+
+#### Path argument
+
+The `write` and `append` filters require at least one argument, the name or path of the second file to generate. The path can be absolute, or relative to the generated file of the parent template. Non-existing directories will be created. For example, with the parent template `parent.txt.j2`:
+
+``` jinja2
+{% filter write("foo/child.txt") %}
+This will be rendered to the child output file
+{% endfilter %}
+```
+
+``` shell
+>>> tree
+.
+└── src
+    └── parent.txt.j2
+
+>>> j2gpp ./src/parent.txt.j2 --outdir ./gen/
+[...]
+
+>>> tree
+.
+├── src
+│   └── parent.txt.j2
+└── gen
+    ├── foo
+    │   └── child.txt
+    └── parent.txt
+```
+
+#### Writing to both files
+
+By default, the content of the block is only written to the child file, and is not written to the parent rendered template. This behaviour can be changed by providing the filter argument `preserve` as `True`. For example, with the parent template `parent.txt.j2`:
+
+``` jinja2
+{% filter write("child.txt", preserve=True) %}
+This will be rendered to both parent and child output files
+{% endfilter %}
+```
+
+``` shell
+>>> j2gpp ./parent.txt.j2 --outdir ./gen/
+[...]
+
+>>> cat ./parent.txt
+This will be rendered to both parent and child output files
+
+>>> cat ./child.txt
+This will be rendered to both parent and child output files
+```
+
+#### Skipping the parent file
+
+The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files. For example, with the parent template `parent.txt.j2`:
+
+``` jinja2
+This will not be written to any file
+{% filter write("child.txt") %}
+This will be rendered to the child output file
+{% endfilter %}
+```
+
+``` shell
+>>> tree
+.
+└── parent.txt.j2
+
+>>> j2gpp ./parent.txt.j2
+[...]
+
+>>> tree
+.
+├── child.txt
+└── parent.txt.j2
+
+>>> cat child.txt
+This will be rendered to the child output file
+```
