@@ -222,6 +222,10 @@ def align(content, margin=1):
         column_idx += 1
     lines_objs.append(line_obj)
 
+  # No alignment markers detected
+  if not columns_widths:
+    return content
+
   # Then apply the alignment to all the lines
   lines = []
   for line_idx,line_obj in enumerate(lines_objs):
