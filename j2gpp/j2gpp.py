@@ -30,7 +30,7 @@ from j2gpp.tests import extra_tests
 
 def main():
 
-  j2gpp_version = "2.0.2"
+  j2gpp_version = "2.1.0"
 
   # Source templates
   sources = []
