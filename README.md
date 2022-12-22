@@ -633,6 +633,8 @@ If the version of Jinja2 installed supports the `@render_time_only` decorator, t
 
 The J2GPP filters `write` and `append` allow exporting the content of a block to another file. This can be used for a file combining elements contributed by multiple templates, for alternative versions of a file from a single template, for generating small annex files to a large template, for generating a files for each element in a list, etc. When coupled with the `include` or `macro` statements with nested temlates, it allows for even more complex outputs.
 
+Note that if the installed Jinja2 version doesn't support the `@render_time_only` decorator, using the `write` and `append` filters in conditional blocks may results in unwnated behaviour.
+
 #### Write example
 
 For example, with the parent template `parent.txt.j2`:

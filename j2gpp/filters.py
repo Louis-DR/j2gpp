@@ -324,6 +324,7 @@ extra_filters['combinations_with_replacement_range'] = lambda L,start,stop : ite
 write_source_toggle = [True]
 
 # Write content of the block to a file
+@render_time_only
 def write(content, path, preserve=False, write_source=True):
   # Skip source template according to argument option
   global write_source_toggle
@@ -363,6 +364,7 @@ extra_filters['write'] = write
 
 
 # Append content of the block to a file
+@render_time_only
 def append(content, path, preserve=False, write_source=True):
   # Skip source template according to argument option
   global write_source_toggle
