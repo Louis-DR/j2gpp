@@ -31,6 +31,7 @@
   - [Scripting in J2GPP templates](#scripting-in-j2gpp-templates)
     - [Conditional and do extension](#conditional-and-do-extension)
     - [Conditional and filters](#conditional-and-filters)
+    - [Throw errors and warnings from template](#throw-errors-and-warnings-from-template)
     - [Writing files](#writing-files)
       - [Write example](#write-example)
       - [Append example](#append-example)
@@ -312,6 +313,8 @@ When using two-level dictionaries, the key corresponding to the minimum or maxim
 You can count the number of occurrences of a value in a list using the `count` filter.
 
 The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
+
+The `warning` and `error` filters can be used to throw warnings and errors from the template that will be displayed in the J2GPP logs. The filter is applied to a block, replaces the block with nothing and throws the warning or error with the content of the block as comment. The filter works with conditional blocks if the version of Jinja2 installed supports the `@render_time_only` decorator.
 
 ## Process directories
 
@@ -621,6 +624,10 @@ git clone https://github.com/Louis-DR/jinja.git
 cd jinja
 pip3 install ./
 ```
+
+### Throw errors and warnings from template
+
+If the version of Jinja2 installed supports the `@render_time_only` decorator, then the `warning` and `error` filters allow to throw warnings and erros from the template and display them in the J2GPP logs. This is useful with conditionals to perform data sanity checks for instance.
 
 ### Writing files
 
