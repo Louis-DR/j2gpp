@@ -400,8 +400,13 @@ def main():
     throw_warning("Incompatible --render-non-template and --copy-non-template options. Option --copy-non-template is ignored.")
     options['copy_non_template'] = False
 
+  # Overload the join_path function such that the include statements are relative to the template
+  class RelativeIncludeEnvironment(Environment):
+    def join_path(self, template, parent):
+      return os.path.join(os.path.dirname(parent), template)
+
   # Jinja2 environment
-  env = Environment(
+  env = RelativeIncludeEnvironment(
     loader=FileSystemLoader(inc_dirs)
   )
   env.add_extension('jinja2.ext.do')
