@@ -430,28 +430,30 @@ def main():
   if filter_paths:
     filters = {}
     for filter_path in filter_paths:
-      filter_module = imp.load_source("", filter_path)
-      for filter_name in dir(filter_module):
-        if filter_name[0] != '_':
-          print(f"Loading filter '{filter_name}' from '{filter_path}'.")
-          filter_function = getattr(filter_module, filter_name)
-          # Check if function, else could be module or variable
-          if callable(filter_function):
-            filters[filter_name] = filter_function
+      if os.path.isfile(filter_path):
+        filter_module = imp.load_source("", filter_path)
+        for filter_name in dir(filter_module):
+          if filter_name[0] != '_':
+            print(f"Loading filter '{filter_name}' from '{filter_path}'.")
+            filter_function = getattr(filter_module, filter_name)
+            # Check if function, else could be module or variable
+            if callable(filter_function):
+              filters[filter_name] = filter_function
     env.filters.update(filters)
 
   # Extra Jinja2 tests
   if test_paths:
     tests = {}
     for test_path in test_paths:
-      test_module = imp.load_source("", test_path)
-      for test_name in dir(test_module):
-        if test_name[0] != '_':
-          test_function = getattr(test_module, test_name)
-          # Check if function, else could be module or variable
-          if callable(test_function):
-            print(f"Loading test '{test_name}' from '{test_path}'.")
-            tests[test_name] = test_function
+      if os.path.isfile(test_path):
+        test_module = imp.load_source("", test_path)
+        for test_name in dir(test_module):
+          if test_name[0] != '_':
+            test_function = getattr(test_module, test_name)
+            # Check if function, else could be module or variable
+            if callable(test_function):
+              print(f"Loading test '{test_name}' from '{test_path}'.")
+              tests[test_name] = test_function
     env.tests.update(tests)
 
   # Variables files post processor
