@@ -19,7 +19,38 @@ import errno
 import itertools
 from j2gpp.utils import *
 
+
+
+# If using fork of Jinja2, then import the render_time_only decorator
+try: from jinja2.utils import render_time_only
+except ImportError:
+  def render_time_only(func):
+    def decorated(*args, **kwargs):
+      throw_warning("The installed Jinja2 library doesn't support the @render_time_only decorator. The function {func.__name__} may get executed regarless of conditional block.")
+      return func(*args, **kwargs)
+    return decorated
+
+
+
 extra_filters = {}
+
+
+
+# ┌─────────────────────┐
+# │ Warnings and errors │
+# └─────────────────────┘
+
+@render_time_only
+def filter_warning(text):
+  throw_warning(text)
+  return ""
+extra_filters['warning'] = filter_warning
+
+@render_time_only
+def filter_error(text):
+  throw_error(text)
+  return ""
+extra_filters['error'] = filter_error
 
 
 
@@ -297,6 +328,7 @@ extra_filters['combinations_with_replacement_range'] = lambda L,start,stop : ite
 write_source_toggle = [True]
 
 # Write content of the block to a file
+@render_time_only
 def write(content, path, preserve=False, write_source=True):
   # Skip source template according to argument option
   global write_source_toggle
@@ -336,6 +368,7 @@ extra_filters['write'] = write
 
 
 # Append content of the block to a file
+@render_time_only
 def append(content, path, preserve=False, write_source=True):
   # Skip source template according to argument option
   global write_source_toggle
