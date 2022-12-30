@@ -99,6 +99,7 @@ The following arguments can be added to the command for additional features. The
 | `--vars-post-processor` | Load a Python function to process variables after loading      |
 | `--overwrite-outdir`    | Overwrite output directory                                     |
 | `--warn-overwrite`      | Warn when overwriting files                                    |
+| `--no-strict-undefined` | Disable error with undefined variable in template              |
 | `--no-overwrite`        | Prevent overwriting files                                      |
 | `--no-check-identifier` | Disable warning when attributes are not valid identifiers      |
 | `--fix-identifiers`     | Replace invalid characters from identifiers with underscore    |
@@ -252,6 +253,8 @@ Some arguments are flags to enable or disable special features. This is more adv
 `--overwrite-outdir` cleans the output directory before rendering the templates and copying any other files.
 
 `--warn-overwrite` enables warnings triggered whenever a file is overwritten.
+
+`--no-strict-undefined` disables errors triggered whenever a template variable is used but not defined.
 
 `--no-overwrite` prevents any file from being overwritten, and triggers a warning when that happens.
 

@@ -216,6 +216,7 @@ def main():
   argparser.add_argument(      "--vars-post-processor", dest="vars_post_processor", help="Load a Python function to process variables after loading",      nargs=2  )
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
+  argparser.add_argument(      "--no-strict-undefined", dest="no_strict_undefined", help="Disable error with undefined variable in template",              action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
   argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
   argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",    action="store_true", default=False)
@@ -364,6 +365,7 @@ def main():
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
+  options['no_strict_undefined'] = args.no_strict_undefined
   options['no_overwrite']        = args.no_overwrite
   options['no_check_identifier'] = args.no_check_identifier
   options['fix_identifiers']     = args.fix_identifiers
@@ -409,10 +411,11 @@ def main():
   # Jinja2 environment
   env = RelativeIncludeEnvironment(
     loader=FileSystemLoader(inc_dirs),
-    undefined = StrictUndefined
   )
   env.add_extension('jinja2.ext.do')
   env.add_extension('jinja2.ext.debug')
+  if not options['no_strict_undefined']:
+    env.undefined = StrictUndefined
 
 
 
