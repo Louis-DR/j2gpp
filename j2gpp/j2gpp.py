@@ -212,7 +212,7 @@ def main():
   argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
   argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a Python file",                   nargs='+')
   argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a Python file",                     nargs='+')
-  argparser.add_argument(      "--vars-post-processor", dest="vars_post_processor", help="Load a Python function to process variables after loading",      nargs=2  )
+  argparser.add_argument(      "--file-vars-adapter",   dest="file_vars_adapter",   help="Load a Python function to process variables after loading",      nargs=2  )
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
@@ -348,12 +348,12 @@ def main():
       print(" ", test_path)
       test_paths.append(test_path)
 
-  # Variables files post processor
-  vars_post_processor = None
-  if args.vars_post_processor:
-    vars_post_processor = args.vars_post_processor
-    vars_post_processor[0] = os.path.expandvars(os.path.expanduser(os.path.abspath(vars_post_processor[0])))
-    print(f"Variables files post processor :\n  {args.vars_post_processor[1]} from {args.vars_post_processor[0]}")
+  # Variables files adapter function
+  file_vars_adapter = None
+  if args.file_vars_adapter:
+    file_vars_adapter = args.file_vars_adapter
+    file_vars_adapter[0] = os.path.expandvars(os.path.expanduser(os.path.abspath(file_vars_adapter[0])))
+    print(f"Variables files adapter function :\n  {args.file_vars_adapter[1]} from {args.file_vars_adapter[0]}")
 
   # Debug mode
   debug_vars = args.debug_vars
@@ -456,11 +456,11 @@ def main():
               tests[test_name] = test_function
     env.tests.update(tests)
 
-  # Variables files post processor
+  # Variables files adapter function
   postproc_function = None
-  if vars_post_processor:
-    postproc_path = vars_post_processor[0]
-    postproc_name = vars_post_processor[1]
+  if file_vars_adapter:
+    postproc_path = file_vars_adapter[0]
+    postproc_name = file_vars_adapter[1]
     print(f"Loading variable postprocessor function '{postproc_name}' from '{postproc_path}'.")
     try:
       postproc_module = imp.load_source("", postproc_path)
