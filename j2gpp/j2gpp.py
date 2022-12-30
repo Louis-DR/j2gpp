@@ -22,9 +22,8 @@ import errno
 import shutil
 from datetime import datetime
 from platform import python_version
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2 import Environment, FileSystemLoader
 from jinja2 import __version__ as jinja2_version
-import jinja2.exceptions as jinja2_exceptions
 from j2gpp.utils import *
 from j2gpp.filters import extra_filters, write_source_toggle
 from j2gpp.tests import extra_tests
@@ -204,34 +203,35 @@ def main():
 
   # Creating arguments
   argparser = argparse.ArgumentParser()
-  argparser.add_argument("source",                                                  help="Source template files or directories to render",                 nargs='*')
-  argparser.add_argument("-O", "--outdir",              dest="outdir",              help="Output directory path"                                                    )
-  argparser.add_argument("-o", "--output",              dest="output",              help="Output file path for single source template"                              )
-  argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",   nargs='+')
-  argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",               nargs='+')
-  argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                         nargs='+')
-  argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                nargs='?',           default=None, const="")
-  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a Python file",                   nargs='+')
-  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a Python file",                     nargs='+')
-  argparser.add_argument(      "--vars-post-processor", dest="vars_post_processor", help="Load a Python function to process variables after loading",      nargs=2  )
-  argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
-  argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
-  argparser.add_argument(      "--no-strict-undefined", dest="no_strict_undefined", help="Disable error with undefined variable in template",              action="store_true", default=False)
-  argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
-  argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
-  argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",    action="store_true", default=False)
-  argparser.add_argument(      "--chdir-src",           dest="chdir_src",           help="Change working directory to source before rendering ",           action="store_true", default=False)
-  argparser.add_argument(      "--no-chdir",            dest="no_chdir",            help="Disable changing working directory before rendering",            action="store_true", default=False)
-  argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                            )
-  argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                    )
-  argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                     action="store_true", default=False)
-  argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates", nargs='?',           default=None, const="_j2gpp")
-  argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",   action="store_true", default=False)
-  argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",               action="store_true", default=False)
-  argparser.add_argument(      "--debug-vars",          dest="debug_vars",          help="Display available variables at the top of rendered templates",   action="store_true", default=False)
-  argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                action="store_true", default=False)
-  argparser.add_argument(      "--version",             dest="version",             help="Print J2GPP version and quits",                                  action="store_true", default=False)
-  argparser.add_argument(      "--license",             dest="license",             help="Print J2GPP license and quits",                                  action="store_true", default=False)
+  argparser.add_argument("source",                                                  help="Source template files or directories to render",                        nargs='*')
+  argparser.add_argument("-O", "--outdir",              dest="outdir",              help="Output directory path"                                                           )
+  argparser.add_argument("-o", "--output",              dest="output",              help="Output file path for single source template"                                     )
+  argparser.add_argument("-I", "--incdir",              dest="incdir",              help="Include directories for include and import Jinja2 statements",          nargs='+')
+  argparser.add_argument("-D", "--define",              dest="define",              help="Define global variables in the format name=value",                      nargs='+')
+  argparser.add_argument("-V", "--varfile",             dest="varfile",             help="Global variables files",                                                nargs='+')
+  argparser.add_argument(      "--envvar",              dest="envvar",              help="Loads environment variables as global variables",                       nargs='?',           default=None, const="")
+  argparser.add_argument(      "--filters",             dest="filters",             help="Load extra Jinja2 filters from a Python file",                          nargs='+')
+  argparser.add_argument(      "--tests",               dest="tests",               help="Load extra Jinja2 tests from a Python file",                            nargs='+')
+  argparser.add_argument(      "--file-vars-adapter",   dest="file_vars_adapter",   help="Load a Python function to process variables after loading from a file", nargs=2  )
+  argparser.add_argument(      "--global-vars-adapter", dest="global_vars_adapter", help="Load a Python function to process all variables before rendering",      nargs=2  )
+  argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                            action="store_true", default=False)
+  argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                           action="store_true", default=False)
+  argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                             action="store_true", default=False)
+  argparser.add_argument(      "--no-strict-undefined", dest="no_strict_undefined", help="Disable error with undefined variable in template",                     action="store_true", default=False)
+  argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",             action="store_true", default=False)
+  argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",           action="store_true", default=False)
+  argparser.add_argument(      "--chdir-src",           dest="chdir_src",           help="Change working directory to source before rendering ",                  action="store_true", default=False)
+  argparser.add_argument(      "--no-chdir",            dest="no_chdir",            help="Disable changing working directory before rendering",                   action="store_true", default=False)
+  argparser.add_argument(      "--csv-delimiter",       dest="csv_delimiter",       help="CSV delimiter (default: ',')",                                                   )
+  argparser.add_argument(      "--csv-escapechar",      dest="csv_escapechar",      help="CSV escape character (default: None)",                                           )
+  argparser.add_argument(      "--csv-dontstrip",       dest="csv_dontstrip",       help="Disable stripping whitespace of CSV values",                            action="store_true", default=False)
+  argparser.add_argument(      "--render-non-template", dest="render_non_template", help="Process also source files that are not recognized as templates",        nargs='?',           default=None, const="_j2gpp")
+  argparser.add_argument(      "--copy-non-template",   dest="copy_non_template",   help="Copy source files that are not templates to output directory",          action="store_true", default=False)
+  argparser.add_argument(      "--force-glob",          dest="force_glob",          help="Glob UNIX-like patterns in path even when quoted",                      action="store_true", default=False)
+  argparser.add_argument(      "--debug-vars",          dest="debug_vars",          help="Display available variables at the top of rendered templates",          action="store_true", default=False)
+  argparser.add_argument(      "--perf",                dest="perf",                help="Measure and display performance",                                       action="store_true", default=False)
+  argparser.add_argument(      "--version",             dest="version",             help="Print J2GPP version and quits",                                         action="store_true", default=False)
+  argparser.add_argument(      "--license",             dest="license",             help="Print J2GPP license and quits",                                         action="store_true", default=False)
   args, args_unknown = argparser.parse_known_args()
 
   if args.version:
@@ -350,12 +350,19 @@ def main():
       print(" ", test_path)
       test_paths.append(test_path)
 
-  # Variables files post processor
-  vars_post_processor = None
-  if args.vars_post_processor:
-    vars_post_processor = args.vars_post_processor
-    vars_post_processor[0] = os.path.expandvars(os.path.expanduser(os.path.abspath(vars_post_processor[0])))
-    print(f"Variables files post processor :\n  {args.vars_post_processor[1]} from {args.vars_post_processor[0]}")
+  # Variables files adapter function
+  file_vars_adapter = None
+  if args.file_vars_adapter:
+    file_vars_adapter = args.file_vars_adapter
+    file_vars_adapter[0] = os.path.expandvars(os.path.expanduser(os.path.abspath(file_vars_adapter[0])))
+    print(f"Variables files adapter function :\n  {args.file_vars_adapter[1]} from {args.file_vars_adapter[0]}")
+
+  # Global variables adapter function
+  global_vars_adapter = None
+  if args.global_vars_adapter:
+    global_vars_adapter = args.global_vars_adapter
+    global_vars_adapter[0] = os.path.expandvars(os.path.expanduser(os.path.abspath(global_vars_adapter[0])))
+    print(f"Global variables adapter function :\n  {args.global_vars_adapter[1]} from {args.global_vars_adapter[0]}")
 
   # Debug mode
   debug_vars = args.debug_vars
@@ -365,7 +372,6 @@ def main():
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
-  options['no_strict_undefined'] = args.no_strict_undefined
   options['no_overwrite']        = args.no_overwrite
   options['no_check_identifier'] = args.no_check_identifier
   options['fix_identifiers']     = args.fix_identifiers
@@ -410,12 +416,10 @@ def main():
 
   # Jinja2 environment
   env = RelativeIncludeEnvironment(
-    loader=FileSystemLoader(inc_dirs),
+    loader=FileSystemLoader(inc_dirs)
   )
   env.add_extension('jinja2.ext.do')
   env.add_extension('jinja2.ext.debug')
-  if not options['no_strict_undefined']:
-    env.undefined = StrictUndefined
 
 
 
@@ -461,24 +465,43 @@ def main():
               tests[test_name] = test_function
     env.tests.update(tests)
 
-  # Variables files post processor
-  postproc_function = None
-  if vars_post_processor:
-    postproc_path = vars_post_processor[0]
-    postproc_name = vars_post_processor[1]
-    print(f"Loading variable postprocessor function '{postproc_name}' from '{postproc_path}'.")
+  # Variables files adapter function
+  file_vars_adapter_function = None
+  if file_vars_adapter:
+    file_vars_adapter_path = file_vars_adapter[0]
+    file_vars_adapter_name = file_vars_adapter[1]
+    print(f"Loading variables file adapter function '{file_vars_adapter_name}' from '{file_vars_adapter_path}'.")
     try:
-      postproc_module = imp.load_source("", postproc_path)
-      postproc_function = getattr(postproc_module, postproc_name)
-      if not callable(postproc_function):
-        throw_error(f"Object '{postproc_name}' from '{postproc_path}' is not a function.")
-        postproc_function = None
+      file_vars_adapter_module = imp.load_source("", file_vars_adapter_path)
+      file_vars_adapter_function = getattr(file_vars_adapter_module, file_vars_adapter_name)
+      if not callable(file_vars_adapter_function):
+        throw_error(f"Object '{file_vars_adapter_name}' from '{file_vars_adapter_path}' is not a function.")
+        file_vars_adapter_function = None
     except FileNotFoundError as exc:
-      throw_error(f"Script file '{postproc_path}' doesn't exist or cannot be read.")
-      postproc_function = None
+      throw_error(f"Script file '{file_vars_adapter_path}' doesn't exist or cannot be read.")
+      file_vars_adapter_function = None
     except AttributeError as exc:
-      throw_error(f"Function '{postproc_name}' cannot be found in script '{postproc_path}'.")
-      postproc_function = None
+      throw_error(f"Function '{file_vars_adapter_name}' cannot be found in script '{file_vars_adapter_path}'.")
+      file_vars_adapter_function = None
+
+  # Global variables adapter function
+  global_vars_adapter_function = None
+  if global_vars_adapter:
+    global_vars_adapter_path = global_vars_adapter[0]
+    global_vars_adapter_name = global_vars_adapter[1]
+    print(f"Loading global variables adapter function '{global_vars_adapter_name}' from '{global_vars_adapter_path}'.")
+    try:
+      global_vars_adapter_module = imp.load_source("", global_vars_adapter_path)
+      global_vars_adapter_function = getattr(global_vars_adapter_module, global_vars_adapter_name)
+      if not callable(global_vars_adapter_function):
+        throw_error(f"Object '{global_vars_adapter_name}' from '{global_vars_adapter_path}' is not a function.")
+        global_vars_adapter_function = None
+    except FileNotFoundError as exc:
+      throw_error(f"Script file '{global_vars_adapter_path}' doesn't exist or cannot be read.")
+      global_vars_adapter_function = None
+    except AttributeError as exc:
+      throw_error(f"Function '{global_vars_adapter_name}' cannot be found in script '{global_vars_adapter_path}'.")
+      global_vars_adapter_function = None
 
 
 
@@ -638,12 +661,12 @@ def main():
         rec_hierarchical_vars(val, context_file)
 
   # Process the variables directory after loading
-  def vars_postprocessor(var_dict, context_file=None):
+  def vars_post_load_processor(var_dict, context_file=None):
     # Include variables files from others
     rec_hierarchical_vars(var_dict, context_file)
-    # User postprocessor function
-    if postproc_function:
-      postproc_function(var_dict)
+    # User variables file adapter function
+    if file_vars_adapter_function:
+      file_vars_adapter_function(var_dict)
     # Check attributes are valid identifier
     if not options['no_check_identifier']:
       rec_check_valid_identifier(var_dict, context_file)
@@ -656,7 +679,7 @@ def main():
       loader = loaders[var_format]
       try:
         var_dict = loader(var_path)
-        vars_postprocessor(var_dict, var_path)
+        vars_post_load_processor(var_dict, var_path)
       except OSError as exc:
         if exc.errno == errno.ENOENT:
           throw_error(f"Cannot read '{var_path}' : file doesn't exist.")
@@ -725,6 +748,10 @@ def main():
       # Merge with global variables dictionary
       global_vars = var_dict_update(global_vars, var_dict, context=f" when loading global command line defines")
 
+  # User global variables adapter function
+  if global_vars_adapter_function:
+    global_vars_adapter_function(var_dict)
+
 
 
   # ┌─────────────────────┐
@@ -784,18 +811,6 @@ def main():
       with open(src_path,'r') as src_file:
         # Jinja2 rendering from string
         src_res += env.from_string(src_file.read()).render(src_vars)
-    except jinja2_exceptions.UndefinedError as exc:
-      # Undefined object encountered during rendering
-      traceback = jinja2_render_traceback(src_path)
-      throw_error(f"Undefined object encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
-    except jinja2_exceptions.TemplateSyntaxError as exc:
-      # Syntax error encountered during rendering
-      traceback = jinja2_render_traceback(src_path)
-      throw_error(f"Syntax error encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
-    except jinja2_exceptions.TemplateNotFound as exc:
-      # Template not found
-      traceback = jinja2_render_traceback(src_path)
-      throw_error(f"Included template '{exc}' not found :\n{traceback}")
     except OSError as exc:
       # Catch file read exceptions
       if exc.errno == errno.ENOENT:
@@ -805,9 +820,8 @@ def main():
       else:
         throw_error(f"Cannot read '{src_path}'.")
     except Exception as exc:
-      # Catch all other Python exceptions (in filter for example)
-      traceback = jinja2_render_traceback(src_path, including_non_template=True)
-      throw_error(f"Exception occurred while rendering '{src_path}' :\n{traceback}\n      {type(exc).__name__} - {exc}")
+      # Catch all other exceptions such as Jinja2 errors
+      throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
 
     if not write_source_toggle[0]:
       print(f"Not writting file '{out_path}' becaused skipped by exported block.")
