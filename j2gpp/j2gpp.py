@@ -22,8 +22,9 @@ import errno
 import shutil
 from datetime import datetime
 from platform import python_version
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from jinja2 import __version__ as jinja2_version
+import jinja2.exceptions as jinja2_exceptions
 from j2gpp.utils import *
 from j2gpp.filters import extra_filters, write_source_toggle
 from j2gpp.tests import extra_tests
@@ -215,6 +216,7 @@ def main():
   argparser.add_argument(      "--vars-post-processor", dest="vars_post_processor", help="Load a Python function to process variables after loading",      nargs=2  )
   argparser.add_argument(      "--overwrite-outdir",    dest="overwrite_outdir",    help="Overwrite output directory",                                     action="store_true", default=False)
   argparser.add_argument(      "--warn-overwrite",      dest="warn_overwrite",      help="Warn when overwriting files",                                    action="store_true", default=False)
+  argparser.add_argument(      "--no-strict-undefined", dest="no_strict_undefined", help="Disable error with undefined variable in template",              action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",        dest="no_overwrite",        help="Prevent overwriting files",                                      action="store_true", default=False)
   argparser.add_argument(      "--no-check-identifier", dest="no_check_identifier", help="Disable warning when attributes are not valid identifiers",      action="store_true", default=False)
   argparser.add_argument(      "--fix-identifiers",     dest="fix_identifiers",     help="Replace invalid characters from identifiers with underscore",    action="store_true", default=False)
@@ -363,6 +365,7 @@ def main():
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
+  options['no_strict_undefined'] = args.no_strict_undefined
   options['no_overwrite']        = args.no_overwrite
   options['no_check_identifier'] = args.no_check_identifier
   options['fix_identifiers']     = args.fix_identifiers
@@ -407,10 +410,12 @@ def main():
 
   # Jinja2 environment
   env = RelativeIncludeEnvironment(
-    loader=FileSystemLoader(inc_dirs)
+    loader=FileSystemLoader(inc_dirs),
   )
   env.add_extension('jinja2.ext.do')
   env.add_extension('jinja2.ext.debug')
+  if not options['no_strict_undefined']:
+    env.undefined = StrictUndefined
 
 
 
@@ -779,6 +784,18 @@ def main():
       with open(src_path,'r') as src_file:
         # Jinja2 rendering from string
         src_res += env.from_string(src_file.read()).render(src_vars)
+    except jinja2_exceptions.UndefinedError as exc:
+      # Undefined object encountered during rendering
+      traceback = jinja2_render_traceback(src_path)
+      throw_error(f"Undefined object encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
+    except jinja2_exceptions.TemplateSyntaxError as exc:
+      # Syntax error encountered during rendering
+      traceback = jinja2_render_traceback(src_path)
+      throw_error(f"Syntax error encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
+    except jinja2_exceptions.TemplateNotFound as exc:
+      # Template not found
+      traceback = jinja2_render_traceback(src_path)
+      throw_error(f"Included template '{exc}' not found :\n{traceback}")
     except OSError as exc:
       # Catch file read exceptions
       if exc.errno == errno.ENOENT:
@@ -788,8 +805,9 @@ def main():
       else:
         throw_error(f"Cannot read '{src_path}'.")
     except Exception as exc:
-      # Catch all other exceptions such as Jinja2 errors
-      throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+      # Catch all other Python exceptions (in filter for example)
+      traceback = jinja2_render_traceback(src_path, including_non_template=True)
+      throw_error(f"Exception occurred while rendering '{src_path}' :\n{traceback}\n      {type(exc).__name__} - {exc}")
 
     if not write_source_toggle[0]:
       print(f"Not writting file '{out_path}' becaused skipped by exported block.")

@@ -1,0 +1,7 @@
+/.ipynb_checkpoints
+j2gpp/__pycache__/
+j2gpp.egg-info/
+/build
+/dist
+/test
+/TODO

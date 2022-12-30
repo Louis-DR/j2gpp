@@ -14,7 +14,9 @@
 import time
 import ast
 import os
+import re
 import errno
+from sys import exc_info
 
 
 
@@ -208,3 +210,47 @@ def change_working_directory(dir_path):
       throw_error(f"Cannot change working directory to '{dir_path}' : missing permissions.")
     else:
       throw_error(f"Cannot change working directory to '{dir_path}'.")
+
+
+
+# ┌────────────────┐
+# │ Error handling │
+# └────────────────┘
+
+# Return pretty traceback string of Jinja2 render
+tb_frame_re = re.compile(r"<frame at 0x[a-z0-9]*, file '(.*)', line (\d+), (?:(code top-level template code|code template|code block '.*')|.*)>")
+def jinja2_render_traceback(src_path, including_non_template=False):
+  traceback_print = ""
+  tb_frame_isj2gpp = False
+  # Get traceback objects
+  typ, value, tb = exc_info()
+  # Iterate over nested traceback frames
+  while tb:
+    # Parse traceback frame string
+    tb_frame_str = str(tb.tb_frame)
+    tb_frame_match = tb_frame_re.match(tb_frame_str)
+    # If we include non-templates, then we don't reset the flag
+    if not including_non_template: tb_frame_isj2gpp = False
+    # Identify frames corresponding to Jinja2 templates
+    if tb.tb_frame.f_code.co_filename == '<template>':
+      # Top-most template
+      tb_src_path = src_path
+      tb_lineno = tb.tb_lineno
+      tb_frame_isj2gpp = True
+    elif tb_frame_match and (tb_frame_match.group(3) or tb_frame_isj2gpp):
+      # Nested child templates
+      tb_src_path = tb_frame_match.group(1)
+      tb_lineno = tb_frame_match.group(2)
+      tb_frame_isj2gpp = True
+    # Factorized string formatting
+    if tb_frame_isj2gpp:
+      traceback_print += f"  File '{tb_src_path}', line {tb_lineno}\n"
+      # Fetch the line raising the exception
+      with open(tb_src_path,'r') as tb_src_file:
+        for lineno,line in enumerate(tb_src_file):
+          if lineno == int(tb_lineno)-1:
+            traceback_print += "    "+line.strip()+"\n"
+            break
+    tb = tb.tb_next
+  # Strip the final line jump
+  return traceback_print[:-1]
