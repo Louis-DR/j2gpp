@@ -24,6 +24,7 @@ from datetime import datetime
 from platform import python_version
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from jinja2 import __version__ as jinja2_version
+import jinja2.exceptions as jinja2_exceptions
 from j2gpp.utils import *
 from j2gpp.filters import extra_filters, write_source_toggle
 from j2gpp.tests import extra_tests
@@ -814,6 +815,18 @@ def main():
       with open(src_path,'r') as src_file:
         # Jinja2 rendering from string
         src_res += env.from_string(src_file.read()).render(src_vars)
+    except jinja2_exceptions.UndefinedError as exc:
+      # Undefined object encountered during rendering
+      traceback = jinja2_render_traceback(src_path)
+      throw_error(f"Undefined object encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
+    except jinja2_exceptions.TemplateSyntaxError as exc:
+      # Syntax error encountered during rendering
+      traceback = jinja2_render_traceback(src_path)
+      throw_error(f"Syntax error encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
+    except jinja2_exceptions.TemplateNotFound as exc:
+      # Template not found
+      traceback = jinja2_render_traceback(src_path)
+      throw_error(f"Included template '{exc}' not found :\n{traceback}")
     except OSError as exc:
       # Catch file read exceptions
       if exc.errno == errno.ENOENT:
@@ -823,8 +836,9 @@ def main():
       else:
         throw_error(f"Cannot read '{src_path}'.")
     except Exception as exc:
-      # Catch all other exceptions such as Jinja2 errors
-      throw_error(f"Exception occurred while rendering '{src_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+      # Catch all other Python exceptions (in filter for example)
+      traceback = jinja2_render_traceback(src_path, including_non_template=True)
+      throw_error(f"Exception occurred while rendering '{src_path}' :\n{traceback}\n      {type(exc).__name__} - {exc}")
 
     if not write_source_toggle[0]:
       print(f"Not writting file '{out_path}' becaused skipped by exported block.")
