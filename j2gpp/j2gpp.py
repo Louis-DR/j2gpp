@@ -7,7 +7,7 @@
 # ╟───────────────────────────────────────────────────────────────────────────╢
 # ║ Description: Jinja2-based General Purpose Preprocessor. For information   ║
 # ║              about the usage of this tool, please refer to the README or  ║
-# ║              run "j2gp --help".                                           ║
+# ║              run "j2ggp --help".                                          ║
 # ║                                                                           ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 
@@ -22,7 +22,7 @@ import errno
 import shutil
 from datetime import datetime
 from platform import python_version
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 from jinja2 import __version__ as jinja2_version
 from j2gpp.utils import *
 from j2gpp.filters import extra_filters, write_source_toggle
@@ -372,6 +372,7 @@ def main():
   # Other options
   options['overwrite_outdir']    = args.overwrite_outdir
   options['warn_overwrite']      = args.warn_overwrite
+  options['no_strict_undefined'] = args.no_strict_undefined
   options['no_overwrite']        = args.no_overwrite
   options['no_check_identifier'] = args.no_check_identifier
   options['fix_identifiers']     = args.fix_identifiers
@@ -420,6 +421,8 @@ def main():
   )
   env.add_extension('jinja2.ext.do')
   env.add_extension('jinja2.ext.debug')
+  if not options['no_strict_undefined']:
+    env.undefined = StrictUndefined
 
 
 
