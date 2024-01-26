@@ -84,9 +84,9 @@ extra_filters['list_exp']  = lambda X,y : [x**y for x in X]
 # └─────────────────────┘
 
 # Alignment
-extra_filters['ljust']  = lambda s,l : str(s).ljust(l)
-extra_filters['rjust']  = lambda s,l : str(s).rjust(l)
-extra_filters['center'] = lambda s,l : str(s).center(l)
+extra_filters['ljust']  = lambda s,l,c=" " : str(s).ljust(l,c)
+extra_filters['rjust']  = lambda s,l,c=" " : str(s).rjust(l,c)
+extra_filters['center'] = lambda s,l,c=" " : str(s).center(l,c)
 
 # Trimming and padding
 extra_filters['strip']  = lambda s,p=None : str(s).strip(p)
