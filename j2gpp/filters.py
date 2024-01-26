@@ -88,6 +88,11 @@ extra_filters['ljust']  = lambda s,l : str(s).ljust(l)
 extra_filters['rjust']  = lambda s,l : str(s).rjust(l)
 extra_filters['center'] = lambda s,l : str(s).center(l)
 
+# Trimming and padding
+extra_filters['strip']  = lambda s,p=None : str(s).strip(p)
+extra_filters['lstrip'] = lambda s,p=None : str(s).lstrip(p)
+extra_filters['rstrip'] = lambda s,p=None : str(s).rstrip(p)
+
 # Case
 extra_filters['title']    = lambda s : str(s).title()
 extra_filters['swapcase'] = lambda s : str(s).swapcase()
