@@ -86,8 +86,11 @@ def main():
         # Convert attribute to child
         if options['xml_convert_attributes']:
           key = key.lstrip("@")
+        # Remove namespace
+        if options['xml_remove_namespaces']:
+          key = key.split(":")[-1]
         # Prepare bool for auto-cast
-        if value == "true": value = "True"
+        if value == "true":  value = "True"
         if value == "false": value = "False"
         # Auto-cast value
         value = auto_cast_str(value)
@@ -233,6 +236,7 @@ def main():
   argparser.add_argument(      "--csv-escape-char",        dest="csv_escape_char",        help="CSV escape character (default: None)",                                           )
   argparser.add_argument(      "--csv-dont-strip",         dest="csv_dont_strip",         help="Disable stripping whitespace of CSV values",                            action="store_true", default=False)
   argparser.add_argument(      "--xml-convert-attributes", dest="xml_convert_attributes", help="Convert XML attributes to normal element without the '@' prefix",       action="store_true", default=False)
+  argparser.add_argument(      "--xml-remove-namespaces",  dest="xml_remove_namespaces",  help="Remove XML namespace prefixes from tags",                               action="store_true", default=False)
   argparser.add_argument(      "--render-non-template",    dest="render_non_template",    help="Process also source files that are not recognized as templates",        nargs='?',           default=None, const="_j2gpp")
   argparser.add_argument(      "--copy-non-template",      dest="copy_non_template",      help="Copy source files that are not templates to output directory",          action="store_true", default=False)
   argparser.add_argument(      "--force-glob",             dest="force_glob",             help="Glob UNIX-like patterns in path even when quoted",                      action="store_true", default=False)
@@ -390,6 +394,7 @@ def main():
   options['csv_escape_char']        = args.csv_escape_char
   options['csv_dont_strip']         = args.csv_dont_strip
   options['xml_convert_attributes'] = args.xml_convert_attributes
+  options['xml_remove_namespaces']  = args.xml_remove_namespaces
   options['render_non_template']    = args.render_non_template
   options['copy_non_template']      = args.copy_non_template
   options['force_glob']             = args.force_glob

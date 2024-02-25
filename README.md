@@ -111,6 +111,7 @@ The following arguments can be added to the command for additional features. The
 | `--csv-escape-char`        | CSV escape character (default: None)                                  |
 | `--csv-dont-strip`         | Disable stripping whitespace of CSV values                            |
 | `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix       |
+| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                               |
 | `--render-non-template`    | Process also source files that are not recognized as templates        |
 | `--copy-non-template`      | Copy source files that are not templates to output directory          |
 | `--force-glob`             | Glob UNIX-like patterns in path even when quoted                      |
