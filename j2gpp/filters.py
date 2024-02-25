@@ -159,18 +159,36 @@ def pascal(s, remove_underscore=True, remove_hyphen=True, remove_dot=False):
 extra_filters['camel']  = camel
 extra_filters['pascal'] = pascal
 
-re_caps_boundary       = re.compile(r'(?<!^)(?=[A-Z])')
-re_caps_boundary_group = re.compile(r'(?<!^)(?<![A-Z])(?=[A-Z])')
+re_caps_boundary                    = re.compile(r'(?<!^)(?=[A-Z])')
+re_caps_boundary_with_numbers       = re.compile(r'(?<!^)(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
+re_caps_boundary_group              = re.compile(r'(?<!^)(?<![A-Z])(?=[A-Z])')
+re_caps_boundary_group_with_numbers = re.compile(r'(?<!^)(?<![A-Z0-9])(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
 
-def snake(s, preserve_caps=True, group_caps=True):
-  if group_caps: s = re_caps_boundary_group.sub('_', s)
-  else: s = re_caps_boundary.sub('_', s)
+def snake(s, preserve_caps=True, group_caps=True, consider_numbers=True):
+  if group_caps:
+    if consider_numbers:
+      s = re_caps_boundary_group_with_numbers.sub('_', s)
+    else:
+      s = re_caps_boundary_group.sub('_', s)
+  else:
+    if consider_numbers:
+      s = re_caps_boundary_with_numbers.sub('_', s)
+    else:
+      s = re_caps_boundary.sub('_', s)
   if not preserve_caps: s = s.lower()
   return s
 
-def kebab(s, preserve_caps=True, group_caps=True):
-  if group_caps: s = re_caps_boundary_group.sub('-', s)
-  else: s = re_caps_boundary.sub('-', s)
+def kebab(s, preserve_caps=True, group_caps=True, consider_numbers=True):
+  if group_caps:
+    if consider_numbers:
+      s = re_caps_boundary_group_with_numbers.sub('-', s)
+    else:
+      s = re_caps_boundary_group.sub('-', s)
+  else:
+    if consider_numbers:
+      s = re_caps_boundary_with_numbers.sub('-', s)
+    else:
+      s = re_caps_boundary.sub('-', s)
   if not preserve_caps: s = s.lower()
   return s
 
