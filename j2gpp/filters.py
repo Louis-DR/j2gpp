@@ -13,6 +13,10 @@
 
 import math
 import statistics
+import hashlib
+import dataclasses
+import datetime
+import json
 import re
 import os
 import errno
@@ -76,6 +80,47 @@ extra_filters['list_div']  = lambda X,y : [x/y  for x in X]
 extra_filters['list_mod']  = lambda X,y : [x%y  for x in X]
 extra_filters['list_rem']  = lambda X,y : [x//y for x in X]
 extra_filters['list_exp']  = lambda X,y : [x**y for x in X]
+
+
+
+# ┌───────────────────────┐
+# │ Hash and cryptography │
+# └───────────────────────┘
+
+# Serialize almost any data type
+# Source : Adrian https://death.andgravity.com/stable-hashing
+def json_default(x):
+  try:
+    return dataclasses.asdict(x)
+  except TypeError:
+    pass
+  if isinstance(x, datetime.datetime):
+    return x.isoformat(timespec='microseconds')
+  raise TypeError(f"object of type {type(x).__name__} not serializable")
+
+def json_dumps(x):
+  return json.dumps(
+    x,
+    default      = json_default,
+    ensure_ascii = False,
+    sort_keys    = True,
+    indent       = None,
+    separators   = (',', ':'),
+  )
+
+# Hash
+extra_filters['md5']      = lambda x : hashlib.md5      (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha1']     = lambda x : hashlib.sha1     (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha224']   = lambda x : hashlib.sha224   (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha256']   = lambda x : hashlib.sha256   (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha384']   = lambda x : hashlib.sha384   (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha512']   = lambda x : hashlib.sha512   (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha3_224'] = lambda x : hashlib.sha3_224 (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha3_256'] = lambda x : hashlib.sha3_256 (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha3_384'] = lambda x : hashlib.sha3_384 (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['sha3_512'] = lambda x : hashlib.sha3_512 (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['blake2b']  = lambda x : hashlib.blake2b  (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['blake2s']  = lambda x : hashlib.blake2s  (json_dumps(x).encode('utf-8')).hexdigest()
 
 
 
