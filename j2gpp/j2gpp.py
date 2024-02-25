@@ -166,13 +166,13 @@ def main():
       import csv
       with open(var_path) as var_file:
         try:
-          csv_reader = csv.DictReader(var_file, delimiter=delimiter, escapechar=options['csv_escapechar'])
+          csv_reader = csv.DictReader(var_file, delimiter=delimiter, escapechar=options['csv_escape_char'])
           # First columns for keys
           main_key = csv_reader.fieldnames[0]
           for row in csv_reader:
             var = row.pop(main_key)
             # Strip whitespace around key and value
-            if not options['csv_dontstrip']:
+            if not options['csv_dont_strip']:
               row = {key.strip():val.strip() for key,val in row.items()}
             # Auto cast values
             row = {key:auto_cast_str(val) for key,val in row.items()}
@@ -210,7 +210,7 @@ def main():
 
   # Creating arguments
   argparser = argparse.ArgumentParser()
-  argparser.add_argument("source",                                                     help="Source template files or directories to render",                        nargs='*')
+  argparser.add_argument("source",                                                        help="Source template files or directories to render",                        nargs='*')
   argparser.add_argument("-O", "--outdir",                 dest="outdir",                 help="Output directory path"                                                           )
   argparser.add_argument("-o", "--output",                 dest="output",                 help="Output file path for single source template"                                     )
   argparser.add_argument("-I", "--incdir",                 dest="incdir",                 help="Include directories for include and import Jinja2 statements",          nargs='+')
@@ -230,9 +230,9 @@ def main():
   argparser.add_argument(      "--chdir-src",              dest="chdir_src",              help="Change working directory to source before rendering ",                  action="store_true", default=False)
   argparser.add_argument(      "--no-chdir",               dest="no_chdir",               help="Disable changing working directory before rendering",                   action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",          dest="csv_delimiter",          help="CSV delimiter (default: ',')",                                                   )
-  argparser.add_argument(      "--csv-escapechar",         dest="csv_escapechar",         help="CSV escape character (default: None)",                                           )
-  argparser.add_argument(      "--csv-dontstrip",          dest="csv_dontstrip",          help="Disable stripping whitespace of CSV values",                            action="store_true", default=False)
-  argparser.add_argument(      "--xml-convert-attributes", dest="xml_convert_attributes", help="Convert XML attributes to normal element without the '@' prefix",                                     action="store_true", default=False)
+  argparser.add_argument(      "--csv-escape-char",        dest="csv_escape_char",        help="CSV escape character (default: None)",                                           )
+  argparser.add_argument(      "--csv-dont-strip",         dest="csv_dont_strip",         help="Disable stripping whitespace of CSV values",                            action="store_true", default=False)
+  argparser.add_argument(      "--xml-convert-attributes", dest="xml_convert_attributes", help="Convert XML attributes to normal element without the '@' prefix",       action="store_true", default=False)
   argparser.add_argument(      "--render-non-template",    dest="render_non_template",    help="Process also source files that are not recognized as templates",        nargs='?',           default=None, const="_j2gpp")
   argparser.add_argument(      "--copy-non-template",      dest="copy_non_template",      help="Copy source files that are not templates to output directory",          action="store_true", default=False)
   argparser.add_argument(      "--force-glob",             dest="force_glob",             help="Glob UNIX-like patterns in path even when quoted",                      action="store_true", default=False)
@@ -387,8 +387,8 @@ def main():
   options['chdir_src']              = args.chdir_src
   options['no_chdir']               = args.no_chdir
   options['csv_delimiter']          = args.csv_delimiter if args.csv_delimiter else ','
-  options['csv_escapechar']         = args.csv_escapechar
-  options['csv_dontstrip']          = args.csv_dontstrip
+  options['csv_escape_char']        = args.csv_escape_char
+  options['csv_dont_strip']         = args.csv_dont_strip
   options['xml_convert_attributes'] = args.xml_convert_attributes
   options['render_non_template']    = args.render_non_template
   options['copy_non_template']      = args.copy_non_template
