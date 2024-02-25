@@ -505,6 +505,10 @@ test_dict:
 
 Note that XML expects a single root element. To avoid having to specify the root element when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
 
+XML attributes are converted to children with the attribute being prefixed by '`@`'. This prefix can be removed by setting the option `--xml-convert-attributes`.
+
+By default, XML tag prefixes and namespaces are kept, but they can be stripped by setting the option `--xml-remove-namespaces`.
+
 ``` xml
 <_>
   <test_none></test_none>
