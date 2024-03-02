@@ -349,6 +349,30 @@ def align(content, margin=1):
 extra_filters['align'] = align
 
 
+re_restructure_nocapture = re.compile(r'{§\s*[\w\s]+?\s*§}')
+re_restructure_capture   = re.compile(r'{§\s*([\w\s]+?)\s*§}')
+re_s                     = re.compile(r'\s+')
+
+def restructure(content):
+  sections = re_restructure_nocapture.split(content)
+  tags     = re_restructure_capture.findall(content)
+
+  result = ""
+
+  for section, tag in zip(sections[:-1], tags):
+    section = section.strip(' \n\t\r')
+    tag_split = re_s.split(tag)
+    tag_operation = tag_split[0]
+    tag_arguments = tag_split[1:] if len(tag_split) > 1 else []
+    if (tag_operation == 'spacing'):
+      spacing = int(tag_arguments[0])+1 if len(tag_arguments) > 0 else 1
+      result += section + '\n'*spacing
+  result += sections[-1].strip(' \n\t\r')
+  return result
+
+extra_filters['restructure'] = restructure
+
+
 
 # ┌─────────────────────┐
 # │ Dictionary and list │
