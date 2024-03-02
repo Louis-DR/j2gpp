@@ -89,35 +89,39 @@ int main() {
 
 The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
 
-| Argument                   | Description                                                           |
-| -------------------------- | --------------------------------------------------------------------- |
-| `-O/--outdir`              | Output directory for all rendered templates                           |
-| `-o/--output`              | Output file for single template                                       |
-| `-I/--incdir`              | Include search directory for include and import statements            |
-| `-D/--define`              | Inline global variables for all templates                             |
-| `-V/--varfile`             | Global variables files for all templates                              |
-| `--envvar`                 | Loads environment variables as global variables                       |
-| `--filters`                | Load extra Jinja2 filters from a Python file                          |
-| `--tests`                  | Load extra Jinja2 tests from a Python file                            |
-| `--file-vars-adapter`      | Load a Python function to process variables after loading from a file |
-| `--global-vars-adapter`    | Load a Python function to process all variables before rendering      |
-| `--overwrite-outdir`       | Overwrite output directory                                            |
-| `--warn-overwrite`         | Warn when overwriting files                                           |
-| `--no-overwrite`           | Prevent overwriting files                                             |
-| `--no-strict-undefined`    | Disable error with undefined variable in template                     |
-| `--no-check-identifier`    | Disable warning when attributes are not valid identifiers             |
-| `--fix-identifiers`        | Replace invalid characters from identifiers with underscore           |
-| `--csv-delimiter`          | CSV delimiter (default: '`,`')                                        |
-| `--csv-escape-char`        | CSV escape character (default: None)                                  |
-| `--csv-dont-strip`         | Disable stripping whitespace of CSV values                            |
-| `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix       |
-| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                               |
-| `--render-non-template`    | Process also source files that are not recognized as templates        |
-| `--copy-non-template`      | Copy source files that are not templates to output directory          |
-| `--force-glob`             | Glob UNIX-like patterns in path even when quoted                      |
-| `--perf`                   | Measure the execution time for performance testing                    |
-| `--version`                | Print J2GPP version and quits                                         |
-| `--license`                | Print J2GPP license and quits                                         |
+| Argument                   | Description                                                             |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `-O/--outdir`              | Output directory for all rendered templates                             |
+| `-o/--output`              | Output file for single template                                         |
+| `-I/--incdir`              | Include search directory for include and import statements              |
+| `-D/--define`              | Inline global variables for all templates                               |
+| `-V/--varfile`             | Global variables files for all templates                                |
+| `--envvar`                 | Loads environment variables as global variables                         |
+| `--filters`                | Load extra Jinja2 filters from a Python file                            |
+| `--tests`                  | Load extra Jinja2 tests from a Python file                              |
+| `--file-vars-adapter`      | Load a Python function to process variables after loading from a file   |
+| `--global-vars-adapter`    | Load a Python function to process all variables before rendering        |
+| `--overwrite-outdir`       | Overwrite output directory                                              |
+| `--warn-overwrite`         | Warn when overwriting files                                             |
+| `--no-overwrite`           | Prevent overwriting files                                               |
+| `--no-strict-undefined`    | Disable error with undefined variable in template                       |
+| `--no-check-identifier`    | Disable warning when attributes are not valid identifiers               |
+| `--fix-identifiers`        | Replace invalid characters from identifiers with underscore             |
+| `--chdir-src`              | Change working directory to source before rendering instead of output   |
+| `--no-chdir`               | Disable changing working directory to output directory before rendering |
+| `--trim-whitespace`        | Trim trailing whitespace in generated files                             |
+| `--csv-delimiter`          | CSV delimiter (default: '`,`')                                          |
+| `--csv-escape-char`        | CSV escape character (default: None)                                    |
+| `--csv-dont-strip`         | Disable stripping whitespace of CSV values                              |
+| `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix         |
+| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                                 |
+| `--render-non-template`    | Process also source files that are not recognized as templates          |
+| `--copy-non-template`      | Copy source files that are not templates to output directory            |
+| `--force-glob`             | Glob UNIX-like patterns in path even when quoted                        |
+| `--debug-vars`             | Display available variables at the top of rendered templates            |
+| `--perf`                   | Measure the execution time for performance testing                      |
+| `--version`                | Print J2GPP version and quits                                           |
+| `--license`                | Print J2GPP license and quits                                           |
 
 ## Command line arguments
 
