@@ -354,19 +354,29 @@ re_restructure_capture   = re.compile(r'{§\s*([\w\s]+?)\s*§}')
 re_s                     = re.compile(r'\s+')
 
 def restructure(content):
+  result = ""
+
+  # Split the content between content sections and tags
   sections = re_restructure_nocapture.split(content)
   tags     = re_restructure_capture.findall(content)
 
-  result = ""
-
+  # Iterate over sections and tags
   for section, tag in zip(sections[:-1], tags):
+    # Strip the line breaks and space around the content
     section = section.strip(' \n\t\r')
+    # Split the tag into words
     tag_split = re_s.split(tag)
+    # First word is the type of structure
     tag_operation = tag_split[0]
-    tag_arguments = tag_split[1:] if len(tag_split) > 1 else []
+    # Other words are the operands
+    tag_operands = tag_split[1:] if len(tag_split) > 1 else []
+    # Spacing sections with line breaks
     if (tag_operation == 'spacing'):
-      spacing = int(tag_arguments[0])+1 if len(tag_arguments) > 0 else 1
+      # Number of line breaks (by default 1)
+      spacing = int(tag_operands[0])+1 if len(tag_operands) > 0 else 1
+      # Add the section and its after-spacing
       result += section + '\n'*spacing
+  # Add the last section
   result += sections[-1].strip(' \n\t\r')
   return result
 
