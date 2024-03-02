@@ -232,6 +232,7 @@ def main():
   argparser.add_argument(      "--fix-identifiers",        dest="fix_identifiers",        help="Replace invalid characters from identifiers with underscore",           action="store_true", default=False)
   argparser.add_argument(      "--chdir-src",              dest="chdir_src",              help="Change working directory to source before rendering ",                  action="store_true", default=False)
   argparser.add_argument(      "--no-chdir",               dest="no_chdir",               help="Disable changing working directory before rendering",                   action="store_true", default=False)
+  argparser.add_argument(      "--trim-whitespace",        dest="trim_whitespace",        help="Trim trailing whitespace in generated files",                           action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",          dest="csv_delimiter",          help="CSV delimiter (default: ',')",                                                   )
   argparser.add_argument(      "--csv-escape-char",        dest="csv_escape_char",        help="CSV escape character (default: None)",                                           )
   argparser.add_argument(      "--csv-dont-strip",         dest="csv_dont_strip",         help="Disable stripping whitespace of CSV values",                            action="store_true", default=False)
@@ -390,6 +391,7 @@ def main():
   options['fix_identifiers']        = args.fix_identifiers
   options['chdir_src']              = args.chdir_src
   options['no_chdir']               = args.no_chdir
+  options['trim_whitespace']        = args.trim_whitespace
   options['csv_delimiter']          = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escape_char']        = args.csv_escape_char
   options['csv_dont_strip']         = args.csv_dont_strip
@@ -864,6 +866,10 @@ def main():
       elif options['no_overwrite']:
         throw_warning(f"Output file '{out_path}' already exists and will not be overwritten.")
         continue
+
+    # Trim trailing whitespace
+    if options['trim_whitespace']:
+      src_res = re.sub(r' +\n', '\n', src_res)
 
     # Write the rendered file
     try:
