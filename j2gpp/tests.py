@@ -32,3 +32,12 @@ extra_tests['lower']      = lambda s : str(s).islower()
 extra_tests['upper']      = lambda s : str(s).isupper()
 extra_tests['title']      = lambda s : str(s).istitle()
 extra_tests['printable']  = lambda s : str(s).isprintable()
+
+
+
+# ┌──────┐
+# │ List │
+# └──────┘
+
+extra_tests['empty']     = lambda l : len(l) == 0
+extra_tests['singleton'] = lambda l : len(l) == 1

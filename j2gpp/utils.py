@@ -135,7 +135,7 @@ def intend_text(text):
 def print_license():
   print("""J2GPP is under MIT License
 
-Copyright (c) 2022 Louis Duret-Robert
+Copyright (c) 2022-2024 Louis Duret-Robert
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

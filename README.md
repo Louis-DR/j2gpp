@@ -5,6 +5,7 @@
 - [J2GPP - Jinja2-based General Purpose Preprocessor](#j2gpp---jinja2-based-general-purpose-preprocessor)
   - [Installation](#installation)
   - [Basic usage](#basic-usage)
+    - [J2GPP quick start](#j2gpp-quick-start)
   - [Command line arguments](#command-line-arguments)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
@@ -50,6 +51,8 @@ pip install j2gpp
 
 ## Basic usage
 
+### J2GPP quick start
+
 `j2gpp` requires at least one source be provided. The source paths can be files or directories, relative or absolute, and can use UNIX-style patterns such as wildcards. Template file names must end with the `.j2` extension which will be stripped at render.
 
 For more information about the Jinja2 syntax, see the documentation at [jinja.palletsprojects.com](https://jinja.palletsprojects.com/).
@@ -86,33 +89,35 @@ int main() {
 
 The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
 
-| Argument                | Description                                                           |
-| ----------------------- | --------------------------------------------------------------------- |
-| `-O/--outdir`           | Output directory for all rendered templates                           |
-| `-o/--output`           | Output file for single template                                       |
-| `-I/--incdir`           | Include search directory for include and import statements            |
-| `-D/--define`           | Inline global variables for all templates                             |
-| `-V/--varfile`          | Global variables files for all templates                              |
-| `--envvar`              | Loads environment variables as global variables                       |
-| `--filters`             | Load extra Jinja2 filters from a Python file                          |
-| `--tests`               | Load extra Jinja2 tests from a Python file                            |
-| `--file-vars-adapter`   | Load a Python function to process variables after loading from a file |
-| `--global-vars-adapter` | Load a Python function to process all variables before rendering      |
-| `--overwrite-outdir`    | Overwrite output directory                                            |
-| `--warn-overwrite`      | Warn when overwriting files                                           |
-| `--no-overwrite`        | Prevent overwriting files                                             |
-| `--no-strict-undefined` | Disable error with undefined variable in template                     |
-| `--no-check-identifier` | Disable warning when attributes are not valid identifiers             |
-| `--fix-identifiers`     | Replace invalid characters from identifiers with underscore           |
-| `--csv-delimiter`       | CSV delimiter (default: '`,`')                                        |
-| `--csv-escapechar`      | CSV escape character (default: None)                                  |
-| `--csv-dontstrip`       | Disable stripping whitespace of CSV values                            |
-| `--render-non-template` | Process also source files that are not recognized as templates        |
-| `--copy-non-template`   | Copy source files that are not templates to output directory          |
-| `--force-glob`          | Glob UNIX-like patterns in path even when quoted                      |
-| `--perf`                | Measure the execution time for performance testing                    |
-| `--version`             | Print J2GPP version and quits                                         |
-| `--license`             | Print J2GPP license and quits                                         |
+| Argument                   | Description                                                           |
+| -------------------------- | --------------------------------------------------------------------- |
+| `-O/--outdir`              | Output directory for all rendered templates                           |
+| `-o/--output`              | Output file for single template                                       |
+| `-I/--incdir`              | Include search directory for include and import statements            |
+| `-D/--define`              | Inline global variables for all templates                             |
+| `-V/--varfile`             | Global variables files for all templates                              |
+| `--envvar`                 | Loads environment variables as global variables                       |
+| `--filters`                | Load extra Jinja2 filters from a Python file                          |
+| `--tests`                  | Load extra Jinja2 tests from a Python file                            |
+| `--file-vars-adapter`      | Load a Python function to process variables after loading from a file |
+| `--global-vars-adapter`    | Load a Python function to process all variables before rendering      |
+| `--overwrite-outdir`       | Overwrite output directory                                            |
+| `--warn-overwrite`         | Warn when overwriting files                                           |
+| `--no-overwrite`           | Prevent overwriting files                                             |
+| `--no-strict-undefined`    | Disable error with undefined variable in template                     |
+| `--no-check-identifier`    | Disable warning when attributes are not valid identifiers             |
+| `--fix-identifiers`        | Replace invalid characters from identifiers with underscore           |
+| `--csv-delimiter`          | CSV delimiter (default: '`,`')                                        |
+| `--csv-escape-char`        | CSV escape character (default: None)                                  |
+| `--csv-dont-strip`         | Disable stripping whitespace of CSV values                            |
+| `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix       |
+| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                               |
+| `--render-non-template`    | Process also source files that are not recognized as templates        |
+| `--copy-non-template`      | Copy source files that are not templates to output directory          |
+| `--force-glob`             | Glob UNIX-like patterns in path even when quoted                      |
+| `--perf`                   | Measure the execution time for performance testing                    |
+| `--version`                | Print J2GPP version and quits                                         |
+| `--license`                | Print J2GPP license and quits                                         |
 
 ## Command line arguments
 
@@ -265,9 +270,9 @@ Some arguments are flags to enable or disable special features. This is more adv
 
 `--csv-delimiter` followed by a string will change the delimiter used to parse CSV variables files. The default is "`,`".
 
-`--csv-escapechar` followed by a character sets the escape character used to parse CSV variables files. There is no escape character by default.
+`--csv-escape-char` followed by a character sets the escape character used to parse CSV variables files. There is no escape character by default.
 
-`--csv-dontstrip` disables the stripping of whitespace from CSV keys and values.
+`--csv-dont-strip` disables the stripping of whitespace from CSV keys and values.
 
 `--render-non-template` forces every source file found to be rendered, even if they are not recognized as a template (by ending with a template extension). The resulting file will be saved in the location following the rules of regular templates, but instead of removing the template extension, they will have a suffix added before the file extensions. By default, this suffix is `_j2gpp`, but this can be replaced by whatever is specified after the flag argument.
 
@@ -499,6 +504,10 @@ test_dict:
 ### XML
 
 Note that XML expects a single root element. To avoid having to specify the root element when using the variables in a template, J2GPP automatically removes the root element level if it is named "`_`".
+
+XML attributes are converted to children with the attribute being prefixed by '`@`'. This prefix can be removed by setting the option `--xml-convert-attributes`.
+
+By default, XML tag prefixes and namespaces are kept, but they can be stripped by setting the option `--xml-remove-namespaces`.
 
 ``` xml
 <_>
