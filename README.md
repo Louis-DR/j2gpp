@@ -4,7 +4,8 @@
 
 - [J2GPP - Jinja2-based General Purpose Preprocessor](#j2gpp---jinja2-based-general-purpose-preprocessor)
   - [Installation](#installation)
-  - [Basic usage](#basic-usage)
+    - [Basic usage](#basic-usage)
+    - [Jinja2 basic syntax](#jinja2-basic-syntax)
   - [Command line arguments](#command-line-arguments)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
@@ -48,7 +49,7 @@ With `Python >= 3.7`, Install from Pypi :
 pip install j2gpp
 ```
 
-## Basic usage
+### Basic usage
 
 `j2gpp` requires at least one source be provided. The source paths can be files or directories, relative or absolute, and can use UNIX-style patterns such as wildcards. Template file names must end with the `.j2` extension which will be stripped at render.
 
@@ -113,6 +114,124 @@ The following arguments can be added to the command for additional features. The
 | `--perf`                | Measure the execution time for performance testing                    |
 | `--version`             | Print J2GPP version and quits                                         |
 | `--license`             | Print J2GPP license and quits                                         |
+
+### Jinja2 basic syntax
+
+The Jinja2 preprocessor syntax can be used with any text file by adding expressions and statements. Expressions will be rendered as text in the output file. Statements are used to control the flow of the rendering and perform logic. The syntax also provides a way to write comments that are removed during rendering. The delimiters used are the following :
+
+- `{{ ... }}` for expressions.
+- `{% ... %}` for statements.
+- `{# ... #}` for comments.
+
+Expressions can contain immediate values, operations, variables, and function calls that evaluate to objects of different data types similar to the Python syntax : integer numbers, floating point numbers, booleans, strings, lists, tuples, and dictionnaries.
+
+<table>
+<tr>
+  <th>Example</th>
+  <th>Template</th>
+  <th>Output</th>
+</tr>
+<tr>
+<td>
+Data types
+</td>
+<td><pre>
+integer: {{42}}
+float:   {{3.141592}}
+boolean: {{True}}
+string:  {{"lorem ipsum"}}
+tuple:   {{(1,2,3)}}
+list:    {{[1,2,3]}}
+dict:    {{{'key1':1,'key2':2}}}
+</pre></td>
+<td><pre>
+integer: 42
+float:   3.141592
+boolean: True
+string:  lorem ipsum
+tuple:   (1,2,3)
+list:    [1,2,3]
+dict:    {'key1':1,'key2':2}
+</pre></td>
+</tr>
+</table>
+
+The operations supported are also mostly based on the Python syntax. New operations such as filters and tests are explained in more detail later.
+
+
+<table>
+<tr>
+  <th>Mathematical</th>
+  <th>Comparisons</th>
+  <th>Logical</th>
+  <th>Others</th>
+</tr>
+<tr>
+<td>
+<code>+</code> addition<br>
+<code>-</code> subtraction<br>
+<code>*</code> multiplication<br>
+<code>**</code> exponentiation<br>
+<code>/</code> division<br>
+<code>//</code> quotient<br>
+<code>%</code> remainder<br>
+</td>
+<td>
+<code>==</code> equality<br>
+<code>!=</code> inequality<br>
+<code>>=</code> superiority<br>
+<code>></code> strict superiority<br>
+<code><=</code> inferiority<br>
+<code><</code> strict inferiority<br>
+</td>
+<td>
+<code>and</code> conjuction<br>
+<code>or</code> disjunction<br>
+<code>not</code> negation<br>
+</td>
+<td>
+<code>in</code> containment test<br>
+<code>is</code> test call<br>
+<code>|</code> filter call<br>
+<code>~</code> string conversion and concatenation<br>
+<code>()</code> function call<br>
+<code>[]</code> subscription<br>
+<code>.</code> attribute access<br>
+</td>
+</tr>
+</table>
+
+Variables can be declared through the J2GPP command line arguments such as defines or variables files, or in the template itself through the `set` statement.
+
+<table>
+<tr>
+  <th>Example</th>
+  <th>Template</th>
+  <th>Output</th>
+</tr>
+<tr>
+<td>
+Setting variables
+</td>
+<td><pre>
+{% set foo    = 12 %}
+{% set bar    = 30 %}
+{% set foobar = foo + bar %}
+foo     = {{foo}}
+bar     = {{bar}}
+foobar  = {{foobar}}
+bar-foo = {{bar-foo}}
+</pre></td>
+<td><pre>
+foo     = 12
+bar     = 30
+foobar  = 42
+bar-foo = 18
+</pre></td>
+</tr>
+</table>
+
+Flow control statements like `if-elif-else`, `for`, and `while`
 
 ## Command line arguments
 
