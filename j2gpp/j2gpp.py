@@ -712,20 +712,32 @@ def main():
 
   # Setting context global variables
   print(f"Setting context global variables.")
-  context_dict = {
-    '__python_version__'    : python_version(),
-    '__jinja2_version__'    : jinja2_version,
-    '__j2gpp_version__'     : j2gpp_version,
-    '__user__'              : os.getlogin(),
-    '__pid__'               : os.getpid(),
-    '__ppid__'              : os.getppid(),
-    '__working_directory__' : os.getcwd(),
-    '__output_directory__'  : out_dir if out_dir else os.getcwd(),
-    '__date__'              : datetime.now().strftime("%d-%m-%Y"),
-    '__date_inv__'          : datetime.now().strftime("%Y-%m-%d"),
-    '__time__'              : datetime.now().strftime("%H:%M:%S"),
-    '__datetime__'          : datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-  }
+  context_dict = {}
+  try:                     context_dict['__python_version__'] = python_version()
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__python_version__'.")
+  try:                     context_dict['__jinja2_version__'] = jinja2_version
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__jinja2_version__'.")
+  try:                     context_dict['__j2gpp_version__'] = j2gpp_version
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__j2gpp_version__'.")
+  try:                     context_dict['__user__'] = os.getlogin()
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__user__'.")
+  try:                     context_dict['__pid__'] = os.getpid()
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__pid__'.")
+  try:                     context_dict['__ppid__'] = os.getppid()
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__ppid__'.")
+  try:                     context_dict['__working_directory__'] = os.getcwd()
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__working_directory__'.")
+  try:                     context_dict['__output_directory__'] = out_dir if out_dir else os.getcwd()
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__output_directory__'.")
+  try:                     context_dict['__date__'] = datetime.now().strftime("%d-%m-%Y")
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__date__'.")
+  try:                     context_dict['__date_inv__'] = datetime.now().strftime("%Y-%m-%d")
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__date_inv__'.")
+  try:                     context_dict['__time__'] = datetime.now().strftime("%H:%M:%S")
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__time__'.")
+  try:                     context_dict['__datetime__'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+  except Exception as exc: throw_warning(f"Could not set the context global variable '__datetime__'.")
+
   global_vars = var_dict_update(global_vars, context_dict, context=f" when setting context variables")
 
   # Loading global variables from environment variables
