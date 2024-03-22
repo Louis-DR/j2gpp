@@ -363,7 +363,7 @@ def restructure(content):
   # Iterate over sections and tags
   for section, tag in zip(sections[:-1], tags):
     # Strip the line breaks and space around the content
-    section = section.strip(' \n\t\r')
+    section = section.rstrip(' \t').strip('\n\r')
     # Split the tag into words
     tag_split = re_s.split(tag)
     # First word is the type of structure
@@ -377,7 +377,7 @@ def restructure(content):
       # Add the section and its after-spacing
       result += section + '\n'*spacing
   # Add the last section
-  result += sections[-1].strip(' \n\t\r')
+  result += sections[-1].rstrip(' \t').strip('\n\r')
   return result
 
 extra_filters['restructure'] = restructure
