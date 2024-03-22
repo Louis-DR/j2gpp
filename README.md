@@ -283,25 +283,47 @@ Useful context variables are added before any other variable is loaded. Some are
 
 In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/en/latest/templates/#builtin-filters), J2GPP also defines many useful filter functions.
 
+| warning()   | sha224()   | rjust()    | reindent()        | product()                             |
+| error()     | sha256()   | center()   | autoindent()      | permutations()                        |
+| list_add()  | sha384()   | strip()    | align()           | combinations()                        |
+| list_sub()  | sha512()   | lstrip()   | restructure()     | combinations_with_replacement()       |
+| list_mult() | sha3_224() | rstrip()   | el_of_max_attr()  | permutations_range()                  |
+| list_div()  | sha3_256() | title()    | el_of_min_attr()  | combinations_range()                  |
+| list_mod()  | sha3_384() | swapcase() | key_of_max_attr() | combinations_with_replacement_range() |
+| list_rem()  | sha3_512() | camel()    | key_of_min_attr() | write()                               |
+| list_exp()  | blake2b()  | pascal()   | accumulate()      | append()                              |
+| md5()       | blake2s()  | snake()    | count()           |                                       |
+| sha1()      | ljust()    | kebab()    | pairwise()        |                                       |
+
 All functions from the Python libraries `math` and `statistics` are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
+
+The `warning` and `error` filters can be used to throw warnings and errors from the template that will be displayed in the J2GPP logs. The filter is applied to a block, replaces the block with nothing and throws the warning or error with the content of the block as comment. The filter works with conditional blocks if the version of Jinja2 installed supports the `@render_time_only` decorator.
 
 An operation can be applied to all elements of a list with the filters `list_add`, `list_sub`, `list_mult`, `list_div`, `list_mod`, `list_rem` and `list_exp` respectively for the Python operators `+`, `-`, `*`, `/`, `%`, `//` and `**`.
 
+All hash algorithms provided by the `hashlib` library are provided as filters. The input value or string will be sanitized into JSON and encoded into UTF-8, then hashed and digested in hexadecimal. The number of symbols returned depends on the hash algorithm. The algorithms supported are : `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`, `sha3_224`, `sha3_256`, `sha3_384`, `sha3_512`, `blake2b`, `blake2s`.
+
 Text alignment can be controlled with the Python functions `ljust`, `rjust` and `center`.
+
+Stripping whitespaces or other characters from the start or end of strings can be done with the Python functions `strip`, `lstrip`, and `rstrip`.
 
 Case and formatting can be controlled with the Python functions `title` and `swapcase`, or the added functions `camel`, `pascal`, `snake` and `kebab`. `camel` and `pascal` will remove the underscores and hyphens by default but leave the dots ; that behaviour can be changed by providing the filter arguments `remove_underscore`, `remove_hyphen` and `remove_dot` as `True` or `False`. `snake` and `kebab` will group capitalized letters and preserve capitalization by default ; that behaviour can be changed by providing the filter arguments `preserve_caps` and `group_caps` as `True` or `False`.
 
 Paragraph formatting is facilitated by multiple filters that should be used on a `filter` block. `reindent` removes pre-existing indentation and sets new one. `autoindent` removes pre-existing indentation and sets new indent by incrementing and decrementing the depth based on start and end delimiters of blocks provided by the `starts` and `ends` lists of strings provided by argument (culry braces by default). `align` aligns every line of the paragraph by columns, left before `§`, right before `§§`.
 
+---Restructure
+
 When using a list of dictionaries with a key in common, you can get the list element with the minimum or maximum value of that attribute using the filters `el_of_max_attr` or `el_of_min_attr`.
 
 When using two-level dictionaries, the key corresponding to the minimum or maximum with regards to a specified attribute using the filters `key_of_max_attr` or `key_of_min_attr`.
 
+The sum of elements in a list or other iterable object can be computed using the function `accumulate`.
+
 You can count the number of occurrences of a value in a list using the `count` filter.
 
-The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
+To perform combinatorics on a list, the following functions are provided : `pairwise`, `product` (catersian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to permutations and combinations for lengths in a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
 
-The `warning` and `error` filters can be used to throw warnings and errors from the template that will be displayed in the J2GPP logs. The filter is applied to a block, replaces the block with nothing and throws the warning or error with the content of the block as comment. The filter works with conditional blocks if the version of Jinja2 installed supports the `@render_time_only` decorator.
+The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
 
 ## Process directories
 
