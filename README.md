@@ -87,38 +87,6 @@ int main() {
 }
 ```
 
-The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
-
-| Argument                   | Description                                                           |
-| -------------------------- | --------------------------------------------------------------------- |
-| `-O/--outdir`              | Output directory for all rendered templates                           |
-| `-o/--output`              | Output file for single template                                       |
-| `-I/--incdir`              | Include search directory for include and import statements            |
-| `-D/--define`              | Inline global variables for all templates                             |
-| `-V/--varfile`             | Global variables files for all templates                              |
-| `--envvar`                 | Loads environment variables as global variables                       |
-| `--filters`                | Load extra Jinja2 filters from a Python file                          |
-| `--tests`                  | Load extra Jinja2 tests from a Python file                            |
-| `--file-vars-adapter`      | Load a Python function to process variables after loading from a file |
-| `--global-vars-adapter`    | Load a Python function to process all variables before rendering      |
-| `--overwrite-outdir`       | Overwrite output directory                                            |
-| `--warn-overwrite`         | Warn when overwriting files                                           |
-| `--no-overwrite`           | Prevent overwriting files                                             |
-| `--no-strict-undefined`    | Disable error with undefined variable in template                     |
-| `--no-check-identifier`    | Disable warning when attributes are not valid identifiers             |
-| `--fix-identifiers`        | Replace invalid characters from identifiers with underscore           |
-| `--csv-delimiter`          | CSV delimiter (default: '`,`')                                        |
-| `--csv-escape-char`        | CSV escape character (default: None)                                  |
-| `--csv-dont-strip`         | Disable stripping whitespace of CSV values                            |
-| `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix       |
-| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                               |
-| `--render-non-template`    | Process also source files that are not recognized as templates        |
-| `--copy-non-template`      | Copy source files that are not templates to output directory          |
-| `--force-glob`             | Glob UNIX-like patterns in path even when quoted                      |
-| `--perf`                   | Measure the execution time for performance testing                    |
-| `--version`                | Print J2GPP version and quits                                         |
-| `--license`                | Print J2GPP license and quits                                         |
-
 ## Command line arguments
 
 ### Specify output directory
@@ -254,31 +222,41 @@ def shout_values(var_dict):
 
 ### Option flags
 
-Some arguments are flags to enable or disable special features. This is more advanced but can be useful in niche situations.
+The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
 
-`--overwrite-outdir` cleans the output directory before rendering the templates and copying any other files.
-
-`--warn-overwrite` enables warnings triggered whenever a file is overwritten.
-
-`--no-overwrite` prevents any file from being overwritten, and triggers a warning when that happens.
-
-`--no-strict-undefined` disables errors triggered whenever a template variable is used but not defined.
-
-`--no-check-identifier` disables the ckecking that the variables names and attributes are valid Python identifiers. Root variables with a name not passing this check will not be accessible in Jinja2 templates.
-
-`--fix-identifiers` fixes variables and attributes names that are not valid Python identifiers by replacing incorrect characters by underscores, and if the first character is a number, an underscore is added before.
-
-`--csv-delimiter` followed by a string will change the delimiter used to parse CSV variables files. The default is "`,`".
-
-`--csv-escape-char` followed by a character sets the escape character used to parse CSV variables files. There is no escape character by default.
-
-`--csv-dont-strip` disables the stripping of whitespace from CSV keys and values.
-
-`--render-non-template` forces every source file found to be rendered, even if they are not recognized as a template (by ending with a template extension). The resulting file will be saved in the location following the rules of regular templates, but instead of removing the template extension, they will have a suffix added before the file extensions. By default, this suffix is `_j2gpp`, but this can be replaced by whatever is specified after the flag argument.
-
-`--copy-non-template` enables the copying of the source files that are not recognized as templates or the files in the source directories to the output directory when one is provided with the `--outdir` argument.
-
-`--force-glob` enables globbing UNIX-like patterns in the source files paths even if they are surrounded by quotes. This is disabled by default to allow processing files with `*` and `[...]` in their path. Paths provided without quotes are preprocessed by the shell and any wildcard or other patterns cannot be prevented.
+| Argument                   | Description                                                             |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `-O/--outdir`              | Output directory for all rendered templates                             |
+| `-o/--output`              | Output file for single template                                         |
+| `-I/--incdir`              | Include search directory for include and import statements              |
+| `-D/--define`              | Inline global variables for all templates                               |
+| `-V/--varfile`             | Global variables files for all templates                                |
+| `--envvar`                 | Loads environment variables as global variables                         |
+| `--filters`                | Load extra Jinja2 filters from a Python file                            |
+| `--tests`                  | Load extra Jinja2 tests from a Python file                              |
+| `--file-vars-adapter`      | Load a Python function to process variables after loading from a file   |
+| `--global-vars-adapter`    | Load a Python function to process all variables before rendering        |
+| `--overwrite-outdir`       | Overwrite output directory                                              |
+| `--warn-overwrite`         | Warn when overwriting files                                             |
+| `--no-overwrite`           | Prevent overwriting files                                               |
+| `--no-strict-undefined`    | Disable error with undefined variable in template                       |
+| `--no-check-identifier`    | Disable warning when attributes are not valid identifiers               |
+| `--fix-identifiers`        | Replace invalid characters from identifiers with underscore             |
+| `--chdir-src`              | Change working directory to source before rendering instead of output   |
+| `--no-chdir`               | Disable changing working directory to output directory before rendering |
+| `--trim-whitespace`        | Trim trailing whitespace in generated files                             |
+| `--csv-delimiter`          | CSV delimiter (default: '`,`')                                          |
+| `--csv-escape-char`        | CSV escape character (default: None)                                    |
+| `--csv-dont-strip`         | Disable stripping whitespace of CSV values                              |
+| `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix         |
+| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                                 |
+| `--render-non-template`    | Process also source files that are not recognized as templates          |
+| `--copy-non-template`      | Copy source files that are not templates to output directory            |
+| `--force-glob`             | Glob UNIX-like patterns in path even when quoted                        |
+| `--debug-vars`             | Display available variables at the top of rendered templates            |
+| `--perf`                   | Measure the execution time for performance testing                      |
+| `--version`                | Print J2GPP version and quits                                           |
+| `--license`                | Print J2GPP license and quits                                           |
 
 ### Context variables
 
@@ -305,25 +283,47 @@ Useful context variables are added before any other variable is loaded. Some are
 
 In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/en/latest/templates/#builtin-filters), J2GPP also defines many useful filter functions.
 
+| warning()   | sha224()   | rjust()    | reindent()        | product()                             |
+| error()     | sha256()   | center()   | autoindent()      | permutations()                        |
+| list_add()  | sha384()   | strip()    | align()           | combinations()                        |
+| list_sub()  | sha512()   | lstrip()   | restructure()     | combinations_with_replacement()       |
+| list_mult() | sha3_224() | rstrip()   | el_of_max_attr()  | permutations_range()                  |
+| list_div()  | sha3_256() | title()    | el_of_min_attr()  | combinations_range()                  |
+| list_mod()  | sha3_384() | swapcase() | key_of_max_attr() | combinations_with_replacement_range() |
+| list_rem()  | sha3_512() | camel()    | key_of_min_attr() | write()                               |
+| list_exp()  | blake2b()  | pascal()   | accumulate()      | append()                              |
+| md5()       | blake2s()  | snake()    | count()           |                                       |
+| sha1()      | ljust()    | kebab()    | pairwise()        |                                       |
+
 All functions from the Python libraries `math` and `statistics` are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
+
+The `warning` and `error` filters can be used to throw warnings and errors from the template that will be displayed in the J2GPP logs. The filter is applied to a block, replaces the block with nothing and throws the warning or error with the content of the block as comment. The filter works with conditional blocks if the version of Jinja2 installed supports the `@render_time_only` decorator.
 
 An operation can be applied to all elements of a list with the filters `list_add`, `list_sub`, `list_mult`, `list_div`, `list_mod`, `list_rem` and `list_exp` respectively for the Python operators `+`, `-`, `*`, `/`, `%`, `//` and `**`.
 
+All hash algorithms provided by the `hashlib` library are provided as filters. The input value or string will be sanitized into JSON and encoded into UTF-8, then hashed and digested in hexadecimal. The number of symbols returned depends on the hash algorithm. The algorithms supported are : `md5`, `sha1`, `sha224`, `sha256`, `sha384`, `sha512`, `sha3_224`, `sha3_256`, `sha3_384`, `sha3_512`, `blake2b`, `blake2s`.
+
 Text alignment can be controlled with the Python functions `ljust`, `rjust` and `center`.
+
+Stripping whitespaces or other characters from the start or end of strings can be done with the Python functions `strip`, `lstrip`, and `rstrip`.
 
 Case and formatting can be controlled with the Python functions `title` and `swapcase`, or the added functions `camel`, `pascal`, `snake` and `kebab`. `camel` and `pascal` will remove the underscores and hyphens by default but leave the dots ; that behaviour can be changed by providing the filter arguments `remove_underscore`, `remove_hyphen` and `remove_dot` as `True` or `False`. `snake` and `kebab` will group capitalized letters and preserve capitalization by default ; that behaviour can be changed by providing the filter arguments `preserve_caps` and `group_caps` as `True` or `False`.
 
 Paragraph formatting is facilitated by multiple filters that should be used on a `filter` block. `reindent` removes pre-existing indentation and sets new one. `autoindent` removes pre-existing indentation and sets new indent by incrementing and decrementing the depth based on start and end delimiters of blocks provided by the `starts` and `ends` lists of strings provided by argument (culry braces by default). `align` aligns every line of the paragraph by columns, left before `§`, right before `§§`.
 
+Restructuring of large blocks is facilitated by the filter `restructure` that should be used on a `filter` block. The block will be parsed for structure tags, which is an addition to the Jinja2 syntax and uses the `{§...§}` syntax. The only structure tag currently implemented is `spacing`. It takes a single parameter representing a number of line. When the restructuring filter processes the tag, it will strip all line breaks before and after the tag and replace them with the number of line breaks specified. This is useful to add spacing to the template for readability while keeping the spacing of the generate file clean.
+
 When using a list of dictionaries with a key in common, you can get the list element with the minimum or maximum value of that attribute using the filters `el_of_max_attr` or `el_of_min_attr`.
 
 When using two-level dictionaries, the key corresponding to the minimum or maximum with regards to a specified attribute using the filters `key_of_max_attr` or `key_of_min_attr`.
 
+The sum of elements in a list or other iterable object can be computed using the function `accumulate`.
+
 You can count the number of occurrences of a value in a list using the `count` filter.
 
-The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
+To perform combinatorics on a list, the following functions are provided : `pairwise`, `product` (catersian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to permutations and combinations for lengths in a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
 
-The `warning` and `error` filters can be used to throw warnings and errors from the template that will be displayed in the J2GPP logs. The filter is applied to a block, replaces the block with nothing and throws the warning or error with the content of the block as comment. The filter works with conditional blocks if the version of Jinja2 installed supports the `@render_time_only` decorator.
+The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
 
 ## Process directories
 

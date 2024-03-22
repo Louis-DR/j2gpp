@@ -213,37 +213,38 @@ def main():
 
   # Creating arguments
   argparser = argparse.ArgumentParser()
-  argparser.add_argument("source",                                                        help="Source template files or directories to render",                        nargs='*')
-  argparser.add_argument("-O", "--outdir",                 dest="outdir",                 help="Output directory path"                                                           )
-  argparser.add_argument("-o", "--output",                 dest="output",                 help="Output file path for single source template"                                     )
-  argparser.add_argument("-I", "--incdir",                 dest="incdir",                 help="Include directories for include and import Jinja2 statements",          nargs='+')
-  argparser.add_argument("-D", "--define",                 dest="define",                 help="Define global variables in the format name=value",                      nargs='+')
-  argparser.add_argument("-V", "--varfile",                dest="varfile",                help="Global variables files",                                                nargs='+')
-  argparser.add_argument(      "--envvar",                 dest="envvar",                 help="Loads environment variables as global variables",                       nargs='?',           default=None, const="")
-  argparser.add_argument(      "--filters",                dest="filters",                help="Load extra Jinja2 filters from a Python file",                          nargs='+')
-  argparser.add_argument(      "--tests",                  dest="tests",                  help="Load extra Jinja2 tests from a Python file",                            nargs='+')
-  argparser.add_argument(      "--file-vars-adapter",      dest="file_vars_adapter",      help="Load a Python function to process variables after loading from a file", nargs=2  )
-  argparser.add_argument(      "--global-vars-adapter",    dest="global_vars_adapter",    help="Load a Python function to process all variables before rendering",      nargs=2  )
-  argparser.add_argument(      "--overwrite-outdir",       dest="overwrite_outdir",       help="Overwrite output directory",                                            action="store_true", default=False)
-  argparser.add_argument(      "--warn-overwrite",         dest="warn_overwrite",         help="Warn when overwriting files",                                           action="store_true", default=False)
-  argparser.add_argument(      "--no-overwrite",           dest="no_overwrite",           help="Prevent overwriting files",                                             action="store_true", default=False)
-  argparser.add_argument(      "--no-strict-undefined",    dest="no_strict_undefined",    help="Disable error with undefined variable in template",                     action="store_true", default=False)
-  argparser.add_argument(      "--no-check-identifier",    dest="no_check_identifier",    help="Disable warning when attributes are not valid identifiers",             action="store_true", default=False)
-  argparser.add_argument(      "--fix-identifiers",        dest="fix_identifiers",        help="Replace invalid characters from identifiers with underscore",           action="store_true", default=False)
-  argparser.add_argument(      "--chdir-src",              dest="chdir_src",              help="Change working directory to source before rendering ",                  action="store_true", default=False)
-  argparser.add_argument(      "--no-chdir",               dest="no_chdir",               help="Disable changing working directory before rendering",                   action="store_true", default=False)
-  argparser.add_argument(      "--csv-delimiter",          dest="csv_delimiter",          help="CSV delimiter (default: ',')",                                                   )
-  argparser.add_argument(      "--csv-escape-char",        dest="csv_escape_char",        help="CSV escape character (default: None)",                                           )
-  argparser.add_argument(      "--csv-dont-strip",         dest="csv_dont_strip",         help="Disable stripping whitespace of CSV values",                            action="store_true", default=False)
-  argparser.add_argument(      "--xml-convert-attributes", dest="xml_convert_attributes", help="Convert XML attributes to normal element without the '@' prefix",       action="store_true", default=False)
-  argparser.add_argument(      "--xml-remove-namespaces",  dest="xml_remove_namespaces",  help="Remove XML namespace prefixes from tags",                               action="store_true", default=False)
-  argparser.add_argument(      "--render-non-template",    dest="render_non_template",    help="Process also source files that are not recognized as templates",        nargs='?',           default=None, const="_j2gpp")
-  argparser.add_argument(      "--copy-non-template",      dest="copy_non_template",      help="Copy source files that are not templates to output directory",          action="store_true", default=False)
-  argparser.add_argument(      "--force-glob",             dest="force_glob",             help="Glob UNIX-like patterns in path even when quoted",                      action="store_true", default=False)
-  argparser.add_argument(      "--debug-vars",             dest="debug_vars",             help="Display available variables at the top of rendered templates",          action="store_true", default=False)
-  argparser.add_argument(      "--perf",                   dest="perf",                   help="Measure and display performance",                                       action="store_true", default=False)
-  argparser.add_argument(      "--version",                dest="version",                help="Print J2GPP version and quits",                                         action="store_true", default=False)
-  argparser.add_argument(      "--license",                dest="license",                help="Print J2GPP license and quits",                                         action="store_true", default=False)
+  argparser.add_argument("source",                                                        help="Source template files or directories to render",                          nargs='*')
+  argparser.add_argument("-O", "--outdir",                 dest="outdir",                 help="Output directory path"                                                             )
+  argparser.add_argument("-o", "--output",                 dest="output",                 help="Output file path for single source template"                                       )
+  argparser.add_argument("-I", "--incdir",                 dest="incdir",                 help="Include directories for include and import Jinja2 statements",            nargs='+')
+  argparser.add_argument("-D", "--define",                 dest="define",                 help="Define global variables in the format name=value",                        nargs='+')
+  argparser.add_argument("-V", "--varfile",                dest="varfile",                help="Global variables files",                                                  nargs='+')
+  argparser.add_argument(      "--envvar",                 dest="envvar",                 help="Loads environment variables as global variables",                         nargs='?',           default=None, const="")
+  argparser.add_argument(      "--filters",                dest="filters",                help="Load extra Jinja2 filters from a Python file",                            nargs='+')
+  argparser.add_argument(      "--tests",                  dest="tests",                  help="Load extra Jinja2 tests from a Python file",                              nargs='+')
+  argparser.add_argument(      "--file-vars-adapter",      dest="file_vars_adapter",      help="Load a Python function to process variables after loading from a file",   nargs=2  )
+  argparser.add_argument(      "--global-vars-adapter",    dest="global_vars_adapter",    help="Load a Python function to process all variables before rendering",        nargs=2  )
+  argparser.add_argument(      "--overwrite-outdir",       dest="overwrite_outdir",       help="Overwrite output directory",                                              action="store_true", default=False)
+  argparser.add_argument(      "--warn-overwrite",         dest="warn_overwrite",         help="Warn when overwriting files",                                             action="store_true", default=False)
+  argparser.add_argument(      "--no-overwrite",           dest="no_overwrite",           help="Prevent overwriting files",                                               action="store_true", default=False)
+  argparser.add_argument(      "--no-strict-undefined",    dest="no_strict_undefined",    help="Disable error with undefined variable in template",                       action="store_true", default=False)
+  argparser.add_argument(      "--no-check-identifier",    dest="no_check_identifier",    help="Disable warning when attributes are not valid identifiers",               action="store_true", default=False)
+  argparser.add_argument(      "--fix-identifiers",        dest="fix_identifiers",        help="Replace invalid characters from identifiers with underscore",             action="store_true", default=False)
+  argparser.add_argument(      "--chdir-src",              dest="chdir_src",              help="Change working directory to source before rendering instead of output",   action="store_true", default=False)
+  argparser.add_argument(      "--no-chdir",               dest="no_chdir",               help="Disable changing working directory to output directory before rendering", action="store_true", default=False)
+  argparser.add_argument(      "--trim-whitespace",        dest="trim_whitespace",        help="Trim trailing whitespace in generated files",                             action="store_true", default=False)
+  argparser.add_argument(      "--csv-delimiter",          dest="csv_delimiter",          help="CSV delimiter (default: ',')",                                                     )
+  argparser.add_argument(      "--csv-escape-char",        dest="csv_escape_char",        help="CSV escape character (default: None)",                                             )
+  argparser.add_argument(      "--csv-dont-strip",         dest="csv_dont_strip",         help="Disable stripping whitespace of CSV values",                              action="store_true", default=False)
+  argparser.add_argument(      "--xml-convert-attributes", dest="xml_convert_attributes", help="Convert XML attributes to normal element without the '@' prefix",         action="store_true", default=False)
+  argparser.add_argument(      "--xml-remove-namespaces",  dest="xml_remove_namespaces",  help="Remove XML namespace prefixes from tags",                                 action="store_true", default=False)
+  argparser.add_argument(      "--render-non-template",    dest="render_non_template",    help="Process also source files that are not recognized as templates",          nargs='?',           default=None, const="_j2gpp")
+  argparser.add_argument(      "--copy-non-template",      dest="copy_non_template",      help="Copy source files that are not templates to output directory",            action="store_true", default=False)
+  argparser.add_argument(      "--force-glob",             dest="force_glob",             help="Glob UNIX-like patterns in path even when quoted",                        action="store_true", default=False)
+  argparser.add_argument(      "--debug-vars",             dest="debug_vars",             help="Display available variables at the top of rendered templates",            action="store_true", default=False)
+  argparser.add_argument(      "--perf",                   dest="perf",                   help="Measure and display performance",                                         action="store_true", default=False)
+  argparser.add_argument(      "--version",                dest="version",                help="Print J2GPP version and quits",                                           action="store_true", default=False)
+  argparser.add_argument(      "--license",                dest="license",                help="Print J2GPP license and quits",                                           action="store_true", default=False)
   args, args_unknown = argparser.parse_known_args()
 
   if args.version:
@@ -390,6 +391,7 @@ def main():
   options['fix_identifiers']        = args.fix_identifiers
   options['chdir_src']              = args.chdir_src
   options['no_chdir']               = args.no_chdir
+  options['trim_whitespace']        = args.trim_whitespace
   options['csv_delimiter']          = args.csv_delimiter if args.csv_delimiter else ','
   options['csv_escape_char']        = args.csv_escape_char
   options['csv_dont_strip']         = args.csv_dont_strip
@@ -864,6 +866,10 @@ def main():
       elif options['no_overwrite']:
         throw_warning(f"Output file '{out_path}' already exists and will not be overwritten.")
         continue
+
+    # Trim trailing whitespace
+    if options['trim_whitespace']:
+      src_res = re.sub(r' +\n', '\n', src_res)
 
     # Write the rendered file
     try:
