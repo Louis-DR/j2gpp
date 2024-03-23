@@ -30,7 +30,7 @@ try: from jinja2.utils import render_time_only
 except ImportError:
   def render_time_only(func):
     def decorated(*args, **kwargs):
-      throw_warning("The installed Jinja2 library doesn't support the @render_time_only decorator. The function {func.__name__} may get executed regarless of conditional block.")
+      throw_warning(f"The installed Jinja2 library doesn't support the @render_time_only decorator. The function {func.__name__} may get executed regarless of conditional block.")
       return func(*args, **kwargs)
     return decorated
 

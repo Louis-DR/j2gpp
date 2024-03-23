@@ -232,7 +232,7 @@ def jinja2_render_traceback(src_path, including_non_template=False):
     # If we include non-templates, then we don't reset the flag
     if not including_non_template: tb_frame_isj2gpp = False
     # Identify frames corresponding to Jinja2 templates
-    if tb.tb_frame.f_code.co_filename == '<template>':
+    if tb.tb_frame.f_code.co_filename in ['<template>', '<unknown>']:
       # Top-most template
       tb_src_path = src_path
       tb_lineno = tb.tb_lineno
