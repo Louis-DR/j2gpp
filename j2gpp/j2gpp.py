@@ -844,15 +844,24 @@ def main():
         src_res += env.from_string(src_file.read()).render(src_vars)
     except jinja2_exceptions.UndefinedError as exc:
       # Undefined object encountered during rendering
-      traceback = jinja2_render_traceback(src_path)
+      try:
+        traceback = jinja2_render_traceback(src_path)
+      except Exception as exc:
+        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{src_path}':\n      {exc.message}")
       throw_error(f"Undefined object encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
     except jinja2_exceptions.TemplateSyntaxError as exc:
       # Syntax error encountered during rendering
-      traceback = jinja2_render_traceback(src_path)
+      try:
+        traceback = jinja2_render_traceback(src_path)
+      except Exception as exc:
+        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{src_path}':\n      {exc.message}")
       throw_error(f"Syntax error encountered while rendering '{src_path}' :\n{traceback}\n      {exc.message}")
     except jinja2_exceptions.TemplateNotFound as exc:
       # Template not found
-      traceback = jinja2_render_traceback(src_path)
+      try:
+        traceback = jinja2_render_traceback(src_path)
+      except Exception as exc:
+        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{src_path}':\n      {exc.message}")
       throw_error(f"Included template '{exc}' not found :\n{traceback}")
     except OSError as exc:
       # Catch file read exceptions
@@ -864,7 +873,10 @@ def main():
         throw_error(f"Cannot read '{src_path}'.")
     except Exception as exc:
       # Catch all other Python exceptions (in filter for example)
-      traceback = jinja2_render_traceback(src_path, including_non_template=True)
+      try:
+        traceback = jinja2_render_traceback(src_path, including_non_template=True)
+      except Exception as exc:
+        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{src_path}':\n      {exc.message}")
       throw_error(f"Exception occurred while rendering '{src_path}' :\n{traceback}\n      {type(exc).__name__} - {exc}")
 
     if not write_source_toggle[0]:
