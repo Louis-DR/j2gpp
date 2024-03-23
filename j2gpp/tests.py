@@ -11,6 +11,10 @@
 
 
 
+from jinja2.tests import test_defined
+
+
+
 extra_tests = {}
 
 
@@ -41,3 +45,27 @@ extra_tests['printable']  = lambda s : str(s).isprintable()
 
 extra_tests['empty']     = lambda l : len(l) == 0
 extra_tests['singleton'] = lambda l : len(l) == 1
+
+
+
+# ┌──────┐
+# │ Type │
+# └──────┘
+
+extra_tests['list'] = lambda x : isinstance(x,list)
+extra_tests['dict'] = lambda x : isinstance(x,dict)
+
+
+
+# ┌───────────┐
+# │ Attribute │
+# └───────────┘
+
+extra_tests['defined_and_true']  = lambda x   : test_defined(x) and x
+extra_tests['defined_and_false'] = lambda x   : test_defined(x) and not x
+extra_tests['defined_and_eq']    = lambda x,y : test_defined(x) and x == y
+extra_tests['defined_and_ne']    = lambda x,y : test_defined(x) and x != y
+extra_tests['defined_and_lt']    = lambda x,y : test_defined(x) and x <  y
+extra_tests['defined_and_le']    = lambda x,y : test_defined(x) and x <= y
+extra_tests['defined_and_gt']    = lambda x,y : test_defined(x) and x >  y
+extra_tests['defined_and_ge']    = lambda x,y : test_defined(x) and x >= y
