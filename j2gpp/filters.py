@@ -201,6 +201,10 @@ extra_filters['kebab'] = kebab
 # │ Paragraph formatting │
 # └──────────────────────┘
 
+# Controlling line jumps and blank lines
+extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
+extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
+
 # Removes pre-existing indentation and sets new one
 def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
   indent = depth * ('\t' if tabs else ' '*spaces)
