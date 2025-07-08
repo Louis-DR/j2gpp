@@ -177,6 +177,10 @@ def auto_cast_str(val):
     pass
   return val
 
+# Flatten to shallow list, keep only values for dictionaries
+def flatten(a):
+  return [c for b in a.values() for c in flatten(b) if c is not None] if isinstance(a,dict) else [c for b in a for c in flatten(b) if ]
+
 
 
 # ┌─────────────┐
