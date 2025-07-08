@@ -112,6 +112,12 @@ def throw_h3(text, min_width=40):
 warnings = []
 errors = []
 
+# Global setting for error output stream (set by main script)
+errors_output_stream = sys.stderr
+def set_errors_output_stream(stream):
+  global errors_output_stream
+  errors_output_stream = stream
+
 # Cool looking messages
 def throw_note(text):
   print(ansi_codes['blue']+ansi_codes['bold'], end='')
@@ -133,14 +139,16 @@ def throw_warning(text):
 def throw_error(text):
   global errors
   errors.append(text)
-  print(ansi_codes['red']+ansi_codes['bold'], end='', file=sys.stderr)
-  print(f"ERROR:",text, file=sys.stderr)
-  print(ansi_codes['reset'], end='', file=sys.stderr)
+  print(ansi_codes['red']+ansi_codes['bold'], end='', file=errors_output_stream)
+  print(f"ERROR:",text, file=errors_output_stream)
+  print(ansi_codes['reset'], end='', file=errors_output_stream)
 
 def throw_fatal(text):
-  print(ansi_codes['red']+ansi_codes['bold']+ansi_codes['reversed']+ansi_codes['slowblink'], end='', file=sys.stderr)
-  print(f"FATAL:",text, file=sys.stderr)
-  print(ansi_codes['reset'], end='', file=sys.stderr)
+  global errors
+  errors.append(text)
+  print(ansi_codes['red']+ansi_codes['bold']+ansi_codes['reversed']+ansi_codes['slowblink'], end='', file=errors_output_stream)
+  print(f"FATAL:",text, file=errors_output_stream)
+  print(ansi_codes['reset'], end='', file=errors_output_stream)
 
 def error_warning_summary():
   print("Warnings:", ansi_codes['yellow']+ansi_codes['bold']+ansi_codes['reversed'], len(warnings), ansi_codes['reset'],
