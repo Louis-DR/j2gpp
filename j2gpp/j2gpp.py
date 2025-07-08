@@ -240,6 +240,7 @@ def main():
   argparser.add_argument(      "--copy-non-template",      dest="copy_non_template",      help="Copy source files that are not templates to output directory",          action="store_true", default=False)
   argparser.add_argument(      "--force-glob",             dest="force_glob",             help="Glob UNIX-like patterns in path even when quoted",                      action="store_true", default=False)
   argparser.add_argument(      "--debug-vars",             dest="debug_vars",             help="Display available variables at the top of rendered templates",          action="store_true", default=False)
+  argparser.add_argument(      "--stdout-errors",          dest="stdout_errors",          help="Display errors on stdout instead of stderr",                            action="store_true", default=False)
   argparser.add_argument(      "--perf",                   dest="perf",                   help="Measure and display performance",                                       action="store_true", default=False)
   argparser.add_argument(      "--version",                dest="version",                help="Print J2GPP version and quits",                                         action="store_true", default=False)
   argparser.add_argument(      "--license",                dest="license",                help="Print J2GPP license and quits",                                         action="store_true", default=False)
@@ -264,6 +265,11 @@ def main():
 
   # Parsing command line arguments
   throw_h2("Parsing command line arguments")
+
+  # Set global error output stream setting
+  if args.stdout_errors:
+    print("Displaying errors on stdout instead of stderr.")
+    set_errors_output_stream(sys.stdout)
 
   # Enable performance monitor
   if args.perf:
