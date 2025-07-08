@@ -27,18 +27,6 @@ import jinja2.exceptions as jinja2_exceptions
 from j2gpp.utils import *
 from j2gpp.filters import extra_filters, write_source_toggle
 from j2gpp.tests import extra_tests
-import importlib.util
-import importlib.machinery
-
-def load_source(modname, filename):
-    loader = importlib.machinery.SourceFileLoader(modname, filename)
-    spec = importlib.util.spec_from_file_location(modname, filename, loader=loader)
-    module = importlib.util.module_from_spec(spec)
-    # The module is always executed and not cached in sys.modules.
-    # Uncomment the following line to cache the module.
-    # sys.modules[module.__name__] = module
-    loader.exec_module(module)
-    return module
 
 def main():
 
@@ -470,7 +458,7 @@ def main():
     filters = {}
     for filter_path in filter_paths:
       if os.path.isfile(filter_path):
-        filter_module = load_source("", filter_path)
+        filter_module = load_module("", filter_path)
         for filter_name in dir(filter_module):
           if filter_name[0] != '_':
             print(f"Loading filter '{filter_name}' from '{filter_path}'.")
@@ -485,7 +473,7 @@ def main():
     tests = {}
     for test_path in test_paths:
       if os.path.isfile(test_path):
-        test_module = load_source("", test_path)
+        test_module = load_module("", test_path)
         for test_name in dir(test_module):
           if test_name[0] != '_':
             test_function = getattr(test_module, test_name)
@@ -502,7 +490,7 @@ def main():
     file_vars_adapter_name = file_vars_adapter[1]
     print(f"Loading variables file adapter function '{file_vars_adapter_name}' from '{file_vars_adapter_path}'.")
     try:
-      file_vars_adapter_module = load_source("", file_vars_adapter_path)
+      file_vars_adapter_module = load_module("", file_vars_adapter_path)
       file_vars_adapter_function = getattr(file_vars_adapter_module, file_vars_adapter_name)
       if not callable(file_vars_adapter_function):
         throw_error(f"Object '{file_vars_adapter_name}' from '{file_vars_adapter_path}' is not a function.")
@@ -521,7 +509,7 @@ def main():
     global_vars_adapter_name = global_vars_adapter[1]
     print(f"Loading global variables adapter function '{global_vars_adapter_name}' from '{global_vars_adapter_path}'.")
     try:
-      global_vars_adapter_module = load_source("", global_vars_adapter_path)
+      global_vars_adapter_module = load_module("", global_vars_adapter_path)
       global_vars_adapter_function = getattr(global_vars_adapter_module, global_vars_adapter_name)
       if not callable(global_vars_adapter_function):
         throw_error(f"Object '{global_vars_adapter_name}' from '{global_vars_adapter_path}' is not a function.")

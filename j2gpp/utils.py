@@ -16,7 +16,23 @@ import ast
 import os
 import re
 import errno
-from sys import exc_info
+import sys
+import importlib.util
+import importlib.machinery
+
+
+
+# ┌───────────────────────┐
+# │ Importing modules     │
+# └───────────────────────┘
+
+def load_module(module_name, file_path):
+  loader = importlib.machinery.SourceFileLoader(module_name, file_path)
+  spec   = importlib.util.spec_from_file_location(module_name, file_path, loader=loader)
+  module = importlib.util.module_from_spec(spec)
+  sys.modules[module.__name__] = module
+  loader.exec_module(module)
+  return module
 
 
 
@@ -227,7 +243,7 @@ def jinja2_render_traceback(src_path, including_non_template=False):
   traceback_print = ""
   tb_frame_isj2gpp = False
   # Get traceback objects
-  typ, value, tb = exc_info()
+  typ, value, tb = sys.exc_info()
   # Iterate over nested traceback frames
   while tb:
     # Parse traceback frame string
