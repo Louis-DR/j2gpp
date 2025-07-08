@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "j2gpp"
-version = "2.2.2"
+version = "3.0.0-dev"
 description = "A Jinja2-based General Purpose Preprocessor"
 readme = "README.md"
 requires-python = ">=3.8"
