@@ -201,6 +201,10 @@ extra_filters['kebab'] = kebab
 # │ Paragraph formatting │
 # └──────────────────────┘
 
+# Controlling line jumps and blank lines
+extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
+extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
+
 # Removes pre-existing indentation and sets new one
 def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
   indent = depth * ('\t' if tabs else ' '*spaces)
@@ -388,13 +392,34 @@ extra_filters['restructure'] = restructure
 # │ Dictionary and list │
 # └─────────────────────┘
 
+# List of keys or values
+extra_filters['keys']       = lambda D   : list(D.keys())
+extra_filters['values']     = lambda D   : list(D.values())
+
+# List of attributes of elements in nested dictionary or list of dictionaries
+extra_filters['attributes'] = lambda X,attr : [x[attr] for x in (X.values() if isinstance(X,dict) else X) if attr in x]
+
+# Filter nested dictionary or list of dictionaries
+extra_filters['filter']  = lambda X,attribute,query : {key:value for key,value in X.keys() if isinstance(value,dict) and attribute in value and value[attribute]==query} if isinstance(X,dict) else [element for element in X if isinstance(element,dict) and attribute in element and element[attribute]==query]
+extra_filters['excluse'] = lambda X,attribute,query : {key:value for key,value in X.keys() if isinstance(value,dict) and attribute in value and value[attribute]!=query} if isinstance(X,dict) else [element for element in X if isinstance(element,dict) and attribute in element and element[attribute]!=query]
+
+# Filter dictionary based on keys
+extra_filters['filter_by_list']   = lambda D,keys  : {key:D[key] for key       in keys      if key in D.keys()}
+extra_filters['filter_by_regex']  = lambda D,regex : {key:value  for key,value in D.items() if re.fullmatch(regex,key)}
+extra_filters['exclude_by_list']  = lambda D,keys  : {key:value  for key,value in D.items() if key not in keys}
+extra_filters['exclude_by_regex'] = lambda D,regex : {key:value  for key,value in D.items() if not re.fullmatch(regex,key)}
+
 # Element max and min based on sub attribute
 extra_filters['el_of_max_attr'] = lambda L,attr : max(L, key = lambda el : el[attr])
 extra_filters['el_of_min_attr'] = lambda L,attr : min(L, key = lambda el : el[attr])
 
 # Key of max and min based on sub attribute
-extra_filters['key_of_max_attr'] = lambda d,attr : max(d, key = lambda key : d[key][attr])
-extra_filters['key_of_min_attr'] = lambda d,attr : min(d, key = lambda key : d[key][attr])
+extra_filters['key_of_max_attr'] = lambda D,attr : max(D, key = lambda key : D[key][attr])
+extra_filters['key_of_min_attr'] = lambda D,attr : min(D, key = lambda key : D[key][attr])
+
+# Shortcut for the previous filters for both dictionary and list
+extra_filters['with_max'] = lambda X,attr : extra_filters['el_of_max_attr'](X,attr) if isinstance(X,dict) else extra_filters['key_of_max_attr'](X,attr)
+extra_filters['with_min'] = lambda X,attr : extra_filters['el_of_min_attr'](X,attr) if isinstance(X,dict) else extra_filters['key_of_min_attr'](X,attr)
 
 # Accumulate elements of integer/float list
 extra_filters['accumulate'] = lambda L : itertools.accumulate(L)
@@ -402,6 +427,8 @@ extra_filters['accumulate'] = lambda L : itertools.accumulate(L)
 # Count occurences in list
 extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 
+# Flatten to shallow list, keep only values for dictionaries
+extra_filters['flatten'] = flatten
 
 
 # ┌───────────────┐
