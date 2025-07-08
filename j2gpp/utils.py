@@ -88,6 +88,7 @@ def j2gpp_title():
 # Cool looking headers
 def throw_h1(text, min_width=40):
   width = max(min_width-2,len(text)+2)
+  print(ansi_codes['reset'], end='')
   print(ansi_codes['bold'], end='')
   print('╔'+width*'═'+'╗')
   print('║',text.center(width-2),'║')
@@ -96,6 +97,7 @@ def throw_h1(text, min_width=40):
 
 def throw_h2(text, min_width=40):
   width = max(min_width-2,len(text)+2)
+  print(ansi_codes['reset'], end='')
   print(ansi_codes['bold'], end='')
   print('┏'+width*'━'+'┓')
   print('┃',text.center(width-2),'┃')
@@ -104,13 +106,14 @@ def throw_h2(text, min_width=40):
 
 def throw_h3(text, min_width=40):
   width = max(min_width-2,len(text)+2)
+  print(ansi_codes['reset'], end='')
   print('┌'+width*'─'+'┐')
   print('│',text.center(width-2),'│')
   print('└'+width*'─'+'┘')
 
 # Error and warning accumulators
 warnings = []
-errors = []
+errors   = []
 
 # Global setting for error output stream (set by main script)
 errors_output_stream = sys.stderr
@@ -216,7 +219,42 @@ def auto_cast_str(val):
 
 # Flatten to shallow list, keep only values for dictionaries
 def flatten(a):
-  return [c for b in a.values() for c in flatten(b) if c is not None] if isinstance(a,dict) else [c for b in a for c in flatten(b) if ]
+  return [c for b in a.values() for c in flatten(b) if c is not None] if isinstance(a,dict) else [c for b in a for c in flatten(b) if c is not None]
+
+
+# ┌─────────────────────┐
+# │ Variable processing │
+# └─────────────────────┘
+
+def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
+  """Merge two dictionaries with conflict resolution and warnings"""
+  var_dict_res = var_dict1.copy()
+  for key, val in var_dict2.items():
+    # Conflict
+    if key in var_dict1.keys() and var_dict1[key] != val:
+      val_ori = var_dict1[key]
+      # Recursively merge dictionary
+      if isinstance(val_ori, dict) and isinstance(val, dict):
+        val_scope = f"{val_scope}{key}."
+        var_dict_res[key] = var_dict_update(val_ori, val, val_scope, context)
+      else:
+        var_dict_res[key] = val
+        throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
+    else:
+      var_dict_res[key] = val
+  return var_dict_res
+
+def rec_check_valid_identifier(var_dict, context_file=None, val_scope=""):
+  """Check that attributes names are valid Python identifier that can be accessed in Jinja2"""
+  for key, val in var_dict.copy().items():
+    # Valid identifier contains only alphanumeric letters and underscores, and cannot start with a number
+    if not key.isidentifier():
+      # Note: fix_identifiers option would be handled by caller
+      throw_warning(f"Variable '{val_scope}{key}' from '{context_file}' is not a valid Python identifier and may not be accessible in the templates.")
+    if isinstance(val, dict):
+      val_scope_new = f"{val_scope}{key}."
+      # Traverse the dictionary recursively
+      rec_check_valid_identifier(var_dict[key], context_file, val_scope_new)
 
 
 
@@ -281,7 +319,7 @@ def jinja2_render_traceback(src_path, including_non_template=False):
     elif tb_frame_match and (tb_frame_match.group(3) or tb_frame_isj2gpp):
       # Nested child templates
       tb_src_path = tb_frame_match.group(1)
-      tb_lineno = tb_frame_match.group(2)
+      tb_lineno   = tb_frame_match.group(2)
       tb_frame_isj2gpp = True
     # Factorized string formatting
     if tb_frame_isj2gpp:
