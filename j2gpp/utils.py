@@ -19,12 +19,25 @@ import errno
 import sys
 import importlib.util
 import importlib.machinery
+from importlib.metadata import version
 
 
 
-# ┌───────────────────────┐
-# │ Importing modules     │
-# └───────────────────────┘
+# ┌───────────────┐
+# │ J2GPP version │
+# └───────────────┘
+
+def get_j2gpp_version():
+  try:
+    return version('j2gpp')
+  except Exception:
+    return "error"
+
+
+
+# ┌───────────────────┐
+# │ Importing modules │
+# └───────────────────┘
 
 def load_module(module_name, file_path):
   loader = importlib.machinery.SourceFileLoader(module_name, file_path)
