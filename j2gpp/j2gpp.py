@@ -958,3 +958,8 @@ def main():
     perf_counter_print(perf_counter_stop(perf_counter))
 
   throw_h2("Done")
+
+  if errors:
+    sys.exit(1)
+  else:
+    sys.exit(0)
