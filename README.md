@@ -254,6 +254,7 @@ The following arguments can be added to the command for additional features. The
 | `--copy-non-template`      | Copy source files that are not templates to output directory            |
 | `--force-glob`             | Glob UNIX-like patterns in path even when quoted                        |
 | `--debug-vars`             | Display available variables at the top of rendered templates            |
+| `--stdout-errors`          | Display errors on stdout instead of stderr                              |
 | `--perf`                   | Measure the execution time for performance testing                      |
 | `--version`                | Print J2GPP version and quits                                           |
 | `--license`                | Print J2GPP license and quits                                           |
