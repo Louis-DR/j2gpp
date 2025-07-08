@@ -107,6 +107,8 @@ The following arguments can be added to the command for additional features. The
 | `--no-strict-undefined`    | Disable error with undefined variable in template                     |
 | `--no-check-identifier`    | Disable warning when attributes are not valid identifiers             |
 | `--fix-identifiers`        | Replace invalid characters from identifiers with underscore           |
+| `--chdir-src`              | Change working directory to source before rendering                   |
+| `--no-chdir`               | Disable changing working directory before rendering                   |
 | `--csv-delimiter`          | CSV delimiter (default: '`,`')                                        |
 | `--csv-escape-char`        | CSV escape character (default: None)                                  |
 | `--csv-dont-strip`         | Disable stripping whitespace of CSV values                            |
@@ -115,6 +117,8 @@ The following arguments can be added to the command for additional features. The
 | `--render-non-template`    | Process also source files that are not recognized as templates        |
 | `--copy-non-template`      | Copy source files that are not templates to output directory          |
 | `--force-glob`             | Glob UNIX-like patterns in path even when quoted                      |
+| `--debug-vars`             | Display available variables at the top of rendered templates          |
+| `--stdout-errors`          | Display errors on stdout instead of stderr                            |
 | `--perf`                   | Measure the execution time for performance testing                    |
 | `--version`                | Print J2GPP version and quits                                         |
 | `--license`                | Print J2GPP license and quits                                         |

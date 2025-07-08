@@ -229,7 +229,7 @@ def main():
   argparser.add_argument(      "--no-strict-undefined",    dest="no_strict_undefined",    help="Disable error with undefined variable in template",                     action="store_true", default=False)
   argparser.add_argument(      "--no-check-identifier",    dest="no_check_identifier",    help="Disable warning when attributes are not valid identifiers",             action="store_true", default=False)
   argparser.add_argument(      "--fix-identifiers",        dest="fix_identifiers",        help="Replace invalid characters from identifiers with underscore",           action="store_true", default=False)
-  argparser.add_argument(      "--chdir-src",              dest="chdir_src",              help="Change working directory to source before rendering ",                  action="store_true", default=False)
+  argparser.add_argument(      "--chdir-src",              dest="chdir_src",              help="Change working directory to source before rendering",                   action="store_true", default=False)
   argparser.add_argument(      "--no-chdir",               dest="no_chdir",               help="Disable changing working directory before rendering",                   action="store_true", default=False)
   argparser.add_argument(      "--csv-delimiter",          dest="csv_delimiter",          help="CSV delimiter (default: ',')",                                                   )
   argparser.add_argument(      "--csv-escape-char",        dest="csv_escape_char",        help="CSV escape character (default: None)",                                           )
