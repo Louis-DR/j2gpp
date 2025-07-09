@@ -433,15 +433,15 @@ Defines passed by the command line are interpreted by the Python [ast.literal_ev
 
 ``` shell
 j2gpp ./foo.c.j2 --define test_none=None             \
-                          test_bool=True             \
-                          test_int=42                \
-                          test_float=3.141592        \
-                          test_string1=lorem         \
-                          test_string2="lorem ipsum" \
-                          test_tuple="(1,2,3)"       \
-                          test_list="[1,2,3]"        \
-                          test_dict="{'key1': value1, 'key2': value2}" \
-                          test_dict.key3=value3
+                 --define test_bool=True             \
+                 --define test_int=42                \
+                 --define test_float=3.141592        \
+                 --define test_string1=lorem         \
+                 --define test_string2="lorem ipsum" \
+                 --define test_tuple="(1,2,3)"       \
+                 --define test_list="[1,2,3]"        \
+                 --define test_dict="{'key1': value1, 'key2': value2}" \
+                 --define test_dict.key3=value3
 ```
 
 ### YAML
