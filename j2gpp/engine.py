@@ -185,10 +185,11 @@ class J2GPP:
   # └────────────────────────┘
 
   def render_file(self,
-                 source_path: str,
-                 output_path: Optional[str] = None,
-                 output_dir: Optional[str] = None,
-                 variables: Optional[Dict[str, Any]] = None) -> FileRenderResult:
+                  source_path: str,
+                  output_path: Optional[str]            = None,
+                  output_dir:  Optional[str]            = None,
+                  variables:   Optional[Dict[str, Any]] = None,
+                  ) -> FileRenderResult:
     """Render single file with optional per-render parameters"""
 
     # Determine output path
@@ -225,9 +226,10 @@ class J2GPP:
     )
 
   def render_directory(self,
-                      source_dir: str,
-                      output_dir: str,
-                      variables: Optional[Dict[str, Any]] = None) -> RenderResult:
+                       source_dir: str,
+                       output_dir: str,
+                       variables:  Optional[Dict[str, Any]] = None,
+                       ) -> RenderResult:
     """Render entire directory with optional per-render parameters"""
 
     # Merge variables
@@ -243,7 +245,8 @@ class J2GPP:
 
   def render_string(self,
                    template_string: str,
-                   variables: Optional[Dict[str, Any]] = None) -> str:
+                   variables: Optional[Dict[str, Any]] = None,
+                   ) -> str:
     """Render template string directly"""
 
     # Merge variables
@@ -263,10 +266,10 @@ class J2GPP:
     """Lazy initialization of Jinja2 environment"""
     if self._jinja_env is None or self._env_dirty:
       self._jinja_env = setup_jinja_environment(
-        include_dirs=self.include_dirs,
-        filter_paths=self.filter_paths,
-        test_paths=self.test_paths,
-        options=self.options
+        include_dirs = self.include_dirs,
+        filter_paths = self.filter_paths,
+        test_paths   = self.test_paths,
+        options      = self.options
       )
       self._env_dirty = False
     return self._jinja_env
@@ -334,8 +337,9 @@ class J2GPP:
 
 # Utility function for quick template string rendering
 def render_template(template_string: str,
-                   variables: Optional[Dict[str, Any]] = None,
-                   **options) -> str:
+                    variables: Optional[Dict[str, Any]] = None,
+                    **options,
+                    ) -> str:
   """Quick utility function to render a template string"""
   engine = J2GPP()
 
