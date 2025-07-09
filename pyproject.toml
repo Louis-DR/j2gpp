@@ -23,6 +23,7 @@ dependencies = [
   "xmltodict",
   "toml",
   "configparser",
+  "hjson",
 ]
 
 [project.scripts]

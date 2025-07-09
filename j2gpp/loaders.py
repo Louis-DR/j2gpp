@@ -54,6 +54,21 @@ def load_json_variables(var_path: str) -> Dict[str,Any]:
   return var_dict or {}
 
 
+def load_hjson_variables(var_path: str) -> Dict[str,Any]:
+  """Load variables from HJSON file"""
+  var_dict = {}
+  try:
+    import hjson
+    with open(var_path) as var_file:
+      try:
+        var_dict = dict(hjson.loads(var_file.read()))
+      except Exception as exc:
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'hjson' to parse HJSON variables files.")
+  return var_dict or {}
+
+
 def load_xml_variables(var_path: str,
                        options:  Dict[str,Any] = None,
                        ) -> Dict[str,Any]:
@@ -195,16 +210,17 @@ def load_tsv_variables(var_path:    str,
 
 # Registry of loaders by file extension
 LOADERS = {
-  'yaml': load_yaml_variables,
-  'yml':  load_yaml_variables,
-  'json': load_json_variables,
-  'xml':  load_xml_variables,
-  'toml': load_toml_variables,
-  'ini':  load_ini_variables,
-  'cfg':  load_ini_variables,
-  'env':  load_env_variables,
-  'csv':  load_csv_variables,
-  'tsv':  load_tsv_variables,
+  'yaml':  load_yaml_variables,
+  'yml':   load_yaml_variables,
+  'json':  load_json_variables,
+  'hjson': load_hjson_variables,
+  'xml':   load_xml_variables,
+  'toml':  load_toml_variables,
+  'ini':   load_ini_variables,
+  'cfg':   load_ini_variables,
+  'env':   load_env_variables,
+  'csv':   load_csv_variables,
+  'tsv':   load_tsv_variables,
 }
 
 

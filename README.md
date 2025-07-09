@@ -24,6 +24,7 @@
     - [Command line define](#command-line-define)
     - [YAML](#yaml)
     - [JSON](#json)
+    - [HJSON](#hjson)
     - [XML](#xml)
     - [TOML](#toml)
     - [INI/CFG](#inicfg)
@@ -131,7 +132,7 @@ j2gpp ./foo.c.j2 --define bar=42
 
 ### Loading global variables from files
 
-You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
+You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, HJSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
@@ -500,6 +501,42 @@ test_dict:
     "key1": "value1",
     "key2": "value2",
     "key3": "value3"
+  }
+}
+```
+
+### HJSON
+
+``` hjson
+{
+  # None
+  test_none: null,
+
+  # Boolean
+  test_bool1: true,
+  test_bool2: false,
+
+  # Numbers
+  test_int: 42,
+  test_float: 3.141592,
+
+  # String
+  test_string1: "lorem ipsum",
+  test_string2: lorem ipsum,
+  test_string3: '''
+                multi
+                line
+                string
+                '''
+
+  # List
+  test_list: [1,2,3],
+
+  # Dictionary
+  test_dict: {
+    key1: value1,
+    key2: value2,
+    key3: value3
   }
 }
 ```
