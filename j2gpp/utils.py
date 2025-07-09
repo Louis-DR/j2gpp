@@ -237,6 +237,55 @@ def var_dict_update(var_dict1, var_dict2, val_scope="", context=""):
       if isinstance(val_ori, dict) and isinstance(val, dict):
         val_scope = f"{val_scope}{key}."
         var_dict_res[key] = var_dict_update(val_ori, val, val_scope, context)
+      # Special case: try to merge dict into string that looks like a dictionary
+      elif isinstance(val_ori, str) and isinstance(val, dict) and val_ori.strip().startswith('{') and val_ori.strip().endswith('}'):
+        # Try to parse the string as a dictionary with more flexible parsing
+        try:
+          # First, try standard ast.literal_eval
+          parsed_dict = ast.literal_eval(val_ori)
+          if isinstance(parsed_dict, dict):
+            var_dict_res[key] = var_dict_update(parsed_dict, val, val_scope, context)
+          else:
+            var_dict_res[key] = val
+            throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
+        except (ValueError, SyntaxError):
+          # Convert JSON-style syntax to Python syntax and try again
+          try:
+            # Convert JSON booleans and null to Python equivalents
+            json_to_python = val_ori.replace('true', 'True').replace('false', 'False').replace('null', 'None')
+            parsed_dict = ast.literal_eval(json_to_python)
+            if isinstance(parsed_dict, dict):
+              var_dict_res[key] = var_dict_update(parsed_dict, val, val_scope, context)
+            else:
+              var_dict_res[key] = val
+              throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
+          except (ValueError, SyntaxError):
+            # If that fails, try a more flexible approach for unquoted values
+            try:
+              # Replace unquoted words with quoted strings (improved heuristic)
+              import re
+              fixed_str = val_ori
+              # Convert JSON syntax first
+              fixed_str = fixed_str.replace('true', 'True').replace('false', 'False').replace('null', 'None')
+              # Handle single-quoted keys with unquoted values
+              fixed_str = re.sub(r"'([^']*)':\s*([a-zA-Z_][a-zA-Z0-9_]*)", r"'\1': '\2'", fixed_str)
+              # Handle double-quoted keys with unquoted values
+              fixed_str = re.sub(r'"([^"]*)":\s*([a-zA-Z_][a-zA-Z0-9_]*)', r'"\1": "\2"', fixed_str)
+              # Handle unquoted keys with unquoted values
+              fixed_str = re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*):\s*([a-zA-Z_][a-zA-Z0-9_]*)', r'"\1": "\2"', fixed_str)
+              # Don't quote numbers, booleans, or null
+              fixed_str = re.sub(r':\s*"(\d+(?:\.\d+)?)"', r': \1', fixed_str)  # Numbers
+              fixed_str = re.sub(r':\s*"(True|False|None)"', r': \1', fixed_str)  # Python booleans and None
+              parsed_dict = ast.literal_eval(fixed_str)
+              if isinstance(parsed_dict, dict):
+                var_dict_res[key] = var_dict_update(parsed_dict, val, val_scope, context)
+              else:
+                var_dict_res[key] = val
+                throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
+            except (ValueError, SyntaxError):
+              # If all parsing fails, just overwrite with warning
+              var_dict_res[key] = val
+              throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
       else:
         var_dict_res[key] = val
         throw_warning(f"Variable '{val_scope}{key}' got overwritten from '{val_ori}' to '{val}'{context}.")
