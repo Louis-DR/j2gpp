@@ -3,38 +3,17 @@
 # ║ Author:      Louis Duret-Robert - louisduret@gmail.com                    ║
 # ║ Website:     louis-dr.github.io                                           ║
 # ║ License:     MIT License                                                  ║
-# ║ File:        setup.py                                                     ║
+# ║ File:        __main__.py                                                  ║
 # ╟───────────────────────────────────────────────────────────────────────────╢
-# ║ Description: Setuptools configuration to build the command line program.  ║
+# ║ Description: Module entry point for python -m j2gpp execution.            ║
 # ║                                                                           ║
 # ╚═══════════════════════════════════════════════════════════════════════════╝
 
 
 
-from setuptools import setup, find_packages
+from j2gpp import main
 
-setup(name         = 'j2gpp',
-      version      = '2.2.2',
-      description  = 'A Jinja2-based General Purpose Preprocessor',
-      keywords     = ['j2gpp', 'jinja2', 'preprocessor'],
-      url          = 'https://github.com/Louis-DR/j2gpp',
-      author       = 'Louis Duret-Robert',
-      author_email = 'louisduret@gmail.com',
-      license      = 'MIT',
-      license_file = 'LICENSE',
 
-      long_description              = open('README.md').read(),
-      long_description_content_type = 'text/markdown',
 
-      packages     = find_packages(),
-      entry_points = {
-        'console_scripts': ['j2gpp = j2gpp:main']
-      },
-      install_requires = [
-        'jinja2',
-        'ruamel.yaml',
-        'xmltodict',
-        'toml',
-        'configparser'
-      ],
-)
+if __name__ == '__main__':
+  main()

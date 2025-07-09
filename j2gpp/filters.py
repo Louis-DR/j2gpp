@@ -58,6 +58,14 @@ extra_filters['error'] = filter_error
 
 
 
+# ┌───────────────────┐
+# │ Casting and types │
+# └───────────────────┘
+
+extra_filters['type'] = lambda x : type(x).__name__
+
+
+
 # ┌──────┐
 # │ Math │
 # └──────┘

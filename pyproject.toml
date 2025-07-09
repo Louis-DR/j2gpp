@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "j2gpp"
+version = "3.0.0"
+description = "A Jinja2-based General Purpose Preprocessor"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+keywords = ["j2gpp", "jinja2", "preprocessor"]
+authors = [
+  { name = "Louis Duret-Robert", email = "louisduret@gmail.com" }
+]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+]
+dependencies = [
+  "jinja2",
+  "ruamel.yaml",
+  "xmltodict",
+  "toml",
+  "configparser",
+  "hjson",
+]
+
+[project.scripts]
+j2gpp = "j2gpp:main"
+
+[project.urls]
+"Homepage" = "https://github.com/Louis-DR/j2gpp"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["j2gpp*"]
+exclude = ["tests*", "docs*"]

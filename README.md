@@ -24,6 +24,7 @@
     - [Command line define](#command-line-define)
     - [YAML](#yaml)
     - [JSON](#json)
+    - [HJSON](#hjson)
     - [XML](#xml)
     - [TOML](#toml)
     - [INI/CFG](#inicfg)
@@ -131,7 +132,7 @@ j2gpp ./foo.c.j2 --define bar=42
 
 ### Loading global variables from files
 
-You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
+You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, HJSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
 
 For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
@@ -254,6 +255,7 @@ The following arguments can be added to the command for additional features. The
 | `--copy-non-template`      | Copy source files that are not templates to output directory            |
 | `--force-glob`             | Glob UNIX-like patterns in path even when quoted                        |
 | `--debug-vars`             | Display available variables at the top of rendered templates            |
+| `--stdout-errors`          | Display errors on stdout instead of stderr                              |
 | `--perf`                   | Measure the execution time for performance testing                      |
 | `--version`                | Print J2GPP version and quits                                           |
 | `--license`                | Print J2GPP license and quits                                           |
@@ -292,7 +294,7 @@ In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/e
 | list_mod()  | sha3_384() | swapcase() | key_of_max_attr() | combinations_with_replacement_range() |
 | list_rem()  | sha3_512() | camel()    | key_of_min_attr() | write()                               |
 | list_exp()  | blake2b()  | pascal()   | accumulate()      | append()                              |
-| md5()       | blake2s()  | snake()    | count()           |                                       |
+| md5()       | blake2s()  | snake()    | count()           | type()                                |
 | sha1()      | ljust()    | kebab()    | pairwise()        |                                       |
 
 All functions from the Python libraries `math` and `statistics` are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
@@ -324,6 +326,8 @@ You can count the number of occurrences of a value in a list using the `count` f
 To perform combinatorics on a list, the following functions are provided : `pairwise`, `product` (catersian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to permutations and combinations for lengths in a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
 
 The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
+
+To get the name of the type of a variable as a string, use the `type` filter.
 
 ## Process directories
 
@@ -432,15 +436,15 @@ Defines passed by the command line are interpreted by the Python [ast.literal_ev
 
 ``` shell
 j2gpp ./foo.c.j2 --define test_none=None             \
-                          test_bool=True             \
-                          test_int=42                \
-                          test_float=3.141592        \
-                          test_string1=lorem         \
-                          test_string2="lorem ipsum" \
-                          test_tuple="(1,2,3)"       \
-                          test_list="[1,2,3]"        \
-                          test_dict="{'key1': value1, 'key2': value2}" \
-                          test_dict.key3=value3
+                 --define test_bool=True             \
+                 --define test_int=42                \
+                 --define test_float=3.141592        \
+                 --define test_string1=lorem         \
+                 --define test_string2="lorem ipsum" \
+                 --define test_tuple="(1,2,3)"       \
+                 --define test_list="[1,2,3]"        \
+                 --define test_dict="{'key1': value1, 'key2': value2}" \
+                 --define test_dict.key3=value3
 ```
 
 ### YAML
@@ -497,6 +501,42 @@ test_dict:
     "key1": "value1",
     "key2": "value2",
     "key3": "value3"
+  }
+}
+```
+
+### HJSON
+
+``` hjson
+{
+  # None
+  test_none: null,
+
+  # Boolean
+  test_bool1: true,
+  test_bool2: false,
+
+  # Numbers
+  test_int: 42,
+  test_float: 3.141592,
+
+  # String
+  test_string1: "lorem ipsum",
+  test_string2: lorem ipsum,
+  test_string3: '''
+                multi
+                line
+                string
+                '''
+
+  # List
+  test_list: [1,2,3],
+
+  # Dictionary
+  test_dict: {
+    key1: value1,
+    key2: value2,
+    key3: value3
   }
 }
 ```
