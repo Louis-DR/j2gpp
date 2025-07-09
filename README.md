@@ -293,7 +293,7 @@ In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/e
 | list_mod()  | sha3_384() | swapcase() | key_of_max_attr() | combinations_with_replacement_range() |
 | list_rem()  | sha3_512() | camel()    | key_of_min_attr() | write()                               |
 | list_exp()  | blake2b()  | pascal()   | accumulate()      | append()                              |
-| md5()       | blake2s()  | snake()    | count()           |                                       |
+| md5()       | blake2s()  | snake()    | count()           | type()                                |
 | sha1()      | ljust()    | kebab()    | pairwise()        |                                       |
 
 All functions from the Python libraries `math` and `statistics` are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
@@ -325,6 +325,8 @@ You can count the number of occurrences of a value in a list using the `count` f
 To perform combinatorics on a list, the following functions are provided : `pairwise`, `product` (catersian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to permutations and combinations for lengths in a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
 
 The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
+
+To get the name of the type of a variable as a string, use the `type` filter.
 
 ## Process directories
 
