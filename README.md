@@ -21,6 +21,7 @@
     - [Advanced configuration](#advanced-configuration)
     - [Configuration inspection](#configuration-inspection)
     - [Template validation](#template-validation)
+    - [Template discovery \& analysis](#template-discovery--analysis)
     - [Result objects](#result-objects)
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
@@ -361,6 +362,18 @@ J2GPP.validate_template_string(template_str)    # Validate template string synta
 J2GPP.validate_template_file("template.j2")     # Validate template file syntax
 J2GPP.validate_directory("./templates/")        # Validate all templates in directory (recursive by default)
 J2GPP.validate_directory("./templates/", False) # Validate templates in directory (non-recursive)
+```
+
+### Template discovery & analysis
+
+``` python
+# Find template files
+J2GPP.find_templates("./templates/")         # Find all .j2 files (recursive by default)
+J2GPP.find_templates("./templates/", False)  # Find .j2 files (non-recursive)
+
+# Analyze template dependencies and structure
+J2GPP.find_template_dependencies("main.j2") # Find included/imported templates
+J2GPP.analyze_template_variables("main.j2") # Extract variables used in template
 ```
 
 ### Result objects

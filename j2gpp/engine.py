@@ -12,9 +12,11 @@
 
 
 import os
+import re
+import glob
 from datetime import datetime
 from platform import python_version
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, Set
 
 from jinja2 import __version__ as jinja2_version
 from jinja2 import Environment, TemplateSyntaxError, TemplateNotFound
@@ -464,6 +466,208 @@ class J2GPP:
       result.add_template_result(invalid_result)
 
     return result
+
+
+
+  # ┌───────────────────────────────┐
+  # │ Template Discovery & Analysis │
+  # └───────────────────────────────┘
+
+  def find_templates(self, directory_path: str, recursive: bool = True) -> List[str]:
+    """Find all .j2 template files in a directory"""
+    directory_absolute_path = os.path.abspath(directory_path)
+    templates = []
+
+    if not os.path.isdir(directory_absolute_path):
+      return templates
+
+    try:
+      if recursive:
+        # Use glob for recursive search
+        pattern   = os.path.join(directory_absolute_path, "**", "*.j2")
+        templates = glob.glob(pattern, recursive=True)
+      else:
+        # Search only immediate directory
+        pattern   = os.path.join(directory_absolute_path, "*.j2")
+        templates = glob.glob(pattern)
+
+      # Return sorted list of absolute paths
+      return sorted(templates)
+
+    except OSError:
+      return templates
+
+  def find_template_dependencies(self, template_path: str) -> List[str]:
+    """Find templates included or imported by the given template"""
+    template_absolute_path = os.path.abspath(template_path)
+    dependencies = set()
+
+    if not os.path.isfile(template_absolute_path):
+      return []
+
+    try:
+      with open(template_absolute_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+      # Find include statements: {% include "template.j2" %}
+      include_pattern = r'{%\s*include\s+["\']([^"\']+)["\']\s*%}'
+      includes = re.findall(include_pattern, content, re.IGNORECASE)
+      dependencies.update(includes)
+
+      # Find import statements: {% import "template.j2" as namespace %}
+      import_pattern = r'{%\s*import\s+["\']([^"\']+)["\']\s*(?:as\s+\w+)?\s*%}'
+      imports = re.findall(import_pattern, content, re.IGNORECASE)
+      dependencies.update(imports)
+
+      # Find extends statements: {% extends "base.j2" %}
+      extends_pattern = r'{%\s*extends\s+["\']([^"\']+)["\']\s*%}'
+      extends = re.findall(extends_pattern, content, re.IGNORECASE)
+      dependencies.update(extends)
+
+      # Convert relative paths to absolute paths based on template directory
+      template_dir = os.path.dirname(template_absolute_path)
+      absolute_dependencies = []
+
+      for dependency in dependencies:
+        if os.path.isabs(dependency):
+          absolute_dependencies.append(dependency)
+        else:
+          # Try to resolve relative to template directory first
+          dep_path = os.path.join(template_dir, dependency)
+          if os.path.isfile(dep_path):
+            absolute_dependencies.append(os.path.abspath(dep_path))
+          else:
+            # Try to resolve relative to include directories
+            for include_dir in self.include_dirs:
+              dep_path = os.path.join(include_dir, dependency)
+              if os.path.isfile(dep_path):
+                absolute_dependencies.append(os.path.abspath(dep_path))
+                break
+            else:
+              # Keep the original relative path if not found
+              absolute_dependencies.append(dependency)
+
+      return sorted(absolute_dependencies)
+
+    except (OSError, UnicodeDecodeError):
+      return []
+
+  def analyze_template_variables(self, template_path: str) -> Set[str]:
+    """Extract variable names used in a template"""
+    template_absolute_path = os.path.abspath(template_path)
+    variables = set()
+
+    if not os.path.isfile(template_absolute_path):
+      return variables
+
+    try:
+      with open(template_absolute_path, 'r', encoding='utf-8') as file:
+        content = file.read()
+
+      # Find variables in {{ variable }} expressions
+      var_pattern = r'{{\s*([^}|]+?)(?:\s*\|[^}]*)?\s*}}'
+      var_matches = re.findall(var_pattern, content)
+
+      for var_match in var_matches:
+        # Clean up and extract base variable names
+        var_name = var_match.strip()
+        # Remove function calls, array access, etc. to get base variable
+        base_var = self._extract_base_variable(var_name)
+        if base_var and self._is_valid_variable_name(base_var):
+          variables.add(base_var)
+
+      # Find variables in control structures {% for var in list %}, {% if condition %}
+      control_patterns = [
+        r'{%\s*for\s+\w+\s+in\s+([^%]+?)\s*%}', # for loops
+        r'{%\s*if\s+([^%]+?)\s*%}',             # if statements
+        r'{%\s*elif\s+([^%]+?)\s*%}',           # elif statements
+        r'{%\s*set\s+\w+\s*=\s*([^%]+?)\s*%}',  # set statements
+      ]
+
+      for pattern in control_patterns:
+        control_matches = re.findall(pattern, content, re.IGNORECASE)
+        for control_match in control_matches:
+          # Extract variables from expressions
+          expression_vars = self._extract_variables_from_expression(control_match.strip())
+          variables.update(expression_vars)
+
+      # Remove built-in Jinja2 variables and functions
+      builtin_vars = {
+        'loop', 'super', 'self', 'varargs', 'kwargs',
+        'true', 'false', 'none', 'True', 'False', 'None'
+      }
+      variables = variables - builtin_vars
+
+      return variables
+
+    except (OSError, UnicodeDecodeError):
+      return variables
+
+  def _extract_base_variable(self, expression: str) -> Optional[str]:
+    """Extract the base variable name from an expression"""
+    # Remove whitespace
+    expression = expression.strip()
+
+    # Handle simple variable names
+    if re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', expression):
+      return expression
+
+    # Handle dot notation (get the root variable)
+    if '.' in expression:
+      return expression.split('.')[0].strip()
+
+    # Handle array access
+    if '[' in expression:
+      return expression.split('[')[0].strip()
+
+    # Handle function calls
+    if '(' in expression:
+      return expression.split('(')[0].strip()
+
+    # Handle complex expressions - try to find the first valid identifier
+    words = re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*', expression)
+    if words:
+      return words[0]
+
+    return None
+
+  def _extract_variables_from_expression(self, expression: str) -> Set[str]:
+    """Extract variable names from a Jinja2 expression"""
+    variables = set()
+
+    # Find all identifiers in the expression
+    identifiers = re.findall(r'[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)*', expression)
+
+    for identifier in identifiers:
+      # Get the root variable name
+      root_var = identifier.split('.')[0]
+      if self._is_valid_variable_name(root_var):
+        variables.add(root_var)
+
+    return variables
+
+  def _is_valid_variable_name(self, name: str) -> bool:
+    """Check if a name is a valid variable name (not a keyword or builtin)"""
+    if not name or not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', name):
+      return False
+
+    # Filter out common Jinja2 keywords and functions
+    jinja_keywords = {
+      'and', 'or', 'not', 'is', 'in', 'if', 'else', 'endif', 'for', 'endfor',
+      'while', 'endwhile', 'set', 'endset', 'block', 'endblock', 'extends',
+      'include', 'import', 'from', 'as', 'with', 'without', 'context',
+      'scoped', 'ignore', 'missing', 'range', 'length', 'abs', 'attr',
+      'batch', 'capitalize', 'center', 'default', 'dictsort', 'escape',
+      'filesizeformat', 'first', 'float', 'forceescape', 'format',
+      'groupby', 'indent', 'int', 'join', 'last', 'list', 'lower',
+      'map', 'max', 'min', 'pprint', 'random', 'reject', 'rejectattr',
+      'replace', 'reverse', 'round', 'safe', 'select', 'selectattr',
+      'slice', 'sort', 'string', 'striptags', 'sum', 'title', 'tojson',
+      'trim', 'truncate', 'unique', 'upper', 'urlencode', 'urlize',
+      'wordcount', 'wordwrap', 'xmlattr'
+    }
+
+    return name.lower() not in jinja_keywords
 
 
 
