@@ -10,6 +10,7 @@
   - [Additional template features](#additional-template-features)
     - [Context variables](#context-variables)
     - [Additional built-in filters](#additional-built-in-filters)
+    - [Additional built-in tests](#additional-built-in-tests)
   - [Command line arguments](#command-line-arguments)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
@@ -174,6 +175,26 @@ To perform combinatorics on a list, the following functions are provided : `pair
 The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
 
 To get the name of the type of a variable as a string, use the `type` filter.
+
+### Additional built-in tests
+
+In addition to the [Jinja2 built-in tests](https://jinja.palletsprojects.com/en/latest/templates/#builtin-tests), J2GPP also defines many useful test functions.
+
+|           |              |             |                     |                  |
+| --------- | ------------ | ----------- | ------------------- | ---------------- |
+| decimal() | identifier() | printable() | defined_and_true()  | defined_and_le() |
+| digit()   | space()      | empty()     | defined_and_false() | defined_and_gt() |
+| numeric() | lower()      | singleton() | defined_and_eq()    | defined_and_ge() |
+| alpha()   | upper()      | list()      | defined_and_ne()    |                  |
+| alnum()   | title()      | dict()      | defined_and_lt()    |                  |
+
+The Python test functions `str.isdecimal()`, `str.isdigit()`, `str.isnumeric()`, `str.isalpha()`, `str.isalnum()`, `str.isidentifier()`, `str.isspace()`, `str.islower()`, `str.isupper()`, `str.istitle()`, and `str.isprintable()` are made available as tests `decimal`, `digit`, `numeric`, `alpha`, `alnum`, `identifier`, `space`, `lower`, `upper`, `title`, and `printable`. They automatically cast the input value to a string.
+
+For lists, the tests `empty` and `singleton` returns whether the list is empty or contains a single item respectively.
+
+Jinja2 provides tests for type testing integers, floats, and strings. J2GPP adds type testing for lists and dictionaries with the tests `list` and `dict` respectively.
+
+Jinja2 provides the `defined` test. To facilitate testing if a variable is defined and an additional condition on its value, J2GPP adds the tests `defined_and_true`, `defined_and_false`, `defined_and_eq` (equal, `==`), `defined_and_ne` (not equal, `!=`), `defined_and_lt` (less than, `<`), `defined_and_le` (less than or equal to, `<=`), `defined_and_gt` (greater than, `>`), and `defined_and_ge` (greater than or equal to, `>=`).
 
 ## Command line arguments
 
