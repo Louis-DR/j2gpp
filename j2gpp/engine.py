@@ -132,6 +132,57 @@ class J2GPP:
       self.variables = self._merge_variables(self.variables, env_vars)
     return self
 
+  def clear_variables(self) -> 'J2GPP':
+    """Clear all variables (chainable)"""
+    self.variables = {}
+    return self
+
+  def remove_variable(self, name: str) -> 'J2GPP':
+    """Remove variable with dot notation support (chainable)"""
+    var_keys = name.split('.')
+    current = self.variables
+
+    try:
+      # Navigate to the parent of the target key
+      for key in var_keys[:-1]:
+        if not isinstance(current, dict) or key not in current:
+          # Variable path doesn't exist, nothing to remove
+          return self
+        current = current[key]
+
+      # Remove the final key if it exists
+      final_key = var_keys[-1]
+      if isinstance(current, dict) and final_key in current:
+        del current[final_key]
+
+        # Clean up empty parent dictionaries
+        self._cleanup_empty_parents(self.variables, var_keys[:-1])
+
+    except (TypeError, KeyError):
+      # Variable doesn't exist, nothing to remove
+      pass
+
+    return self
+
+  def _cleanup_empty_parents(self, root: Dict[str, Any], path: List[str]):
+    """Remove empty parent dictionaries after variable removal"""
+    if not path:
+      return
+
+    current = root
+    for key in path[:-1]:
+      if not isinstance(current, dict) or key not in current:
+        return
+      current = current[key]
+
+    final_key = path[-1]
+    if isinstance(current, dict) and final_key in current:
+      target = current[final_key]
+      if isinstance(target, dict) and len(target) == 0:
+        del current[final_key]
+        # Recursively clean up if this made the parent empty
+        self._cleanup_empty_parents(root, path[:-1])
+
 
 
   # ┌───────────────┐

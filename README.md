@@ -309,6 +309,8 @@ J2GPP.define_variables({"key": "value"})     # Add dictionary of variables
 J2GPP.load_variables_from_file("./vars.yml") # Load from variables file
 J2GPP.load_variables_from_env()              # Load environment variables
 J2GPP.load_variables_from_env("ENV")         # Load environment variables under "ENV" prefix
+J2GPP.clear_variables()                      # Clear all variables
+J2GPP.remove_variable("key")                 # Remove variable (supports dot notation)
 ```
 
 ### Configuration methods
