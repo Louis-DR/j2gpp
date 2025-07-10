@@ -85,7 +85,22 @@ class J2GPP:
   # │ Variable Management  │
   # └──────────────────────┘
 
-  def add_variables(self, variables: Dict[str, Any]) -> 'J2GPP':
+  def define_variable(self, name: str, value: Any) -> 'J2GPP':
+    """Define single variable with dot notation support (chainable)"""
+    # Auto-cast string values
+    if isinstance(value, str):
+      value = auto_cast_str(value)
+
+    # Handle dot notation (e.g., "config.debug" -> {"config": {"debug": value}})
+    var_keys = name.split('.')[::-1]
+    var_dict = {var_keys[0]: value}
+    for var_key in var_keys[1:]:
+      var_dict = {var_key: var_dict}
+
+    self.variables = self._merge_variables(self.variables, var_dict)
+    return self
+
+  def define_variables(self, variables: Dict[str, Any]) -> 'J2GPP':
     """Add variables to global context (chainable)"""
     self.variables = self._merge_variables(self.variables, variables)
     return self
@@ -106,20 +121,6 @@ class J2GPP:
       self.variables = self._merge_variables(self.variables, env_vars)
     return self
 
-  def define_variable(self, name: str, value: Any) -> 'J2GPP':
-    """Define single variable with dot notation support (chainable)"""
-    # Auto-cast string values
-    if isinstance(value, str):
-      value = auto_cast_str(value)
-
-    # Handle dot notation (e.g., "config.debug" -> {"config": {"debug": value}})
-    var_keys = name.split('.')[::-1]
-    var_dict = {var_keys[0]: value}
-    for var_key in var_keys[1:]:
-      var_dict = {var_key: var_dict}
-
-    self.variables = self._merge_variables(self.variables, var_dict)
-    return self
 
 
   # ┌───────────────┐

@@ -302,8 +302,8 @@ Renders a template string directly. Returns the rendered string.
 ### Variable management
 
 ``` python
-J2GPP.add_variables({"key": "value"})        # Add dictionary of variables
-J2GPP.define_variable("key", "value")        # Define single variable (supports dot notation)
+J2GPP.define_variable("key", "value")        # Define single variable with auto-casting of strings and support for dot noration
+J2GPP.define_variables({"key": "value"})     # Add dictionary of variables
 J2GPP.load_variables_from_file("./vars.yml") # Load from variables file
 J2GPP.load_variables_from_env()              # Load environment variables
 J2GPP.load_variables_from_env("ENV")         # Load environment variables under "ENV" prefix
