@@ -288,7 +288,7 @@ J2GPP.render_file(source_path, output_path=None, output_dir=None, variables=None
 Renders a single template file. Returns `FileRenderResult` with information about the operation.
 
 ``` python
-J2GPP.render_directory(source_dir, output_dir, variables=None)
+J2GPP.render_directory(source_dir, output_dir=None, variables=None)
 ```
 
 Renders all templates in a directory tree. Returns `RenderResult` containing information about all processed files.
@@ -312,6 +312,7 @@ J2GPP.load_variables_from_env("ENV")         # Load environment variables under 
 ### Configuration methods
 
 ``` python
+J2GPP.set_output_directory("./output/")               # Set default output directory for all rendering
 J2GPP.add_include_directory("./includes/")            # Add include directory for Jinja2 imports
 J2GPP.set_include_directories(["./inc1/", "./inc2/"]) # Set multiple include directories
 J2GPP.add_filter("my_filter", my_filter_function)     # Add single filter function directly
@@ -361,6 +362,15 @@ j2gpp ./foo.c.j2 --outdir ./bar/
 from j2gpp import J2GPP
 j2gpp = J2GPP()
 j2gpp.render_file("./foo.c.j2", output_dir="./bar/")
+```
+
+In API mode, you can also set the default output directory for all rendering operations using the `set_output_directory()` method. This new default directory is overwritten by the `output_path` and `output_dir` parameters of the render methods.
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.set_output_directory("./bar/")
+j2gpp.render_file("./foo.c.j2")
 ```
 
 ### Specifying output file

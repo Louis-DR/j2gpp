@@ -68,6 +68,9 @@ class J2GPP:
       'overwrite_outdir':       False,
     }
 
+    # Output configuration
+    self.output_directory = None
+
     # Jinja2 configuration
     self.include_dirs = []
     self.filters = {}
@@ -127,6 +130,11 @@ class J2GPP:
   # ┌───────────────┐
   # │ Configuration │
   # └───────────────┘
+
+  def set_output_directory(self, output_dir: str) -> 'J2GPP':
+    """Set the output directory for all file rendering (chainable)"""
+    self.output_directory = os.path.abspath(output_dir)
+    return self
 
   def set_include_directories(self, dirs: List[str]) -> 'J2GPP':
     """Set Jinja2 include directories (chainable)"""
@@ -234,6 +242,7 @@ class J2GPP:
     return self
 
 
+
   # ┌────────────────────────┐
   # │ Core Rendering Methods │
   # └────────────────────────┘
@@ -246,10 +255,17 @@ class J2GPP:
                   ) -> FileRenderResult:
     """Render single file with optional per-render parameters"""
 
-    # Determine output path
+    # Determine output path with hierarchy:
+    # 1. Method parameter output_path (highest priority)
+    # 2. Method parameter output_dir
+    # 3. Class-level output_directory
+    # 4. Source file directory (default)
     if output_path is None:
       if output_dir is None:
-        output_dir = os.getcwd()
+        if self.output_directory is not None:
+          output_dir = self.output_directory
+        else:
+          output_dir = os.path.dirname(os.path.abspath(source_path))
 
       # Generate output filename
       filename = os.path.basename(source_path)
@@ -281,10 +297,20 @@ class J2GPP:
 
   def render_directory(self,
                        source_dir: str,
-                       output_dir: str,
+                       output_dir: Optional[str] = None,
                        variables:  Optional[Dict[str, Any]] = None,
                        ) -> RenderResult:
     """Render entire directory with optional per-render parameters"""
+
+    # Determine output directory with hierarchy:
+    # 1. Method parameter output_dir (highest priority)
+    # 2. Class-level output_directory
+    # 3. Source directory (default)
+    if output_dir is None:
+      if self.output_directory is not None:
+        output_dir = self.output_directory
+      else:
+        output_dir = source_dir
 
     # Merge variables
     merged_vars = self._get_merged_variables(variables)
