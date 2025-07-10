@@ -14,7 +14,7 @@
 import os
 from datetime import datetime
 from platform import python_version
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Callable
 
 from jinja2 import __version__ as jinja2_version
 
@@ -34,7 +34,8 @@ from j2gpp.utils import (
   auto_cast_str,
   throw_warning,
   rec_check_valid_identifier,
-  var_dict_update
+  var_dict_update,
+  load_module
 )
 
 
@@ -69,8 +70,8 @@ class J2GPP:
 
     # Jinja2 configuration
     self.include_dirs = []
-    self.filter_paths = []
-    self.test_paths   = []
+    self.filters = {}
+    self.tests   = {}
 
     # Adapter functions
     self.file_vars_adapter_function   = None
@@ -148,23 +149,75 @@ class J2GPP:
       throw_warning(f"Unknown option '{option_name}' ignored.")
     return self
 
-  def load_filters_from_file(self, file_path: str) -> 'J2GPP':
-    """Load custom Jinja2 filters (chainable)"""
-    abs_path = os.path.abspath(file_path)
-    if abs_path not in self.filter_paths:
-      self.filter_paths.append(abs_path)
+  def add_filter(self, name: str, function_callable: Callable) -> 'J2GPP':
+    """Add a single filter function directly (chainable)"""
+    if callable(function_callable):
+      self.filters[name] = function_callable
       self._env_dirty = True
+    else:
+      throw_warning(f"Filter '{name}' must be callable.")
+    return self
+
+  def add_test(self, name: str, function_callable: Callable) -> 'J2GPP':
+    """Add a single test function directly (chainable)"""
+    if callable(function_callable):
+      self.tests[name] = function_callable
+      self._env_dirty = True
+    else:
+      throw_warning(f"Test '{name}' must be callable.")
+    return self
+
+  def add_filters(self, filters: Dict[str, Callable]) -> 'J2GPP':
+    """Add multiple filter functions from dictionary (chainable)"""
+    for name, function_callable in filters.items():
+      self.add_filter(name, function_callable)
+    return self
+
+  def add_tests(self, tests: Dict[str, Callable]) -> 'J2GPP':
+    """Add multiple test functions from dictionary (chainable)"""
+    for name, function_callable in tests.items():
+      self.add_test(name, function_callable)
+    return self
+
+  def load_filters_from_file(self, file_path: str) -> 'J2GPP':
+    """Load custom Jinja2 filters from Python file (chainable)"""
+    file_absolute_path = os.path.abspath(file_path)
+
+    if os.path.isfile(file_absolute_path):
+      try:
+        filter_module = load_module("", file_absolute_path)
+        for filter_name in dir(filter_module):
+          if filter_name[0] != '_':
+            filter_function = getattr(filter_module, filter_name)
+            if callable(filter_function):
+              self.add_filter(filter_name, filter_function)
+      except Exception as exc:
+        throw_warning(f"Could not load filters from '{file_absolute_path}': {exc}")
+    else:
+      throw_warning(f"Filter file '{file_absolute_path}' does not exist.")
+
     return self
 
   def load_tests_from_file(self, file_path: str) -> 'J2GPP':
-    """Load custom Jinja2 tests (chainable)"""
-    abs_path = os.path.abspath(file_path)
-    if abs_path not in self.test_paths:
-      self.test_paths.append(abs_path)
-      self._env_dirty = True
+    """Load custom Jinja2 tests from Python file (chainable)"""
+    file_absolute_path = os.path.abspath(file_path)
+
+    if os.path.isfile(file_absolute_path):
+      try:
+        test_module = load_module("", file_absolute_path)
+        for test_name in dir(test_module):
+          if test_name[0] != '_':
+            test_function = getattr(test_module, test_name)
+            if callable(test_function):
+              self.add_test(test_name, test_function)
+      except Exception as exc:
+        throw_warning(f"Could not load tests from '{file_absolute_path}': {exc}")
+    else:
+      throw_warning(f"Test file '{file_absolute_path}' does not exist.")
+
     return self
 
-  def set_file_vars_adapter(self, function_callable) -> 'J2GPP':
+  def set_file_vars_adapter(self, function_callable: Callable) -> 'J2GPP':
     """Set function to process variables after loading from files (chainable)"""
     if callable(function_callable):
       self.file_vars_adapter_function = function_callable
@@ -172,7 +225,7 @@ class J2GPP:
       throw_warning("File vars adapter must be callable.")
     return self
 
-  def set_global_vars_adapter(self, function_callable) -> 'J2GPP':
+  def set_global_vars_adapter(self, function_callable: Callable) -> 'J2GPP':
     """Set function to process all variables before rendering (chainable)"""
     if callable(function_callable):
       self.global_vars_adapter_function = function_callable
@@ -255,7 +308,7 @@ class J2GPP:
 
     # Render using core function
     return render_template_string(
-      template_string, merged_vars, self.include_dirs, self.options
+      template_string, merged_vars, self.include_dirs, self.filters, self.tests, self.options
     )
 
 
@@ -268,8 +321,8 @@ class J2GPP:
     if self._jinja_env is None or self._env_dirty:
       self._jinja_env = setup_jinja_environment(
         include_dirs = self.include_dirs,
-        filter_paths = self.filter_paths,
-        test_paths   = self.test_paths,
+        filters      = self.filters,
+        tests        = self.tests,
         options      = self.options
       )
       self._env_dirty = False

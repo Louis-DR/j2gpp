@@ -314,8 +314,12 @@ J2GPP.load_variables_from_env("ENV")         # Load environment variables under 
 ``` python
 J2GPP.add_include_directory("./includes/")            # Add include directory for Jinja2 imports
 J2GPP.set_include_directories(["./inc1/", "./inc2/"]) # Set multiple include directories
-J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters
-J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests
+J2GPP.add_filter("my_filter", my_filter_function)     # Add single filter function directly
+J2GPP.add_test("my_test", my_test_function)           # Add single test function directly
+J2GPP.add_filters({"filter1": func1, "filter2": func2}) # Add multiple filter functions
+J2GPP.add_tests({"test1": func1, "test2": func2})     # Add multiple test functions
+J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters from Python file
+J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests from Python file
 J2GPP.set_option("trim_whitespace", True)             # Set rendering options
 ```
 
@@ -481,6 +485,18 @@ j2gpp = J2GPP()
 j2gpp.load_filters_from_file("./bar.py").render_file("./foo.c.j2")
 ```
 
+Or add filter functions directly:
+
+```python
+from j2gpp import J2GPP
+
+def right_ajust(s, length=0):
+  return s.rjust(length)
+
+j2gpp = J2GPP()
+j2gpp.add_filter("right_ajust", right_ajust).render_file("./foo.c.j2")
+```
+
 With the filter script `bar.py` :
 
 ``` python
@@ -502,6 +518,23 @@ j2gpp ./foo.c.j2 --tests ./bar.py
 from j2gpp import J2GPP
 j2gpp = J2GPP()
 j2gpp.load_tests_from_file("./bar.py").render_file("./foo.c.j2")
+```
+
+Or add test functions directly:
+
+```python
+import math
+from j2gpp import J2GPP
+
+def prime(x):
+  if x<=1: return False
+  for i in range(2,int(math.sqrt(x))+1):
+    if (x%i) == 0:
+      return False
+  return True
+
+j2gpp = J2GPP()
+j2gpp.add_test("prime", prime).render_file("./foo.c.j2")
 ```
 
 With the test script `bar.py` :
