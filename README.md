@@ -130,19 +130,19 @@ Useful context variables are added before any other variable is loaded. Some are
 
 In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/en/latest/templates/#builtin-filters), J2GPP also defines many useful filter functions.
 
-|             |            |            |                   |                                       |
-| ----------- | ---------- | ---------- | ----------------- | ------------------------------------- |
-| warning()   | sha224()   | rjust()    | reindent()        | product()                             |
-| error()     | sha256()   | center()   | autoindent()      | permutations()                        |
-| list_add()  | sha384()   | strip()    | align()           | combinations()                        |
-| list_sub()  | sha512()   | lstrip()   | restructure()     | combinations_with_replacement()       |
-| list_mult() | sha3_224() | rstrip()   | el_of_max_attr()  | permutations_range()                  |
-| list_div()  | sha3_256() | title()    | el_of_min_attr()  | combinations_range()                  |
-| list_mod()  | sha3_384() | swapcase() | key_of_max_attr() | combinations_with_replacement_range() |
-| list_rem()  | sha3_512() | camel()    | key_of_min_attr() | write()                               |
-| list_exp()  | blake2b()  | pascal()   | accumulate()      | append()                              |
-| md5()       | blake2s()  | snake()    | count()           | type()                                |
-| sha1()      | ljust()    | kebab()    | pairwise()        |                                       |
+|               |              |              |                     |                                         |
+| ------------- | ------------ | ------------ | ------------------- | --------------------------------------- |
+| `warning()`   | `sha224()`   | `rjust()`    | `reindent()`        | `product()`                             |
+| `error()`     | `sha256()`   | `center()`   | `autoindent()`      | `permutations()`                        |
+| `list_add()`  | `sha384()`   | `strip()`    | `align()`           | `combinations()`                        |
+| `list_sub()`  | `sha512()`   | `lstrip()`   | `restructure()`     | `combinations_with_replacement()`       |
+| `list_mult()` | `sha3_224()` | `rstrip()`   | `el_of_max_attr()`  | `permutations_range()`                  |
+| `list_div()`  | `sha3_256()` | `title()`    | `el_of_min_attr()`  | `combinations_range()`                  |
+| `list_mod()`  | `sha3_384()` | `swapcase()` | `key_of_max_attr()` | `combinations_with_replacement_range()` |
+| `list_rem()`  | `sha3_512()` | `camel()`    | `key_of_min_attr()` | `write()`                               |
+| `list_exp()`  | `blake2b()`  | `pascal()`   | `accumulate()`      | `append()`                              |
+| `md5()`       | `blake2s()`  | `snake()`    | `count()`           | `type()`                                |
+| `sha1()`      | `ljust()`    | `kebab()`    | `pairwise()`        |                                         |
 
 All functions from the Python libraries [`math`](https://docs.python.org/3/library/math.html) and [`statistics`](https://docs.python.org/3/library/statistics.html) are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
 
@@ -180,13 +180,13 @@ To get the name of the type of a variable as a string, use the `type` filter.
 
 In addition to the [Jinja2 built-in tests](https://jinja.palletsprojects.com/en/latest/templates/#builtin-tests), J2GPP also defines many useful test functions.
 
-|           |              |             |                     |                  |
-| --------- | ------------ | ----------- | ------------------- | ---------------- |
-| decimal() | identifier() | printable() | defined_and_true()  | defined_and_le() |
-| digit()   | space()      | empty()     | defined_and_false() | defined_and_gt() |
-| numeric() | lower()      | singleton() | defined_and_eq()    | defined_and_ge() |
-| alpha()   | upper()      | list()      | defined_and_ne()    |                  |
-| alnum()   | title()      | dict()      | defined_and_lt()    |                  |
+|             |                |               |                       |                    |
+| ----------- | -------------- | ------------- | --------------------- | ------------------ |
+| `decimal()` | `identifier()` | `printable()` | `defined_and_true()`  | `defined_and_le()` |
+| `digit()`   | `space()`      | `empty()`     | `defined_and_false()` | `defined_and_gt()` |
+| `numeric()` | `lower()`      | `singleton()` | `defined_and_eq()`    | `defined_and_ge()` |
+| `alpha()`   | `upper()`      | `list()`      | `defined_and_ne()`    |                    |
+| `alnum()`   | `title()`      | `dict()`      | `defined_and_lt()`    |                    |
 
 The Python test functions `str.isdecimal()`, `str.isdigit()`, `str.isnumeric()`, `str.isalpha()`, `str.isalnum()`, `str.isidentifier()`, `str.isspace()`, `str.islower()`, `str.isupper()`, `str.istitle()`, and `str.isprintable()` are made available as tests `decimal`, `digit`, `numeric`, `alpha`, `alnum`, `identifier`, `space`, `lower`, `upper`, `title`, and `printable`. They automatically cast the input value to a string.
 
