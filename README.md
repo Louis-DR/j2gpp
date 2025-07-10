@@ -19,6 +19,9 @@
     - [Variable management](#variable-management)
     - [Configuration methods](#configuration-methods)
     - [Advanced configuration](#advanced-configuration)
+    - [Configuration inspection](#configuration-inspection)
+    - [Template validation](#template-validation)
+    - [Template discovery \& analysis](#template-discovery--analysis)
     - [Result objects](#result-objects)
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
@@ -288,7 +291,7 @@ J2GPP.render_file(source_path, output_path=None, output_dir=None, variables=None
 Renders a single template file. Returns `FileRenderResult` with information about the operation.
 
 ``` python
-J2GPP.render_directory(source_dir, output_dir, variables=None)
+J2GPP.render_directory(source_dir, output_dir=None, variables=None)
 ```
 
 Renders all templates in a directory tree. Returns `RenderResult` containing information about all processed files.
@@ -302,20 +305,27 @@ Renders a template string directly. Returns the rendered string.
 ### Variable management
 
 ``` python
-J2GPP.add_variables({"key": "value"})        # Add dictionary of variables
-J2GPP.define_variable("key", "value")        # Define single variable (supports dot notation)
+J2GPP.define_variable("key", "value")        # Define single variable with auto-casting of strings and support for dot noration
+J2GPP.define_variables({"key": "value"})     # Add dictionary of variables
 J2GPP.load_variables_from_file("./vars.yml") # Load from variables file
 J2GPP.load_variables_from_env()              # Load environment variables
 J2GPP.load_variables_from_env("ENV")         # Load environment variables under "ENV" prefix
+J2GPP.clear_variables()                      # Clear all variables
+J2GPP.remove_variable("key")                 # Remove variable (supports dot notation)
 ```
 
 ### Configuration methods
 
 ``` python
+J2GPP.set_output_directory("./output/")               # Set default output directory for all rendering
 J2GPP.add_include_directory("./includes/")            # Add include directory for Jinja2 imports
 J2GPP.set_include_directories(["./inc1/", "./inc2/"]) # Set multiple include directories
-J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters
-J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests
+J2GPP.add_filter("my_filter", my_filter_function)     # Add single filter function directly
+J2GPP.add_test("my_test", my_test_function)           # Add single test function directly
+J2GPP.add_filters({"filter1": func1, "filter2": func2}) # Add multiple filter functions
+J2GPP.add_tests({"test1": func1, "test2": func2})     # Add multiple test functions
+J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters from Python file
+J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests from Python file
 J2GPP.set_option("trim_whitespace", True)             # Set rendering options
 ```
 
@@ -324,6 +334,46 @@ J2GPP.set_option("trim_whitespace", True)             # Set rendering options
 ``` python
 J2GPP.set_file_vars_adapter(my_function)   # Process variables after loading from files
 J2GPP.set_global_vars_adapter(my_function) # Process all variables before rendering
+```
+
+### Configuration inspection
+
+``` python
+# Get current configuration state
+J2GPP.get_variables()           # Return copy of current variables dictionary
+J2GPP.get_options()             # Return copy of current options dictionary
+J2GPP.get_filters()             # Return copy of available filters dictionary
+J2GPP.get_tests()               # Return copy of available tests dictionary
+J2GPP.get_include_directories() # Return copy of include directories list
+J2GPP.get_output_directory()    # Return current output directory (None if not set)
+
+# Check configuration state
+J2GPP.has_variable("key")                  # Check if variable exists (supports dot notation)
+J2GPP.has_filter("my_filter")              # Check if filter is loaded
+J2GPP.has_test("my_test")                  # Check if test is loaded
+J2GPP.has_include_directory("./includes/") # Check if include directory is configured
+```
+
+### Template validation
+
+``` python
+# Validate template syntax without rendering
+J2GPP.validate_template_string(template_str)    # Validate template string syntax
+J2GPP.validate_template_file("template.j2")     # Validate template file syntax
+J2GPP.validate_directory("./templates/")        # Validate all templates in directory (recursive by default)
+J2GPP.validate_directory("./templates/", False) # Validate templates in directory (non-recursive)
+```
+
+### Template discovery & analysis
+
+``` python
+# Find template files
+J2GPP.find_templates("./templates/")         # Find all .j2 files (recursive by default)
+J2GPP.find_templates("./templates/", False)  # Find .j2 files (non-recursive)
+
+# Analyze template dependencies and structure
+J2GPP.find_template_dependencies("main.j2") # Find included/imported templates
+J2GPP.analyze_template_variables("main.j2") # Extract variables used in template
 ```
 
 ### Result objects
@@ -339,6 +389,21 @@ RenderResult               # Returned by J2GPP.render_directory()
 RenderResult.success       # Boolean indicating overall success
 RenderResult.file_results  # List of `FileRenderResult` objects for each processed file
 RenderResult.error_message # Error description if failed
+
+ValidationResult               # Returned by template validation methods
+ValidationResult.is_valid      # Boolean indicating if template syntax is valid
+ValidationResult.template_path # Path to template file (None for string validation)
+ValidationResult.error_message # Error description if validation failed
+ValidationResult.error_line    # Line number where error occurred (if available)
+ValidationResult.error_column  # Column number where error occurred (if available)
+
+DirectoryValidationResult                   # Returned by J2GPP.validate_directory()
+DirectoryValidationResult.is_valid          # Boolean indicating if all templates are valid
+DirectoryValidationResult.directory_path    # Path to validated directory
+DirectoryValidationResult.total_templates   # Total number of templates found
+DirectoryValidationResult.valid_templates   # Number of valid templates
+DirectoryValidationResult.invalid_templates # Number of invalid templates
+DirectoryValidationResult.template_results  # List of `ValidationResult` objects for each template
 ```
 
 ## Advanced usage
@@ -357,6 +422,15 @@ j2gpp ./foo.c.j2 --outdir ./bar/
 from j2gpp import J2GPP
 j2gpp = J2GPP()
 j2gpp.render_file("./foo.c.j2", output_dir="./bar/")
+```
+
+In API mode, you can also set the default output directory for all rendering operations using the `set_output_directory()` method. This new default directory is overwritten by the `output_path` and `output_dir` parameters of the render methods.
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.set_output_directory("./bar/")
+j2gpp.render_file("./foo.c.j2")
 ```
 
 ### Specifying output file
@@ -481,6 +555,18 @@ j2gpp = J2GPP()
 j2gpp.load_filters_from_file("./bar.py").render_file("./foo.c.j2")
 ```
 
+Or add filter functions directly:
+
+```python
+from j2gpp import J2GPP
+
+def right_ajust(s, length=0):
+  return s.rjust(length)
+
+j2gpp = J2GPP()
+j2gpp.add_filter("right_ajust", right_ajust).render_file("./foo.c.j2")
+```
+
 With the filter script `bar.py` :
 
 ``` python
@@ -502,6 +588,23 @@ j2gpp ./foo.c.j2 --tests ./bar.py
 from j2gpp import J2GPP
 j2gpp = J2GPP()
 j2gpp.load_tests_from_file("./bar.py").render_file("./foo.c.j2")
+```
+
+Or add test functions directly:
+
+```python
+import math
+from j2gpp import J2GPP
+
+def prime(x):
+  if x<=1: return False
+  for i in range(2,int(math.sqrt(x))+1):
+    if (x%i) == 0:
+      return False
+  return True
+
+j2gpp = J2GPP()
+j2gpp.add_test("prime", prime).render_file("./foo.c.j2")
 ```
 
 With the test script `bar.py` :

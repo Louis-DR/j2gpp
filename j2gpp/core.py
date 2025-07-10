@@ -46,17 +46,17 @@ class RelativeIncludeEnvironment(Environment):
 
 
 def setup_jinja_environment(include_dirs: List[str]     = None,
-                            filter_paths: List[str]     = None,
-                            test_paths:   List[str]     = None,
+                            filters:      Dict[str,Any] = None,
+                            tests:        Dict[str,Any] = None,
                             options:      Dict[str,Any] = None,
                             ) -> Environment:
   """Set up Jinja2 environment with filters, tests, and options"""
   if include_dirs is None:
     include_dirs = []
-  if filter_paths is None:
-    filter_paths = []
-  if test_paths is None:
-    test_paths = []
+  if filters is None:
+    filters = {}
+  if tests is None:
+    tests = {}
   if options is None:
     options = {}
 
@@ -75,30 +75,10 @@ def setup_jinja_environment(include_dirs: List[str]     = None,
   env.tests.update(extra_tests)
 
   # Load custom filters
-  if filter_paths:
-    filters = {}
-    for filter_path in filter_paths:
-      if os.path.isfile(filter_path):
-        filter_module = load_module("", filter_path)
-        for filter_name in dir(filter_module):
-          if filter_name[0] != '_':
-            filter_function = getattr(filter_module, filter_name)
-            if callable(filter_function):
-              filters[filter_name] = filter_function
-    env.filters.update(filters)
+  env.filters.update(filters)
 
   # Load custom tests
-  if test_paths:
-    tests = {}
-    for test_path in test_paths:
-      if os.path.isfile(test_path):
-        test_module = load_module("", test_path)
-        for test_name in dir(test_module):
-          if test_name[0] != '_':
-            test_function = getattr(test_module, test_name)
-            if callable(test_function):
-              tests[test_name] = test_function
-    env.tests.update(tests)
+  env.tests.update(tests)
 
   return env
 
@@ -309,6 +289,8 @@ def process_directory(source_dir: str,
 def render_template_string(template_string: str,
                            variables:       Dict[str,Any] = None,
                            include_dirs:    List[str]     = None,
+                           filters:         Dict[str,Any] = None,
+                           tests:           Dict[str,Any] = None,
                            options:         Dict[str,Any] = None,
                            ) -> str:
   """Quick utility to render a template string"""
@@ -317,5 +299,5 @@ def render_template_string(template_string: str,
   if options is None:
     options = {}
 
-  env = setup_jinja_environment(include_dirs=include_dirs, options=options)
+  env = setup_jinja_environment(include_dirs=include_dirs, filters=filters, tests=tests, options=options)
   return env.from_string(template_string).render(variables)
