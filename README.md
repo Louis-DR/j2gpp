@@ -19,6 +19,7 @@
     - [Variable management](#variable-management)
     - [Configuration methods](#configuration-methods)
     - [Advanced configuration](#advanced-configuration)
+    - [Configuration inspection](#configuration-inspection)
     - [Result objects](#result-objects)
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
@@ -329,6 +330,24 @@ J2GPP.set_option("trim_whitespace", True)             # Set rendering options
 ``` python
 J2GPP.set_file_vars_adapter(my_function)   # Process variables after loading from files
 J2GPP.set_global_vars_adapter(my_function) # Process all variables before rendering
+```
+
+### Configuration inspection
+
+``` python
+# Get current configuration state
+J2GPP.get_variables()           # Return copy of current variables dictionary
+J2GPP.get_options()             # Return copy of current options dictionary
+J2GPP.get_filters()             # Return copy of available filters dictionary
+J2GPP.get_tests()               # Return copy of available tests dictionary
+J2GPP.get_include_directories() # Return copy of include directories list
+J2GPP.get_output_directory()    # Return current output directory (None if not set)
+
+# Check configuration state
+J2GPP.has_variable("key")                  # Check if variable exists (supports dot notation)
+J2GPP.has_filter("my_filter")              # Check if filter is loaded
+J2GPP.has_test("my_test")                  # Check if test is loaded
+J2GPP.has_include_directory("./includes/") # Check if include directory is configured
 ```
 
 ### Result objects

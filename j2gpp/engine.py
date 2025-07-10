@@ -85,9 +85,10 @@ class J2GPP:
     self._env_dirty = True
 
 
-  # ┌──────────────────────┐
-  # │ Variable Management  │
-  # └──────────────────────┘
+
+  # ┌─────────────────────┐
+  # │ Variable Management │
+  # └─────────────────────┘
 
   def define_variable(self, name: str, value: Any) -> 'J2GPP':
     """Define single variable with dot notation support (chainable)"""
@@ -243,6 +244,62 @@ class J2GPP:
 
 
 
+  # ┌──────────────────────────┐
+  # │ Configuration Inspection │
+  # └──────────────────────────┘
+
+  def get_variables(self) -> Dict[str, Any]:
+    """Get copy of current variables dictionary"""
+    return self.variables.copy()
+
+  def get_options(self) -> Dict[str, Any]:
+    """Get copy of current options dictionary"""
+    return self.options.copy()
+
+  def get_filters(self) -> Dict[str, Callable]:
+    """Get copy of current filters dictionary"""
+    return self.filters.copy()
+
+  def get_tests(self) -> Dict[str, Callable]:
+    """Get copy of current tests dictionary"""
+    return self.tests.copy()
+
+  def get_include_directories(self) -> List[str]:
+    """Get copy of current include directories list"""
+    return self.include_dirs.copy()
+
+  def get_output_directory(self) -> Optional[str]:
+    """Get current output directory (None if not set)"""
+    return self.output_directory
+
+  def has_variable(self, name: str) -> bool:
+    """Check if variable exists (supports dot notation for nested keys)"""
+    var_keys = name.split('.')
+    current = self.variables
+    try:
+      for key in var_keys:
+        if not isinstance(current, dict) or key not in current:
+          return False
+        current = current[key]
+      return True
+    except (TypeError, KeyError):
+      return False
+
+  def has_filter(self, name: str) -> bool:
+    """Check if filter is loaded"""
+    return name in self.filters
+
+  def has_test(self, name: str) -> bool:
+    """Check if test is loaded"""
+    return name in self.tests
+
+  def has_include_directory(self, directory: str) -> bool:
+    """Check if include directory is configured"""
+    abs_dir = os.path.abspath(directory)
+    return abs_dir in self.include_dirs
+
+
+
   # ┌────────────────────────┐
   # │ Core Rendering Methods │
   # └────────────────────────┘
@@ -336,6 +393,7 @@ class J2GPP:
     return render_template_string(
       template_string, merged_vars, self.include_dirs, self.filters, self.tests, self.options
     )
+
 
 
   # ┌──────────────────┐
