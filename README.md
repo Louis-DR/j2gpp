@@ -12,6 +12,8 @@
     - [Additional built-in filters](#additional-built-in-filters)
     - [Additional built-in tests](#additional-built-in-tests)
   - [CLI reference](#cli-reference)
+    - [Command line arguments](#command-line-arguments)
+    - [Exception handling and errors](#exception-handling-and-errors)
   - [API reference](#api-reference)
     - [Rendering methods](#rendering-methods)
     - [Variable management](#variable-management)
@@ -28,7 +30,7 @@
     - [Loading custom Jinja2 filters](#loading-custom-jinja2-filters)
     - [Loading custom Jinja2 tests](#loading-custom-jinja2-tests)
     - [Processing variables before rendering](#processing-variables-before-rendering)
-  - [Process directories](#process-directories)
+    - [Process directories](#process-directories)
   - [Supported formats for variables](#supported-formats-for-variables)
     - [CLI define](#cli-define)
     - [API define](#api-define)
@@ -228,6 +230,8 @@ Jinja2 provides the `defined` test. To facilitate testing if a variable is defin
 
 ## CLI reference
 
+### Command line arguments
+
 The following arguments can be added to the command for additional features. The details of each options are explained in the sections below.
 
 | Argument                   | Description                                                             |
@@ -264,6 +268,12 @@ The following arguments can be added to the command for additional features. The
 | `--perf`                   | Measure the execution time for performance testing                      |
 | `--version`                | Print J2GPP version and quits                                           |
 | `--license`                | Print J2GPP license and quits                                           |
+
+### Exception handling and errors
+
+When exceptions are encountered during the execution of J2GPP - either in the template, the variables file loaders, or the variable adapter functions - it will display the errors gracefully including, if possible, an error message explaining the issue, and the traceback information to locate the issue in the template.
+
+The errors and warnings can occur in different steps of the execution of J2GPP. They are collected and displayed again at the end of the execution alongside an error and warning counter. Warnings are printed on the standard output `stdout` of the shell, while errors are printed on the error stream `stderr`. If errors occured, the J2GPP process will also return an error status.
 
 ## API reference
 
@@ -537,7 +547,7 @@ def shout_values(var_dict):
       var_dict[key] = val.upper()
 ```
 
-## Process directories
+### Process directories
 
 When the source path provided corresponds to a directory, J2GPP will look for any template files in the source directory tree. If no output directory argument is provided, the rendered files will be written next to the source templates. If an output directory is provided, the source directory tree structure will be copied to the output directory with only the rendered files.
 
