@@ -20,6 +20,7 @@
     - [Configuration methods](#configuration-methods)
     - [Advanced configuration](#advanced-configuration)
     - [Configuration inspection](#configuration-inspection)
+    - [Template validation](#template-validation)
     - [Result objects](#result-objects)
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
@@ -350,6 +351,16 @@ J2GPP.has_test("my_test")                  # Check if test is loaded
 J2GPP.has_include_directory("./includes/") # Check if include directory is configured
 ```
 
+### Template validation
+
+``` python
+# Validate template syntax without rendering
+J2GPP.validate_template_string(template_str)    # Validate template string syntax
+J2GPP.validate_template_file("template.j2")     # Validate template file syntax
+J2GPP.validate_directory("./templates/")        # Validate all templates in directory (recursive by default)
+J2GPP.validate_directory("./templates/", False) # Validate templates in directory (non-recursive)
+```
+
 ### Result objects
 
 ``` python
@@ -363,6 +374,21 @@ RenderResult               # Returned by J2GPP.render_directory()
 RenderResult.success       # Boolean indicating overall success
 RenderResult.file_results  # List of `FileRenderResult` objects for each processed file
 RenderResult.error_message # Error description if failed
+
+ValidationResult               # Returned by template validation methods
+ValidationResult.is_valid      # Boolean indicating if template syntax is valid
+ValidationResult.template_path # Path to template file (None for string validation)
+ValidationResult.error_message # Error description if validation failed
+ValidationResult.error_line    # Line number where error occurred (if available)
+ValidationResult.error_column  # Column number where error occurred (if available)
+
+DirectoryValidationResult                   # Returned by J2GPP.validate_directory()
+DirectoryValidationResult.is_valid          # Boolean indicating if all templates are valid
+DirectoryValidationResult.directory_path    # Path to validated directory
+DirectoryValidationResult.total_templates   # Total number of templates found
+DirectoryValidationResult.valid_templates   # Number of valid templates
+DirectoryValidationResult.invalid_templates # Number of invalid templates
+DirectoryValidationResult.template_results  # List of `ValidationResult` objects for each template
 ```
 
 ## Advanced usage

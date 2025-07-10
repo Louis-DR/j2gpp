@@ -15,6 +15,39 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 
 
+@dataclass
+class ValidationResult:
+  """Result of template validation"""
+  template_path: Optional[str]     = None  # None for string validation
+  is_valid:      bool              = True
+  error_message: Optional[str]     = None
+  error_line:    Optional[int]     = None
+  error_column:  Optional[int]     = None
+
+
+@dataclass
+class DirectoryValidationResult:
+  """Result of validating all templates in a directory"""
+  directory_path:    str
+  template_results:  List[ValidationResult] = field(default_factory=list)
+  total_templates:   int                     = 0
+  valid_templates:   int                     = 0
+  invalid_templates: int                     = 0
+
+  @property
+  def is_valid(self) -> bool:
+    """True if all templates in directory are valid"""
+    return self.invalid_templates == 0
+
+  def add_template_result(self, result: ValidationResult):
+    """Add a template validation result"""
+    self.template_results.append(result)
+    self.total_templates += 1
+    if result.is_valid:
+      self.valid_templates += 1
+    else:
+      self.invalid_templates += 1
+
 
 @dataclass
 class FileRenderResult:

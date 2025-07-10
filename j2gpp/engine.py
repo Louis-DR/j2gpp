@@ -17,6 +17,7 @@ from platform import python_version
 from typing import Dict, Any, List, Optional, Callable
 
 from jinja2 import __version__ as jinja2_version
+from jinja2 import Environment, TemplateSyntaxError, TemplateNotFound
 
 from j2gpp.core import (
   setup_jinja_environment,
@@ -24,7 +25,12 @@ from j2gpp.core import (
   process_directory,
   render_template_string
 )
-from j2gpp.results import RenderResult, FileRenderResult
+from j2gpp.results import (
+  RenderResult,
+  FileRenderResult,
+  ValidationResult,
+  DirectoryValidationResult
+)
 from j2gpp.loaders import (
   load_variables_from_file,
   load_variables_from_env_vars
@@ -297,6 +303,116 @@ class J2GPP:
     """Check if include directory is configured"""
     abs_dir = os.path.abspath(directory)
     return abs_dir in self.include_dirs
+
+
+
+  # ┌─────────────────────┐
+  # │ Template Validation │
+  # └─────────────────────┘
+
+  def validate_template_string(self, template_string: str) -> ValidationResult:
+    """Validate template syntax without rendering"""
+    try:
+      # Create a minimal environment for parsing
+      env = self._ensure_environment()
+      # Parse the template to check for syntax errors
+      env.parse(template_string)
+      return ValidationResult(is_valid=True)
+    except TemplateSyntaxError as exc:
+      return ValidationResult(
+        is_valid=False,
+        error_message=str(exc),
+        error_line=getattr(exc, 'lineno', None),
+        error_column=getattr(exc, 'colno', None)
+      )
+    except TemplateNotFound as exc:
+      return ValidationResult(
+        is_valid=False,
+        error_message=f"Template not found: {exc}"
+      )
+    except Exception as exc:
+      return ValidationResult(
+        is_valid=False,
+        error_message=f"Unexpected error: {exc}"
+      )
+
+  def validate_template_file(self, file_path: str) -> ValidationResult:
+    """Validate template file syntax without rendering"""
+    abs_path = os.path.abspath(file_path)
+
+    # Check if file exists
+    if not os.path.isfile(abs_path):
+      return ValidationResult(
+        template_path=abs_path,
+        is_valid=False,
+        error_message=f"Template file does not exist: {abs_path}"
+      )
+
+    try:
+      # Read template file
+      with open(abs_path, 'r', encoding='utf-8') as file:
+        template_content = file.read()
+
+      # Validate the template content
+      result = self.validate_template_string(template_content)
+      result.template_path = abs_path
+      return result
+
+    except UnicodeDecodeError as exc:
+      return ValidationResult(
+        template_path=abs_path,
+        is_valid=False,
+        error_message=f"Cannot read template file (encoding error): {exc}"
+      )
+    except OSError as exc:
+      return ValidationResult(
+        template_path=abs_path,
+        is_valid=False,
+        error_message=f"Cannot read template file: {exc}"
+      )
+
+  def validate_directory(self, directory_path: str, recursive: bool = True) -> DirectoryValidationResult:
+    """Validate all template files in a directory"""
+    abs_dir = os.path.abspath(directory_path)
+    result = DirectoryValidationResult(directory_path=abs_dir)
+
+    if not os.path.isdir(abs_dir):
+      # Add a single validation result indicating directory doesn't exist
+      invalid_result = ValidationResult(
+        template_path=abs_dir,
+        is_valid=False,
+        error_message=f"Directory does not exist: {abs_dir}"
+      )
+      result.add_template_result(invalid_result)
+      return result
+
+    try:
+      # Find all .j2 template files
+      if recursive:
+        for root, dirs, files in os.walk(abs_dir):
+          for file in files:
+            if file.endswith('.j2'):
+              file_path = os.path.join(root, file)
+              template_result = self.validate_template_file(file_path)
+              result.add_template_result(template_result)
+      else:
+        # Only check files in the immediate directory
+        for file in os.listdir(abs_dir):
+          file_path = os.path.join(abs_dir, file)
+          if os.path.isfile(file_path) and file.endswith('.j2'):
+            template_result = self.validate_template_file(file_path)
+            result.add_template_result(template_result)
+
+    except OSError as exc:
+      # Add a single validation result indicating directory access error
+      invalid_result = ValidationResult(
+        template_path=abs_dir,
+        is_valid=False,
+        error_message=f"Cannot access directory: {exc}"
+      )
+      result.add_template_result(invalid_result)
+
+    return result
 
 
 
