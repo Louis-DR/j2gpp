@@ -5,7 +5,8 @@
 - [J2GPP - Jinja2-based General Purpose Preprocessor](#j2gpp---jinja2-based-general-purpose-preprocessor)
   - [Installation](#installation)
   - [Basic usage](#basic-usage)
-    - [J2GPP quick start](#j2gpp-quick-start)
+    - [J2GPP CLI quick start](#j2gpp-cli-quick-start)
+    - [J2GPP API quick start](#j2gpp-api-quick-start)
   - [Command line arguments](#command-line-arguments)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
@@ -52,13 +53,13 @@ pip install j2gpp
 
 ## Basic usage
 
-### J2GPP quick start
+### J2GPP CLI quick start
 
 `j2gpp` requires at least one source be provided. The source paths can be files or directories, relative or absolute, and can use UNIX-style patterns such as wildcards. Template file names must end with the `.j2` extension which will be stripped at render.
 
 For more information about the Jinja2 syntax, see the documentation at [jinja.palletsprojects.com](https://jinja.palletsprojects.com/).
 
-For instance, suppose we have a templatized source file `foo.c.j2` :
+For example, suppose we have a templatized source file `foo.c.j2` :
 
 ``` c
 #include <stdio.h>
@@ -86,6 +87,16 @@ int main() {
   printf("Hello, world!");
   return 0;
 }
+```
+
+### J2GPP API quick start
+
+J2GPP can also be called from another Python script using the API view. To perform the same action as the example above, the following Python script can be used.
+
+``` python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.render_file("./foo.c.j2")
 ```
 
 ## Command line arguments
