@@ -144,7 +144,7 @@ In addition to the [Jinja2 built-in filters](https://jinja.palletsprojects.com/e
 | md5()       | blake2s()  | snake()    | count()           | type()                                |
 | sha1()      | ljust()    | kebab()    | pairwise()        |                                       |
 
-All functions from the Python libraries `math` and `statistics` are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
+All functions from the Python libraries [`math`](https://docs.python.org/3/library/math.html) and [`statistics`](https://docs.python.org/3/library/statistics.html) are made available as filters. This includes useful functions such as `sqrt`, `pow`, `log`, `sin`, `cos`, `floor`, `ceil`, `mean`, `median`, `variance`, `stdev`, ...
 
 The `warning` and `error` filters can be used to throw warnings and errors from the template that will be displayed in the J2GPP logs. The filter is applied to a block, replaces the block with nothing and throws the warning or error with the content of the block as comment. The filter works with conditional blocks if the version of Jinja2 installed supports the `@render_time_only` decorator.
 
@@ -170,7 +170,7 @@ The sum of elements in a list or other iterable object can be computed using the
 
 You can count the number of occurrences of a value in a list using the `count` filter.
 
-To perform combinatorics on a list, the following functions are provided : `pairwise`, `product` (catersian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to permutations and combinations for lengths in a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
+To perform combinatorics on a list, the following functions from the Python library [`itertools`](https://docs.python.org/3/library/itertools.html) are provided : `pairwise`, `product` (catersian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to generate permutations and combinations of a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
 
 The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
 
