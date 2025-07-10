@@ -11,7 +11,7 @@
     - [Context variables](#context-variables)
     - [Additional built-in filters](#additional-built-in-filters)
     - [Additional built-in tests](#additional-built-in-tests)
-  - [Command line arguments](#command-line-arguments)
+  - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
     - [Include search directory](#include-search-directory)
@@ -23,6 +23,12 @@
     - [Processing variables before rendering](#processing-variables-before-rendering)
     - [Option flags](#option-flags)
   - [Process directories](#process-directories)
+  - [API reference](#api-reference)
+    - [Rendering methods](#rendering-methods)
+    - [Variable management](#variable-management)
+    - [Configuration methods](#configuration-methods)
+    - [Advanced configuration](#advanced-configuration)
+    - [Result objects](#result-objects)
   - [Supported formats for variables](#supported-formats-for-variables)
     - [Command line define](#command-line-define)
     - [YAML](#yaml)
@@ -99,6 +105,29 @@ J2GPP can also be called from another Python script using the API view. To perfo
 from j2gpp import J2GPP
 j2gpp = J2GPP()
 j2gpp.render_file("./foo.c.j2")
+```
+
+Options that can be passed to the CLI can also be passed to the instance of the class `J2GPP` using methods that are chainable for fluent configuration.
+
+The rendering methods `J2GPP.render_file()` and `J2GPP.render_directory()` return a `FileRenderResult` and `RenderResult` object containing information about the render, such as success, error message, and output path. The API can also render strings using `J2GPP.render_string()`.
+
+``` python
+from j2gpp import J2GPP
+
+# Complex configuration example
+result = (J2GPP()
+  .add_include_directory("./includes/")
+  .load_variables_from_file("./config.yml")
+  .define_variable("debug", True)
+  .set_option("trim_whitespace", True)
+  .load_filters_from_file("./custom_filters.py")
+  .render_file("./template.j2", output_path="./output.txt")
+)
+
+if result.success:
+  print(f"Template rendered successfully to: {result.output_path}")
+else:
+  print(f"Error: {result.error_message}")
 ```
 
 ## Additional template features
@@ -196,56 +225,86 @@ Jinja2 provides tests for type testing integers, floats, and strings. J2GPP adds
 
 Jinja2 provides the `defined` test. To facilitate testing if a variable is defined and an additional condition on its value, J2GPP adds the tests `defined_and_true`, `defined_and_false`, `defined_and_eq` (equal, `==`), `defined_and_ne` (not equal, `!=`), `defined_and_lt` (less than, `<`), `defined_and_le` (less than or equal to, `<=`), `defined_and_gt` (greater than, `>`), and `defined_and_ge` (greater than or equal to, `>=`).
 
-## Command line arguments
+## Advanced usage
 
 ### Specify output directory
 
 By default the rendered files are saved next to the source templates. You can provide an output directory with the `-O/--outdir` argument. The output directory path can be relative or absolute. If the directory doesn't exist, it will be created.
 
-For instance the following command will write the rendered file to `./bar/foo.c`.
+For instance the following command or script will write the rendered file to `./bar/foo.c`.
 
 ``` shell
 j2gpp ./foo.c.j2 --outdir ./bar/
+```
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.render_file("./foo.c.j2", output_dir="./bar/")
 ```
 
 ### Specifying output file
 
 By default the rendered files are saved next to the source templates. If a single source template is provided, you can specify the output file directory and name with the `-o/--output` argument. The output file path can be relative or absolute. If the directory doesn't exist, it will be created.
 
-For instance the following command will write the rendered file to `./bar.c`.
+For instance the following command or script will write the rendered file to `./bar.c`.
 
 ``` shell
 j2gpp ./foo.c.j2 --output ./bar.c
+```
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.render_file("./foo.c.j2", output_path="./bar.c")
 ```
 
 ### Include search directory
 
 The `include` and `import` Jinja2 statements require specifying the directory in which the renderer will search. That is provided using the `-I/--incidr` argument.
 
-For instance, with the following command, the files in the directory `./includes/` will be available to `include` and `import` statements when rendering the template `foo.c.j2`.
+For instance, with the following command or script, the files in the directory `./includes/` will be available to `include` and `import` statements when rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --incdir ./includes/
+```
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.add_include_directory("./includes/").render_file("./foo.c.j2")
 ```
 
 ### Passing global variables in command line
 
 You can pass global variables to all templates rendered using the `-D/--define` argument with a list of variables in the format `name=value`. Values are parsed to cast to the correct Python type as explained [later](#command-line-define). Dictionary attributes to any depth can be assigned using dots "`.`" to separate the keys. Global variables defined in the command line overwrite the global variables set by loading files.
 
-For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
+For instance, with the following command or script, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --define bar=42
+```
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.define_variable("bar", 42).render_file("./foo.c.j2")
 ```
 
 ### Loading global variables from files
 
 You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, HJSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
 
-For instance, with the following command, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
+For instance, with the following command or script, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --varfile ./qux.yml
+```
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.load_variables_from_file("./qux.yml").render_file("./foo.c.j2")
 ```
 
 With the variables file `qux.yml` :
@@ -258,34 +317,57 @@ bar: 42
 
 You can import the environment variables of the shell as global variables using the `--envvar` argument. The name of the variables will be that of the environment variable and the value will be cast automatically to the proper Python/Jinja2 type.
 
-For instance, with the following command, the variable `BAR` will have the value `42` when rendering the template `foo.c.j2`.
+For instance, with the following command or script, the variable `BAR` will have the value `42` when rendering the template `foo.c.j2`.
 
 ``` shell
 export BAR=42
 j2gpp ./foo.c.j2 --envvar
 ```
 
+```python
+import os
+from j2gpp import J2GPP
+os.environ["BAR"] = "42"
+j2gpp = J2GPP()
+j2gpp.load_variables_from_env().render_file("./foo.c.j2")
+```
+
 If a string is provided after the `--envvar` argument, the environment variables will be stored in an object of the name provided instead of at the root.
 
-For instance, with the following command, the variable `ENV.BAR` will have the value `42` when rendering the template `foo.c.j2`.
+For instance, with the following command or script, the variable `ENV.BAR` will have the value `42` when rendering the template `foo.c.j2`.
 
 ``` shell
 export BAR=42
 j2gpp ./foo.c.j2 --envvar ENV
 ```
 
+```python
+import os
+from j2gpp import J2GPP
+os.environ["BAR"] = "42"
+j2gpp = J2GPP()
+j2gpp.load_variables_from_env("ENV").render_file("./foo.c.j2")
+```
+
 ### Loading custom Jinja2 filters
 
 You can import custom Jinja2 filters by providing Python files with the `--filters` argument. All functions defined in the python files will be available as Jinja2 filters in the templates.
 
-For instance, with the following command and python file, the filter `right_ajust` will be available when rendering the template `foo.c.j2`.
+For instance, with the following command or script and python file, the filter `right_ajust` will be available when rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --filters ./bar.py
 ```
 
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.load_filters_from_file("./bar.py").render_file("./foo.c.j2")
+```
+
+With the filter script `bar.py` :
+
 ``` python
-# bar.py
 def right_ajust(s, length=0):
   return s.rjust(length)
 ```
@@ -294,14 +376,21 @@ def right_ajust(s, length=0):
 
 You can import custom Jinja2 tests by providing Python files with the `--tests` argument. All functions defined in the python files will be available as Jinja2 tests in the templates.
 
-For instance, with the following command and python file, the test `prime` will be available when rendering the template `foo.c.j2`.
+For instance, with the following command or script and python file, the test `prime` will be available when rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --tests ./bar.py
 ```
 
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.load_tests_from_file("./bar.py").render_file("./foo.c.j2")
+```
+
+With the test script `bar.py` :
+
 ``` python
-# bar.py
 import math
 def prime(x):
   if x<=1: return False
@@ -315,14 +404,27 @@ def prime(x):
 
 You can perform transformations on the dictionary storing the variables before rendering templates by providing a Python function with the argument `--global-vars-adapter`. It takes two arguments, the first is the path to the Python script, and the second is the name of the function to use. The function must take in a single argument, the variables dictionary, and modify it as a reference (not return the modified dictionary). You can also provide an adapter function to be run on the variables loaded from each file before they are written to the global variables object by providing a function with the argument `--file-vars-adapter`.
 
-For instance, with the following command and python file, the variable dictionary loaded from the file `qux.yml` will be processed by the function `shout_values()` before rendering the template `foo.c.j2`.
+For instance, with the following command or script and python file, the variable dictionary loaded from the file `qux.yml` will be processed by the function `shout_values()` before rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --varfile ./qux.yml --file-vars-adapter ./bar.py shout_values
 ```
 
+```python
+from j2gpp import J2GPP
+
+def shout_values(var_dict):
+  for key, val in var_dict.items():
+    if isinstance(val, str):
+      var_dict[key] = val.upper()
+
+j2gpp = J2GPP()
+j2gpp.set_file_vars_adapter(shout_values).load_variables_from_file("./qux.yml").render_file("./foo.c.j2")
+```
+
+With the processing script `bar.py` :
+
 ``` python
-# bar.py
 def shout_values(var_dict):
   for key,val in var_dict.items():
     if isinstance(val, str):
@@ -386,7 +488,7 @@ For instance, suppose we have the following directory structure :
     └── template_2.txt.j2
 ```
 
-When we execute the command `j2gpp ./test_dir/`, we will get :
+When we execute the command `j2gpp ./test_dir/` or the script `J2GPP().render_directory("./test_dir/")`, we will get :
 
 ``` txt
 .
@@ -402,7 +504,7 @@ When we execute the command `j2gpp ./test_dir/`, we will get :
     └── template_2.txt.j2
 ```
 
-But if we provide an output directory with the command `j2gpp ./test_dir/ --outdir ./out_dir/`, we will get :
+But if we provide an output directory with the command `j2gpp ./test_dir/ --outdir ./out_dir/` or the script `J2GPP().render_directory("./test_dir/", "./out_dir/")`, we will get :
 
 ``` txt
 .
@@ -421,7 +523,7 @@ But if we provide an output directory with the command `j2gpp ./test_dir/ --outd
     └── template_2.txt
 ```
 
-We can also tell J2GPP to copy the non-template files with the command `j2gpp ./test_dir/ --outdir ./out_dir/ --copy-non-template`, then we will get :
+We can also tell J2GPP to copy the non-template files with the command `j2gpp ./test_dir/ --outdir ./out_dir/ --copy-non-template` or the script `J2GPP().set_option("copy_non_template", True).render_directory("./test_dir/", "./out_dir/")`, then we will get :
 
 ``` txt
 .
@@ -443,7 +545,7 @@ We can also tell J2GPP to copy the non-template files with the command `j2gpp ./
     └── template_2.txt
 ```
 
-Or even to process non-templates files as templates anyway with the command `j2gpp ./test_dir/ --outdir ./out_dir/ --render-non-template`, then we will get :
+Or even to process non-templates files as templates anyway with the command `j2gpp ./test_dir/ --outdir ./out_dir/ --render-non-template` or the script `J2GPP().set_option("render_non_template", True).render_directory("./test_dir/", "./out_dir/")`, then we will get :
 
 ``` txt
 .
@@ -463,6 +565,72 @@ Or even to process non-templates files as templates anyway with the command `j2g
     ├── sub_dir_2
     │   └── non_template_2_j2gpp.txt
     └── template_2.txt
+```
+
+## API reference
+
+The `J2GPP` class provides a comprehensive API for programmatic template rendering. All configuration methods are chainable, allowing for fluent configuration.
+
+### Rendering methods
+
+``` python
+J2GPP.render_file(source_path, output_path=None, output_dir=None, variables=None)
+```
+
+Renders a single template file. Returns `FileRenderResult` with information about the operation.
+
+``` python
+J2GPP.render_directory(source_dir, output_dir, variables=None)
+```
+
+Renders all templates in a directory tree. Returns `RenderResult` containing information about all processed files.
+
+``` python
+J2GPP.render_string(template_string, variables=None)
+```
+
+Renders a template string directly. Returns the rendered string.
+
+### Variable management
+
+``` python
+J2GPP.add_variables({"key": "value"})        # Add dictionary of variables
+J2GPP.define_variable("key", "value")        # Define single variable (supports dot notation)
+J2GPP.load_variables_from_file("./vars.yml") # Load from variables file
+J2GPP.load_variables_from_env()              # Load environment variables
+J2GPP.load_variables_from_env("ENV")         # Load environment variables under "ENV" prefix
+```
+
+### Configuration methods
+
+``` python
+J2GPP.add_include_directory("./includes/")            # Add include directory for Jinja2 imports
+J2GPP.set_include_directories(["./inc1/", "./inc2/"]) # Set multiple include directories
+J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters
+J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests
+J2GPP.set_option("trim_whitespace", True)             # Set rendering options
+```
+
+### Advanced configuration
+
+``` python
+J2GPP.set_file_vars_adapter(my_function)   # Process variables after loading from files
+J2GPP.set_global_vars_adapter(my_function) # Process all variables before rendering
+```
+
+### Result objects
+
+``` python
+FileRenderResult               # Returned by J2GPP.render_file()
+FileRenderResult.success       # Boolean indicating success
+FileRenderResult.output_path   # Path where file was written
+FileRenderResult.error_message # Error description if failed
+FileRenderResult.source_path   # Original template path
+
+RenderResult               # Returned by J2GPP.render_directory()
+RenderResult.success       # Boolean indicating overall success
+RenderResult.file_results  # List of `FileRenderResult` objects for each processed file
+RenderResult.error_message # Error description if failed
 ```
 
 ## Supported formats for variables
