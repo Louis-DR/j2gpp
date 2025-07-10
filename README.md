@@ -11,6 +11,13 @@
     - [Context variables](#context-variables)
     - [Additional built-in filters](#additional-built-in-filters)
     - [Additional built-in tests](#additional-built-in-tests)
+  - [CLI reference](#cli-reference)
+  - [API reference](#api-reference)
+    - [Rendering methods](#rendering-methods)
+    - [Variable management](#variable-management)
+    - [Configuration methods](#configuration-methods)
+    - [Advanced configuration](#advanced-configuration)
+    - [Result objects](#result-objects)
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
@@ -21,14 +28,7 @@
     - [Loading custom Jinja2 filters](#loading-custom-jinja2-filters)
     - [Loading custom Jinja2 tests](#loading-custom-jinja2-tests)
     - [Processing variables before rendering](#processing-variables-before-rendering)
-    - [Option flags](#option-flags)
   - [Process directories](#process-directories)
-  - [API reference](#api-reference)
-    - [Rendering methods](#rendering-methods)
-    - [Variable management](#variable-management)
-    - [Configuration methods](#configuration-methods)
-    - [Advanced configuration](#advanced-configuration)
-    - [Result objects](#result-objects)
   - [Supported formats for variables](#supported-formats-for-variables)
     - [CLI define](#cli-define)
     - [API define](#api-define)
@@ -225,6 +225,111 @@ For lists, the tests `empty` and `singleton` returns whether the list is empty o
 Jinja2 provides tests for type testing integers, floats, and strings. J2GPP adds type testing for lists and dictionaries with the tests `list` and `dict` respectively.
 
 Jinja2 provides the `defined` test. To facilitate testing if a variable is defined and an additional condition on its value, J2GPP adds the tests `defined_and_true`, `defined_and_false`, `defined_and_eq` (equal, `==`), `defined_and_ne` (not equal, `!=`), `defined_and_lt` (less than, `<`), `defined_and_le` (less than or equal to, `<=`), `defined_and_gt` (greater than, `>`), and `defined_and_ge` (greater than or equal to, `>=`).
+
+## CLI reference
+
+The following arguments can be added to the command for additional features. The details of each options are explained in the sections below.
+
+| Argument                   | Description                                                             |
+| -------------------------- | ----------------------------------------------------------------------- |
+| `-O/--outdir`              | Output directory for all rendered templates                             |
+| `-o/--output`              | Output file for single template                                         |
+| `-I/--incdir`              | Include search directory for include and import statements              |
+| `-D/--define`              | Inline global variables for all templates                               |
+| `-V/--varfile`             | Global variables files for all templates                                |
+| `--envvar`                 | Loads environment variables as global variables                         |
+| `--filters`                | Load extra Jinja2 filters from a Python file                            |
+| `--tests`                  | Load extra Jinja2 tests from a Python file                              |
+| `--file-vars-adapter`      | Load a Python function to process variables after loading from a file   |
+| `--global-vars-adapter`    | Load a Python function to process all variables before rendering        |
+| `--overwrite-outdir`       | Overwrite output directory                                              |
+| `--warn-overwrite`         | Warn when overwriting files                                             |
+| `--no-overwrite`           | Prevent overwriting files                                               |
+| `--no-strict-undefined`    | Disable error with undefined variable in template                       |
+| `--no-check-identifier`    | Disable warning when attributes are not valid identifiers               |
+| `--fix-identifiers`        | Replace invalid characters from identifiers with underscore             |
+| `--chdir-src`              | Change working directory to source before rendering instead of output   |
+| `--no-chdir`               | Disable changing working directory to output directory before rendering |
+| `--trim-whitespace`        | Trim trailing whitespace in generated files                             |
+| `--csv-delimiter`          | CSV delimiter (default: '`,`')                                          |
+| `--csv-escape-char`        | CSV escape character (default: None)                                    |
+| `--csv-dont-strip`         | Disable stripping whitespace of CSV values                              |
+| `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix         |
+| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                                 |
+| `--render-non-template`    | Process also source files that are not recognized as templates          |
+| `--copy-non-template`      | Copy source files that are not templates to output directory            |
+| `--force-glob`             | Glob UNIX-like patterns in path even when quoted                        |
+| `--debug-vars`             | Display available variables at the top of rendered templates            |
+| `--stdout-errors`          | Display errors on stdout instead of stderr                              |
+| `--perf`                   | Measure the execution time for performance testing                      |
+| `--version`                | Print J2GPP version and quits                                           |
+| `--license`                | Print J2GPP license and quits                                           |
+
+## API reference
+
+The `J2GPP` class provides a comprehensive API for programmatic template rendering. All configuration methods are chainable, allowing for fluent configuration. The details of each methods are explained in the sections below.
+
+### Rendering methods
+
+``` python
+J2GPP.render_file(source_path, output_path=None, output_dir=None, variables=None)
+```
+
+Renders a single template file. Returns `FileRenderResult` with information about the operation.
+
+``` python
+J2GPP.render_directory(source_dir, output_dir, variables=None)
+```
+
+Renders all templates in a directory tree. Returns `RenderResult` containing information about all processed files.
+
+``` python
+J2GPP.render_string(template_string, variables=None)
+```
+
+Renders a template string directly. Returns the rendered string.
+
+### Variable management
+
+``` python
+J2GPP.add_variables({"key": "value"})        # Add dictionary of variables
+J2GPP.define_variable("key", "value")        # Define single variable (supports dot notation)
+J2GPP.load_variables_from_file("./vars.yml") # Load from variables file
+J2GPP.load_variables_from_env()              # Load environment variables
+J2GPP.load_variables_from_env("ENV")         # Load environment variables under "ENV" prefix
+```
+
+### Configuration methods
+
+``` python
+J2GPP.add_include_directory("./includes/")            # Add include directory for Jinja2 imports
+J2GPP.set_include_directories(["./inc1/", "./inc2/"]) # Set multiple include directories
+J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters
+J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests
+J2GPP.set_option("trim_whitespace", True)             # Set rendering options
+```
+
+### Advanced configuration
+
+``` python
+J2GPP.set_file_vars_adapter(my_function)   # Process variables after loading from files
+J2GPP.set_global_vars_adapter(my_function) # Process all variables before rendering
+```
+
+### Result objects
+
+``` python
+FileRenderResult               # Returned by J2GPP.render_file()
+FileRenderResult.success       # Boolean indicating success
+FileRenderResult.output_path   # Path where file was written
+FileRenderResult.error_message # Error description if failed
+FileRenderResult.source_path   # Original template path
+
+RenderResult               # Returned by J2GPP.render_directory()
+RenderResult.success       # Boolean indicating overall success
+RenderResult.file_results  # List of `FileRenderResult` objects for each processed file
+RenderResult.error_message # Error description if failed
+```
 
 ## Advanced usage
 
@@ -432,45 +537,6 @@ def shout_values(var_dict):
       var_dict[key] = val.upper()
 ```
 
-### Option flags
-
-The following arguments can be added to the command for additional features. The details of each command is explained in the sections below.
-
-| Argument                   | Description                                                             |
-| -------------------------- | ----------------------------------------------------------------------- |
-| `-O/--outdir`              | Output directory for all rendered templates                             |
-| `-o/--output`              | Output file for single template                                         |
-| `-I/--incdir`              | Include search directory for include and import statements              |
-| `-D/--define`              | Inline global variables for all templates                               |
-| `-V/--varfile`             | Global variables files for all templates                                |
-| `--envvar`                 | Loads environment variables as global variables                         |
-| `--filters`                | Load extra Jinja2 filters from a Python file                            |
-| `--tests`                  | Load extra Jinja2 tests from a Python file                              |
-| `--file-vars-adapter`      | Load a Python function to process variables after loading from a file   |
-| `--global-vars-adapter`    | Load a Python function to process all variables before rendering        |
-| `--overwrite-outdir`       | Overwrite output directory                                              |
-| `--warn-overwrite`         | Warn when overwriting files                                             |
-| `--no-overwrite`           | Prevent overwriting files                                               |
-| `--no-strict-undefined`    | Disable error with undefined variable in template                       |
-| `--no-check-identifier`    | Disable warning when attributes are not valid identifiers               |
-| `--fix-identifiers`        | Replace invalid characters from identifiers with underscore             |
-| `--chdir-src`              | Change working directory to source before rendering instead of output   |
-| `--no-chdir`               | Disable changing working directory to output directory before rendering |
-| `--trim-whitespace`        | Trim trailing whitespace in generated files                             |
-| `--csv-delimiter`          | CSV delimiter (default: '`,`')                                          |
-| `--csv-escape-char`        | CSV escape character (default: None)                                    |
-| `--csv-dont-strip`         | Disable stripping whitespace of CSV values                              |
-| `--xml-convert-attributes` | Convert XML attributes to normal element without the '@' prefix         |
-| `--xml-remove-namespaces`  | Remove XML namespace prefixes from tags                                 |
-| `--render-non-template`    | Process also source files that are not recognized as templates          |
-| `--copy-non-template`      | Copy source files that are not templates to output directory            |
-| `--force-glob`             | Glob UNIX-like patterns in path even when quoted                        |
-| `--debug-vars`             | Display available variables at the top of rendered templates            |
-| `--stdout-errors`          | Display errors on stdout instead of stderr                              |
-| `--perf`                   | Measure the execution time for performance testing                      |
-| `--version`                | Print J2GPP version and quits                                           |
-| `--license`                | Print J2GPP license and quits                                           |
-
 ## Process directories
 
 When the source path provided corresponds to a directory, J2GPP will look for any template files in the source directory tree. If no output directory argument is provided, the rendered files will be written next to the source templates. If an output directory is provided, the source directory tree structure will be copied to the output directory with only the rendered files.
@@ -566,72 +632,6 @@ Or even to process non-templates files as templates anyway with the command `j2g
     ├── sub_dir_2
     │   └── non_template_2_j2gpp.txt
     └── template_2.txt
-```
-
-## API reference
-
-The `J2GPP` class provides a comprehensive API for programmatic template rendering. All configuration methods are chainable, allowing for fluent configuration.
-
-### Rendering methods
-
-``` python
-J2GPP.render_file(source_path, output_path=None, output_dir=None, variables=None)
-```
-
-Renders a single template file. Returns `FileRenderResult` with information about the operation.
-
-``` python
-J2GPP.render_directory(source_dir, output_dir, variables=None)
-```
-
-Renders all templates in a directory tree. Returns `RenderResult` containing information about all processed files.
-
-``` python
-J2GPP.render_string(template_string, variables=None)
-```
-
-Renders a template string directly. Returns the rendered string.
-
-### Variable management
-
-``` python
-J2GPP.add_variables({"key": "value"})        # Add dictionary of variables
-J2GPP.define_variable("key", "value")        # Define single variable (supports dot notation)
-J2GPP.load_variables_from_file("./vars.yml") # Load from variables file
-J2GPP.load_variables_from_env()              # Load environment variables
-J2GPP.load_variables_from_env("ENV")         # Load environment variables under "ENV" prefix
-```
-
-### Configuration methods
-
-``` python
-J2GPP.add_include_directory("./includes/")            # Add include directory for Jinja2 imports
-J2GPP.set_include_directories(["./inc1/", "./inc2/"]) # Set multiple include directories
-J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters
-J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests
-J2GPP.set_option("trim_whitespace", True)             # Set rendering options
-```
-
-### Advanced configuration
-
-``` python
-J2GPP.set_file_vars_adapter(my_function)   # Process variables after loading from files
-J2GPP.set_global_vars_adapter(my_function) # Process all variables before rendering
-```
-
-### Result objects
-
-``` python
-FileRenderResult               # Returned by J2GPP.render_file()
-FileRenderResult.success       # Boolean indicating success
-FileRenderResult.output_path   # Path where file was written
-FileRenderResult.error_message # Error description if failed
-FileRenderResult.source_path   # Original template path
-
-RenderResult               # Returned by J2GPP.render_directory()
-RenderResult.success       # Boolean indicating overall success
-RenderResult.file_results  # List of `FileRenderResult` objects for each processed file
-RenderResult.error_message # Error description if failed
 ```
 
 ## Supported formats for variables
