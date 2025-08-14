@@ -269,6 +269,29 @@ def affix_lines(content, prefix="", suffix="", prefix_first=True, suffix_last=Tr
   return '\n'.join(lines)
 extra_filters['affix_lines'] = affix_lines
 
+# Justify lines
+def justify_lines(content, width=1, fillchar=' ', align='left'):
+  # Width of the longest line
+  max_width = max([len(line) for line in content.split('\n')])
+  justify_width = max(max_width, width)
+  # Iterate line by line
+  lines = content.split('\n')
+  for index,line in enumerate(lines):
+    # Justify the line
+    match align:
+      case 'left':
+        line = line.ljust(justify_width, fillchar)
+      case 'right':
+        line = line.rjust(justify_width, fillchar)
+      case 'center':
+        line = line.center(justify_width, fillchar)
+    # Update the line
+    lines[index] = line
+  return '\n'.join(lines)
+extra_filters['ljust_lines']  = lambda s,w=1,c=" " : justify_lines(s,w,c,'left')
+extra_filters['rjust_lines']  = lambda s,w=1,c=" " : justify_lines(s,w,c,'right')
+extra_filters['center_lines'] = lambda s,w=1,c=" " : justify_lines(s,w,c,'center')
+
 # Controlling line jumps and blank lines
 extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
 extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
