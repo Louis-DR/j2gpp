@@ -246,6 +246,29 @@ extra_filters['affix_all']        = lambda l,p,s,c : [affix(s,p,s,c)   for s in 
 # │ Paragraph formatting │
 # └──────────────────────┘
 
+# Affix lines with prefix and suffix
+def affix_lines(content, prefix="", suffix="", prefix_first=True, suffix_last=True, affix_blank=True, strip_left=False, strip_right=False):
+  # Iterate line by line
+  lines = content.split('\n')
+  for index,line in enumerate(lines):
+    # Strip the line if requested
+    if strip_left:
+      line = line.lstrip()
+    if strip_right:
+      line = line.rstrip()
+    # If line is not blank or we affix blank lines
+    if line != '' or affix_blank:
+      # If line isn't the first line and we affix the first line
+      if index != 0 or prefix_first:
+        line = prefix + line
+      # If line isn't the last line and we affix the last line
+      if index != len(lines)-1 or suffix_last:
+        line = line + suffix
+    # Update the line
+    lines[index] = line
+  return '\n'.join(lines)
+extra_filters['affix_lines'] = affix_lines
+
 # Controlling line jumps and blank lines
 extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
 extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
