@@ -147,8 +147,10 @@ extra_filters['lstrip'] = lambda s,p=None : str(s).lstrip(p)
 extra_filters['rstrip'] = lambda s,p=None : str(s).rstrip(p)
 
 # Case
-extra_filters['title']    = lambda s : str(s).title()
-extra_filters['swapcase'] = lambda s : str(s).swapcase()
+extra_filters['title']      = lambda s : str(s).title()
+extra_filters['capitalize'] = lambda s : str(s).capitalize()
+extra_filters['casefold']   = lambda s : str(s).casefold()
+extra_filters['swapcase']   = lambda s : str(s).swapcase()
 
 def camel(s, remove_underscore=True, remove_hyphen=True, remove_dot=False):
   if remove_underscore: s = s.replace('_', '')
