@@ -276,22 +276,20 @@ extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
 # Removes pre-existing indentation and sets new one
 def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
   indent = depth * ('\t' if tabs else ' '*spaces)
-  is_first = True
 
   # Iterate line by line
   lines = content.split('\n')
-  for idx,line in enumerate(lines):
+  for index,line in enumerate(lines):
 
     # First line skipped according to argument
-    if is_first and not first:
-      is_first = False
+    if index == 0 and not first:
       continue
 
     # Update the line with the correct indentation
     line = line.lstrip()
-    if line != '' and not blank:
+    if line != '' or blank:
       line = indent + line
-    lines[idx] = line
+    lines[index] = line
 
   # Return paragraph of lines
   return '\n'.join(lines)
@@ -301,18 +299,16 @@ extra_filters['reindent'] = reindent
 
 # Removes pre-existing indentation and sets new indent based on rules
 def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=False, blank=False):
-  is_first = True
-  depth = 0
+  depth      = 0
   next_depth = 0
 
   # Iterate line by line
   lines = content.split('\n')
-  for idx,line in enumerate(lines):
+  for index,line in enumerate(lines):
     depth = next_depth
 
     # First line
-    if is_first:
-      is_first = False
+    if index == 0:
 
       # Count the indentation of the first line
       if tabs:
@@ -340,9 +336,9 @@ def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=Fa
     # Update the line with the correct indentation
     line = line.lstrip()
     indent = depth * ('\t' if tabs else ' '*spaces)
-    if line != '' and not blank:
+    if line != '' or blank:
       line = indent + line
-    lines[idx] = line
+    lines[index] = line
 
   # Return paragraph of lines
   return '\n'.join(lines)
@@ -359,20 +355,20 @@ def align(content, margin=1):
   columns_widths = []
   for line in lines:
     line_obj = []
-    column_idx = 0
+    column_index = 0
     # First split at the right align boundaries
     line_split_rjust = line.split('§§')
-    for rjust_idx, text_rjust in enumerate(line_split_rjust):
+    for rjust_index, text_rjust in enumerate(line_split_rjust):
       # Then split at the left align boundaries
       text_rjust_split_ljust = text_rjust.split('§')
-      for ljust_idx, text in enumerate(text_rjust_split_ljust):
+      for ljust_index, text in enumerate(text_rjust_split_ljust):
         # Preserve the indentation of the line
-        if column_idx == 0:
+        if column_index == 0:
           text = text.rstrip()
         else:
           text = text.strip()
         # Build object with dict for each column
-        if ljust_idx == len(text_rjust_split_ljust)-1 and rjust_idx != len(line_split_rjust)-1:
+        if ljust_index == len(text_rjust_split_ljust)-1 and rjust_index != len(line_split_rjust)-1:
           line_obj.append({
             'text': text,
             'just': 'right'
@@ -386,11 +382,11 @@ def align(content, margin=1):
         if len(line_split_rjust) + len(text_rjust_split_ljust) > 2:
           # Update the column widths
           column_width = len(text)
-          if column_idx == len(columns_widths):
+          if column_index == len(columns_widths):
             columns_widths.append(column_width)
           else:
-            columns_widths[column_idx] = max(columns_widths[column_idx], column_width)
-        column_idx += 1
+            columns_widths[column_index] = max(columns_widths[column_index], column_width)
+        column_index += 1
     lines_objs.append(line_obj)
 
   # No alignment markers detected
@@ -399,19 +395,19 @@ def align(content, margin=1):
 
   # Then apply the alignment to all the lines
   lines = []
-  for line_idx,line_obj in enumerate(lines_objs):
+  for line_index,line_obj in enumerate(lines_objs):
     line = ""
-    for column_idx, column in enumerate(line_obj):
-      column_width = columns_widths[column_idx]
+    for column_index, column in enumerate(line_obj):
+      column_width = columns_widths[column_index]
       column_text = column['text']
       column_just = column['just']
-      if column_idx == len(line_obj)-1:
+      if column_index == len(line_obj)-1:
         line += column_text
       elif column_just == 'left':
         line += column_text.ljust(column_width)
       else:
         line += column_text.rjust(column_width)
-      if column_idx != len(line_obj)-1:
+      if column_index != len(line_obj)-1:
         line += ' '*margin
     lines.append(line)
 
@@ -461,8 +457,8 @@ extra_filters['restructure'] = restructure
 # └─────────────────────┘
 
 # List of keys or values
-extra_filters['keys']       = lambda D   : list(D.keys())
-extra_filters['values']     = lambda D   : list(D.values())
+extra_filters['keys']   = lambda D : list(D.keys())
+extra_filters['values'] = lambda D : list(D.values())
 
 # List of attributes of elements in nested dictionary or list of dictionaries
 extra_filters['attributes'] = lambda X,attr : [x[attr] for x in (X.values() if isinstance(X,dict) else X) if attr in x]
