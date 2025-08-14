@@ -146,6 +146,19 @@ extra_filters['strip']  = lambda s,p=None : str(s).strip(p)
 extra_filters['lstrip'] = lambda s,p=None : str(s).lstrip(p)
 extra_filters['rstrip'] = lambda s,p=None : str(s).rstrip(p)
 
+def until(x, terminator):
+  if isinstance(x, str):
+    if isinstance(terminator, str):
+      return x.split(terminator)[0]
+    else:
+      throw_error(f"Invalid terminator of type '{type(terminator).__name__}' for filter 'until'.")
+  else:
+    try:
+      return x[:x.index(terminator)]
+    except Exception as exc:
+      throw_error(f"Exception occurred in 'until' filter : \n  {type(exc).__name__}\n{intend_text(exc)}")
+extra_filters['until'] = until
+
 # Case
 extra_filters['title']      = lambda s : str(s).title()
 extra_filters['capitalize'] = lambda s : str(s).capitalize()
