@@ -218,6 +218,28 @@ def kebab(s, preserve_caps=True, group_caps=True, consider_numbers=True):
 extra_filters['snake'] = snake
 extra_filters['kebab'] = kebab
 
+def change_case(text, case=None):
+  match case:
+    case "lower":      text = text.lower()
+    case "upper":      text = text.upper()
+    case "title":      text = text.title()
+    case "capitalize": text = text.capitalize()
+    case "casefold":   text = text.casefold()
+    case "swapcase":   text = text.swapcase()
+    case "camel":      text = camel  (text)
+    case "pascal":     text = pascal (text)
+    case "snake":      text = snake  (text)
+    case "kebab":      text = kebab  (text)
+  return text
+extra_filters['change_case'] = change_case
+
+def affix(text, prefix="", suffix="", case=None):
+  return prefix + change_case(text, case) + suffix
+extra_filters['affix'] = affix
+
+extra_filters['change_case_all']  = lambda l,c     : [change_case(s,c) for s in l]
+extra_filters['affix_all']        = lambda l,p,s,c : [affix(s,p,s,c)   for s in l]
+
 
 
 # ┌──────────────────────┐
@@ -452,6 +474,7 @@ extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 
 # Flatten to shallow list, keep only values for dictionaries
 extra_filters['flatten'] = flatten
+
 
 
 # ┌───────────────┐
