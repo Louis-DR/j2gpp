@@ -165,60 +165,108 @@ extra_filters['capitalize'] = lambda s : str(s).capitalize()
 extra_filters['casefold']   = lambda s : str(s).casefold()
 extra_filters['swapcase']   = lambda s : str(s).swapcase()
 
-def camel(s, remove_underscore=True, remove_hyphen=True, remove_dot=False):
-  if remove_underscore: s = s.replace('_', '')
-  if remove_hyphen:     s = s.replace('-', '')
-  if remove_dot:        s = s.replace('.', '')
-  s = re.sub(r'[A-Z]', lambda m : m.group(0).lower() ,s,1)
-  return s
-
-def pascal(s, remove_underscore=True, remove_hyphen=True, remove_dot=False):
-  if remove_underscore: s = s.replace('_', '')
-  if remove_hyphen:     s = s.replace('-', '')
-  if remove_dot:        s = s.replace('.', '')
-  s = re.sub(r'[a-z]', lambda m : m.group(0).upper() ,s,1)
-  return s
-
-extra_filters['camel']  = camel
-extra_filters['pascal'] = pascal
-
 re_caps_boundary                    = re.compile(r'(?<!^)(?=[A-Z])')
 re_caps_boundary_with_numbers       = re.compile(r'(?<!^)(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
 re_caps_boundary_group              = re.compile(r'(?<!^)(?<![A-Z])(?=[A-Z])')
 re_caps_boundary_group_with_numbers = re.compile(r'(?<!^)(?<![A-Z0-9])(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
 
-def snake(s, preserve_caps=True, group_caps=True, consider_numbers=True):
+def split_into_words(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
   if group_caps:
     if consider_numbers:
-      s = re_caps_boundary_group_with_numbers.sub('_', s)
+      pattern = re_caps_boundary_group_with_numbers
     else:
-      s = re_caps_boundary_group.sub('_', s)
+      pattern = re_caps_boundary_group
   else:
     if consider_numbers:
-      s = re_caps_boundary_with_numbers.sub('_', s)
+      pattern = re_caps_boundary_with_numbers
     else:
-      s = re_caps_boundary.sub('_', s)
-  if not preserve_caps: s = s.lower()
-  return s
+      pattern = re_caps_boundary
 
-def kebab(s, preserve_caps=True, group_caps=True, consider_numbers=True):
-  if group_caps:
-    if consider_numbers:
-      s = re_caps_boundary_group_with_numbers.sub('-', s)
-    else:
-      s = re_caps_boundary_group.sub('-', s)
-  else:
-    if consider_numbers:
-      s = re_caps_boundary_with_numbers.sub('-', s)
-    else:
-      s = re_caps_boundary.sub('-', s)
-  if not preserve_caps: s = s.lower()
-  return s
+  words = pattern.split(text)
+  if delimiters:
+    delimiter_pattern = re.compile(f'[{re.escape(delimiters)}]+')
+    additional_words = []
+    delimiter_info = []
+    for word in words:
+      if word:
+        splits = delimiter_pattern.split(word)
+        delims = delimiter_pattern.findall(word)
+        for i, split in enumerate(splits):
+          if split:
+            additional_words.append(split)
+          if i < len(delims):
+            delimiter_info.append(delims[i])
+    words = [word for word in additional_words if word]
 
-extra_filters['snake'] = snake
-extra_filters['kebab'] = kebab
+  if not preserve_caps:
+    words = [word.lower() for word in words]
 
-def change_case(text, case=None):
+  return words, delimiter_info
+
+def camel(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0].lower()
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        if len(delimiter) > 1:
+          result += delimiter[:-1]
+      result += word.capitalize()
+  return result
+
+def pascal(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0].capitalize()
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        if len(delimiter) > 1:
+          result += delimiter[:-1]
+      result += word.capitalize()
+  return result
+
+def snake(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0]
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        result += '_' * len(delimiter)
+      else:
+        result += '_'
+      result += word
+  return result
+
+def kebab(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0]
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        result += '-' * len(delimiter)
+      else:
+        result += '-'
+      result += word
+  return result
+
+extra_filters['camel']  = camel
+extra_filters['pascal'] = pascal
+extra_filters['snake']  = snake
+extra_filters['kebab']  = kebab
+
+def change_case(text, case=None, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
   match case:
     case "lower":      text = text.lower()
     case "upper":      text = text.upper()
@@ -226,19 +274,19 @@ def change_case(text, case=None):
     case "capitalize": text = text.capitalize()
     case "casefold":   text = text.casefold()
     case "swapcase":   text = text.swapcase()
-    case "camel":      text = camel  (text)
-    case "pascal":     text = pascal (text)
-    case "snake":      text = snake  (text)
-    case "kebab":      text = kebab  (text)
+    case "camel":      text = camel  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "pascal":     text = pascal (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "snake":      text = snake  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "kebab":      text = kebab  (text, delimiters, preserve_caps, group_caps, consider_numbers)
   return text
 extra_filters['change_case'] = change_case
 
-def affix(text, prefix="", suffix="", case=None):
-  return prefix + change_case(text, case) + suffix
+def affix(text, prefix="", suffix="", case=None, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  return prefix + change_case(text, case, delimiters, preserve_caps, group_caps, consider_numbers) + suffix
 extra_filters['affix'] = affix
 
-extra_filters['change_case_all']  = lambda l,c     : [change_case(s,c) for s in l]
-extra_filters['affix_all']        = lambda l,p,s,c : [affix(s,p,s,c)   for s in l]
+extra_filters['change_case_all']  = lambda l,c,    d=" _-",pc=True,gc=True,cn=True : [change_case(s,c,d,pc,gc,cn) for s in l]
+extra_filters['affix_all']        = lambda l,p,s,c,d=" _-",pc=True,gc=True,cn=True : [affix(s,p,s,c,d,pc,gc,cn)   for s in l]
 
 
 
