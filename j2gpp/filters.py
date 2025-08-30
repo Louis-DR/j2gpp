@@ -119,6 +119,20 @@ def int_to_duodecimal(value, length=0, ten='a', eleven='b'):
 extra_filters['duodecimal'] = int_to_duodecimal
 extra_filters['doz'] = int_to_duodecimal
 
+def int_to_ternary(value, length=0):
+  digits = []
+  while value > 0:
+    remainder = value % 3
+    digits.append(str(remainder))
+    value //= 3
+  if not digits:
+    digits.append('0')
+  ternary_string = ''.join(reversed(digits))
+  return ternary_string.rjust(length, '0')
+
+extra_filters['ternary'] = int_to_ternary
+extra_filters['ter']     = int_to_ternary
+
 
 
 # ┌───────────────────────┐
