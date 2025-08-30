@@ -19,7 +19,12 @@ from math import (
   pow,
   log,
   sqrt,
-  cbrt
+  cbrt,
+  nan,
+  inf,
+  pi,
+  tau,
+  e,
 )
 
 from jinja2 import __version__ as jinja2_version
@@ -62,6 +67,22 @@ try:                     extra_globals['__time__'] = datetime.now().strftime("%H
 except Exception as exc: throw_warning(f"Could not set the context global variable '__time__'.")
 try:                     extra_globals['__datetime__'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 except Exception as exc: throw_warning(f"Could not set the context global variable '__datetime__'.")
+
+
+
+# ┌────────────────────────┐
+# │ Mathematical constants │
+# └────────────────────────┘
+
+extra_globals['nan']   = nan
+extra_globals['inf']   = inf
+extra_globals['pi']    = pi
+extra_globals['tau']   = tau
+extra_globals['e']     = e
+extra_globals['sqrt2'] = sqrt(2)
+extra_globals['sqrt3'] = sqrt(3)
+extra_globals['cbrt2'] = cbrt(2)
+extra_globals['cbrt3'] = cbrt(3)
 
 
 
