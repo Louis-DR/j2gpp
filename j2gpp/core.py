@@ -43,7 +43,7 @@ from j2gpp.filters import (
   extra_filters,
   write_source_toggle
 )
-from j2gpp.tests import extra_tests
+from j2gpp.tests   import extra_tests
 from j2gpp.globals import extra_globals
 
 
@@ -57,6 +57,7 @@ class RelativeIncludeEnvironment(Environment):
 def setup_jinja_environment(include_dirs: List[str]     = None,
                             filters:      Dict[str,Any] = None,
                             tests:        Dict[str,Any] = None,
+                            globals:      Dict[str,Any] = None,
                             options:      Dict[str,Any] = None,
                             ) -> Environment:
   """Set up Jinja2 environment with filters, tests, and options"""
@@ -66,6 +67,8 @@ def setup_jinja_environment(include_dirs: List[str]     = None,
     filters = {}
   if tests is None:
     tests = {}
+  if globals is None:
+    globals = {}
   if options is None:
     options = {}
 
@@ -84,12 +87,10 @@ def setup_jinja_environment(include_dirs: List[str]     = None,
   env.tests.update(extra_tests)
   env.globals.update(extra_globals)
 
-  # Option-specific context variables
-  env.globals['__output_directory__'] = options.get('out_dir', os.getcwd())
-
   # Load custom filters and tests
   env.filters.update(filters)
   env.tests.update(tests)
+  env.globals.update(globals)
 
   return env
 
@@ -146,6 +147,7 @@ def process_single_file(source_path: str,
     # Add context variables specific to this template
     template_vars = variables.copy()
     template_vars.update({
+      '__output_directory__': options.get('out_dir', os.getcwd()),
       '__source_path__': source_path,
       '__output_path__': output_path,
     })
@@ -302,6 +304,7 @@ def render_template_string(template_string: str,
                            include_dirs:    List[str]     = None,
                            filters:         Dict[str,Any] = None,
                            tests:           Dict[str,Any] = None,
+                           globals:         Dict[str,Any] = None,
                            options:         Dict[str,Any] = None,
                            ) -> str:
   """Quick utility to render a template string"""
@@ -310,5 +313,5 @@ def render_template_string(template_string: str,
   if options is None:
     options = {}
 
-  env = setup_jinja_environment(include_dirs=include_dirs, filters=filters, tests=tests, options=options)
+  env = setup_jinja_environment(include_dirs=include_dirs, filters=filters, tests=tests, globals=globals, options=options)
   return env.from_string(template_string).render(variables)

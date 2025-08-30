@@ -23,6 +23,7 @@ import os
 import errno
 import itertools
 from j2gpp.utils import *
+from jinja2.runtime import Undefined
 
 
 
@@ -56,6 +57,19 @@ def filter_error(text):
   throw_error(text)
   return ""
 extra_filters['error'] = filter_error
+
+def check_mandatory_variable(variable):
+  print(f"{variable=}")
+  print(f"{type(variable)=}")
+  print(f"{type(variable).__name__=}")
+  if type(variable) == Undefined:
+    print(f"{variable._undefined_name=}")
+    print(f"{variable._undefined_obj=}")
+    print(f"{variable._undefined_hint=}")
+    print(f"{variable._undefined_exception=}")
+    throw_error(f"Undefined mandatory variable '{variable._undefined_name}'.")
+    return ""
+extra_filters['mandatory'] = check_mandatory_variable
 
 
 

@@ -11,6 +11,7 @@
     - [Context variables](#context-variables)
     - [Additional built-in filters](#additional-built-in-filters)
     - [Additional built-in tests](#additional-built-in-tests)
+    - [Additional built-in globals](#additional-built-in-globals)
   - [CLI reference](#cli-reference)
     - [Command line arguments](#command-line-arguments)
     - [Exception handling and errors](#exception-handling-and-errors)
@@ -32,6 +33,7 @@
     - [Loading global variables from environment](#loading-global-variables-from-environment)
     - [Loading custom Jinja2 filters](#loading-custom-jinja2-filters)
     - [Loading custom Jinja2 tests](#loading-custom-jinja2-tests)
+    - [Loading custom Jinja2 globals](#loading-custom-jinja2-globals)
     - [Processing variables before rendering](#processing-variables-before-rendering)
     - [Process directories](#process-directories)
   - [Supported formats for variables](#supported-formats-for-variables)
@@ -152,12 +154,12 @@ Useful context variables are added before any other variable is loaded. Some are
 | `__user__`              | Global   | Name of the current user                      |
 | `__pid__`               | Global   | Process ID of the current process             |
 | `__ppid__`              | Global   | Process ID of the parent process              |
-| `__working_directory__` | Global   | Working directory                             |
-| `__output_directory__`  | Global   | Output directory                              |
 | `__date__`              | Global   | Date in the format `DD-MM-YYYY`               |
 | `__date_inv__`          | Global   | Date in the format `YYYY-MM-DD`               |
 | `__time__`              | Global   | Time in the format `hh:mm:ss`                 |
 | `__datetime__`          | Global   | Timestamp in the format `YYYY-MM-DD hh:mm:ss` |
+| `__working_directory__` | Global   | Working directory                             |
+| `__output_directory__`  | Global   | Output directory                              |
 | `__source_path__`       | Template | Path of the source template file              |
 | `__output_path__`       | Template | Path where the template is rendered           |
 
@@ -233,6 +235,8 @@ Jinja2 provides tests for type testing integers, floats, and strings. J2GPP adds
 
 Jinja2 provides the `defined` test. To facilitate testing if a variable is defined and an additional condition on its value, J2GPP adds the tests `defined_and_true`, `defined_and_false`, `defined_and_eq` (equal, `==`), `defined_and_ne` (not equal, `!=`), `defined_and_lt` (less than, `<`), `defined_and_le` (less than or equal to, `<=`), `defined_and_gt` (greater than, `>`), and `defined_and_ge` (greater than or equal to, `>=`).
 
+### Additional built-in globals
+
 ## CLI reference
 
 ### Command line arguments
@@ -249,6 +253,7 @@ The following arguments can be added to the command for additional features. The
 | `--envvar`                 | Loads environment variables as global variables                         |
 | `--filters`                | Load extra Jinja2 filters from a Python file                            |
 | `--tests`                  | Load extra Jinja2 tests from a Python file                              |
+| `--globals`                | Load extra Jinja2 globals from a Python file                            |
 | `--file-vars-adapter`      | Load a Python function to process variables after loading from a file   |
 | `--global-vars-adapter`    | Load a Python function to process all variables before rendering        |
 | `--overwrite-outdir`       | Overwrite output directory                                              |
@@ -319,16 +324,19 @@ J2GPP.remove_variable("key")                 # Remove variable (supports dot not
 ### Configuration methods
 
 ``` python
-J2GPP.set_output_directory("./output/")               # Set default output directory for all rendering
-J2GPP.add_include_directory("./includes/")            # Add include directory for Jinja2 imports
-J2GPP.set_include_directories(["./inc1/", "./inc2/"]) # Set multiple include directories
-J2GPP.add_filter("my_filter", my_filter_function)     # Add single filter function directly
-J2GPP.add_test("my_test", my_test_function)           # Add single test function directly
+J2GPP.set_output_directory("./output/")                 # Set default output directory for all rendering
+J2GPP.add_include_directory("./includes/")              # Add include directory for Jinja2 imports
+J2GPP.set_include_directories(["./inc1/", "./inc2/"])   # Set multiple include directories
+J2GPP.add_filter("my_filter", my_filter_function)       # Add single filter function directly
+J2GPP.add_test("my_test", my_test_function)             # Add single test function directly
+J2GPP.add_global("my_global", my_global_function)       # Add single global function directly
 J2GPP.add_filters({"filter1": func1, "filter2": func2}) # Add multiple filter functions
-J2GPP.add_tests({"test1": func1, "test2": func2})     # Add multiple test functions
-J2GPP.load_filters_from_file("./filters.py")          # Load custom Jinja2 filters from Python file
-J2GPP.load_tests_from_file("./tests.py")              # Load custom Jinja2 tests from Python file
-J2GPP.set_option("trim_whitespace", True)             # Set rendering options
+J2GPP.add_tests({"test1": func1, "test2": func2})       # Add multiple test functions
+J2GPP.add_globals({"global1": var1, "global2": class1}) # Add multiple global functions
+J2GPP.load_filters_from_file("./filters.py")            # Load custom Jinja2 filters from Python file
+J2GPP.load_tests_from_file("./tests.py")                # Load custom Jinja2 tests from Python file
+J2GPP.load_globals_from_file("./globals.py")            # Load custom Jinja2 globals from Python file
+J2GPP.set_option("trim_whitespace", True)               # Set rendering options
 ```
 
 ### Advanced configuration
@@ -346,6 +354,7 @@ J2GPP.get_variables()           # Return copy of current variables dictionary
 J2GPP.get_options()             # Return copy of current options dictionary
 J2GPP.get_filters()             # Return copy of available filters dictionary
 J2GPP.get_tests()               # Return copy of available tests dictionary
+J2GPP.get_globals()             # Return copy of available globals dictionary
 J2GPP.get_include_directories() # Return copy of include directories list
 J2GPP.get_output_directory()    # Return current output directory (None if not set)
 
@@ -353,6 +362,7 @@ J2GPP.get_output_directory()    # Return current output directory (None if not s
 J2GPP.has_variable("key")                  # Check if variable exists (supports dot notation)
 J2GPP.has_filter("my_filter")              # Check if filter is loaded
 J2GPP.has_test("my_test")                  # Check if test is loaded
+J2GPP.has_global("my_global")              # Check if global is loaded
 J2GPP.has_include_directory("./includes/") # Check if include directory is configured
 ```
 
@@ -619,6 +629,49 @@ def prime(x):
     if (x%i) == 0:
       return False
   return True
+```
+
+### Loading custom Jinja2 globals
+
+You can import custom Jinja2 global objects (variables, functions, classes) by providing Python files with the `--globals` argument. All objects defined in the python files will be available as Jinja2 globals in the templates.
+
+For instance, with the following command or script and python file, the global `prime` will be available when rendering the template `foo.c.j2`.
+
+``` shell
+j2gpp ./foo.c.j2 --globals ./bar.py
+```
+
+```python
+from j2gpp import J2GPP
+j2gpp = J2GPP()
+j2gpp.load_globals_from_file("./bar.py").render_file("./foo.c.j2")
+```
+
+Or add global functions directly:
+
+```python
+from j2gpp import J2GPP
+
+class AddAccumulator:
+  def __init__(self):
+    self.accumulation = 0
+  def add_accumulate(self, value):
+    self.accumulation += value
+    return self.accumulation
+
+j2gpp = J2GPP()
+j2gpp.add_global("AddAccumulator", AddAccumulator).render_file("./foo.c.j2")
+```
+
+With the global script `bar.py` :
+
+``` python
+class AddAccumulator:
+  def __init__(self):
+    self.accumulation = 0
+  def add_accumulate(self, value):
+    self.accumulation += value
+    return self.accumulation
 ```
 
 ### Processing variables before rendering

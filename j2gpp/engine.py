@@ -89,6 +89,7 @@ class J2GPP:
     self.include_dirs = []
     self.filters = {}
     self.tests   = {}
+    self.globals = {}
 
     # Adapter functions
     self.file_vars_adapter_function   = None
@@ -241,6 +242,12 @@ class J2GPP:
       throw_warning(f"Test '{name}' must be callable.")
     return self
 
+  def add_global(self, name: str, object:Any) -> 'J2GPP':
+    """Add a single global object directly (chainable)"""
+    self.globals[name] = object
+    self._env_dirty = True
+    return self
+
   def add_filters(self, filters: Dict[str, Callable]) -> 'J2GPP':
     """Add multiple filter functions from dictionary (chainable)"""
     for name, function_callable in filters.items():
@@ -253,10 +260,15 @@ class J2GPP:
       self.add_test(name, function_callable)
     return self
 
+  def add_globals(self, globals: Dict[str, Any]) -> 'J2GPP':
+    """Add multiple global objects from dictionary (chainable)"""
+    for name, object in globals.items():
+      self.add_global(name, object)
+    return self
+
   def load_filters_from_file(self, file_path: str) -> 'J2GPP':
     """Load custom Jinja2 filters from Python file (chainable)"""
     file_absolute_path = os.path.abspath(file_path)
-
     if os.path.isfile(file_absolute_path):
       try:
         filter_module = load_module("", file_absolute_path)
@@ -269,13 +281,11 @@ class J2GPP:
         throw_warning(f"Could not load filters from '{file_absolute_path}': {exc}")
     else:
       throw_warning(f"Filter file '{file_absolute_path}' does not exist.")
-
     return self
 
   def load_tests_from_file(self, file_path: str) -> 'J2GPP':
     """Load custom Jinja2 tests from Python file (chainable)"""
     file_absolute_path = os.path.abspath(file_path)
-
     if os.path.isfile(file_absolute_path):
       try:
         test_module = load_module("", file_absolute_path)
@@ -288,7 +298,22 @@ class J2GPP:
         throw_warning(f"Could not load tests from '{file_absolute_path}': {exc}")
     else:
       throw_warning(f"Test file '{file_absolute_path}' does not exist.")
+    return self
 
+  def load_globals_from_file(self, file_path: str) -> 'J2GPP':
+    """Load custom Jinja2 globals from Python file (chainable)"""
+    file_absolute_path = os.path.abspath(file_path)
+    if os.path.isfile(file_absolute_path):
+      try:
+        global_module = load_module("", file_absolute_path)
+        for global_name in dir(global_module):
+          if global_name[0] != '_':
+            global_object = getattr(global_module, global_name)
+            self.add_global(global_name, global_object)
+      except Exception as exc:
+        throw_warning(f"Could not load globals from '{file_absolute_path}': {exc}")
+    else:
+      throw_warning(f"Global file '{file_absolute_path}' does not exist.")
     return self
 
   def set_file_vars_adapter(self, function_callable: Callable) -> 'J2GPP':
@@ -329,6 +354,10 @@ class J2GPP:
     """Get copy of current tests dictionary"""
     return self.tests.copy()
 
+  def get_globals(self) -> Dict[str, Callable]:
+    """Get copy of current globals dictionary"""
+    return self.globals.copy()
+
   def get_include_directories(self) -> List[str]:
     """Get copy of current include directories list"""
     return self.include_dirs.copy()
@@ -357,6 +386,10 @@ class J2GPP:
   def has_test(self, name: str) -> bool:
     """Check if test is loaded"""
     return name in self.tests
+
+  def has_global(self, name: str) -> bool:
+    """Check if global is loaded"""
+    return name in self.globals
 
   def has_include_directory(self, directory: str) -> bool:
     """Check if include directory is configured"""
@@ -768,7 +801,7 @@ class J2GPP:
 
     # Render using core function
     return render_template_string(
-      template_string, merged_vars, self.include_dirs, self.filters, self.tests, self.options
+      template_string, merged_vars, self.include_dirs, self.filters, self.tests, self.globals, self.options
     )
 
 
@@ -784,6 +817,7 @@ class J2GPP:
         include_dirs = self.include_dirs,
         filters      = self.filters,
         tests        = self.tests,
+        globals      = self.globals,
         options      = self.options
       )
       self._env_dirty = False

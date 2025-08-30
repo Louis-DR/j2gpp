@@ -42,7 +42,7 @@ except Exception as exc: throw_warning(f"Could not set the context global variab
 try:                     extra_globals['__ppid__'] = os.getppid()
 except Exception as exc: throw_warning(f"Could not set the context global variable '__ppid__'.")
 try:                     extra_globals['__working_directory__'] = os.getcwd()
-except Exception as exc: throw_warning(f"Could not set the context global variable '__output_directory__'.")
+except Exception as exc: throw_warning(f"Could not set the context global variable '__working_directory__'.")
 try:                     extra_globals['__date__'] = datetime.now().strftime("%d-%m-%Y")
 except Exception as exc: throw_warning(f"Could not set the context global variable '__date__'.")
 try:                     extra_globals['__date_inv__'] = datetime.now().strftime("%Y-%m-%d")
