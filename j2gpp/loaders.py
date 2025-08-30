@@ -208,6 +208,21 @@ def load_tsv_variables(var_path:    str,
   return load_csv_variables(var_path, delimiter='\t', escape_char=escape_char, dont_strip=dont_strip)
 
 
+def load_plist_variables(var_path: str) -> Dict[str,Any]:
+  """Load variables from PLIST file"""
+  var_dict = {}
+  try:
+    import plistlib
+    with open(var_path, 'rb') as var_file:
+      try:
+        var_dict = plistlib.load(var_file)
+      except Exception as exc:
+        throw_error(f"Exception occurred while loading '{var_path}' : \n  {type(exc).__name__}\n{intend_text(exc)}")
+  except ImportError:
+    throw_error("Could not import Python library 'plistlib' to parse PLIST variables files.")
+  return var_dict or {}
+
+
 # Registry of loaders by file extension
 LOADERS = {
   'yaml':  load_yaml_variables,
@@ -221,6 +236,7 @@ LOADERS = {
   'env':   load_env_variables,
   'csv':   load_csv_variables,
   'tsv':   load_tsv_variables,
+  'plist': load_plist_variables,
 }
 
 

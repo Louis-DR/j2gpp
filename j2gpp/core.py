@@ -15,9 +15,18 @@ import os
 import glob
 import errno
 import shutil
-from typing import Dict, Any, List, Optional
+from typing import (
+  Dict,
+  Any,
+  List,
+  Optional
+)
 
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2 import (
+  Environment,
+  FileSystemLoader,
+  StrictUndefined
+)
 import jinja2.exceptions as jinja2_exceptions
 
 from j2gpp.results import (
@@ -28,14 +37,14 @@ from j2gpp.utils import (
   throw_error,
   throw_warning,
   change_working_directory,
-  load_module,
   jinja2_render_traceback
 )
 from j2gpp.filters import (
   extra_filters,
   write_source_toggle
 )
-from j2gpp.tests import extra_tests
+from j2gpp.tests   import extra_tests
+from j2gpp.globals import extra_globals
 
 
 
@@ -48,6 +57,7 @@ class RelativeIncludeEnvironment(Environment):
 def setup_jinja_environment(include_dirs: List[str]     = None,
                             filters:      Dict[str,Any] = None,
                             tests:        Dict[str,Any] = None,
+                            globals:      Dict[str,Any] = None,
                             options:      Dict[str,Any] = None,
                             ) -> Environment:
   """Set up Jinja2 environment with filters, tests, and options"""
@@ -57,6 +67,8 @@ def setup_jinja_environment(include_dirs: List[str]     = None,
     filters = {}
   if tests is None:
     tests = {}
+  if globals is None:
+    globals = {}
   if options is None:
     options = {}
 
@@ -73,12 +85,12 @@ def setup_jinja_environment(include_dirs: List[str]     = None,
   # Load built-in filters and tests
   env.filters.update(extra_filters)
   env.tests.update(extra_tests)
+  env.globals.update(extra_globals)
 
-  # Load custom filters
+  # Load custom filters and tests
   env.filters.update(filters)
-
-  # Load custom tests
   env.tests.update(tests)
+  env.globals.update(globals)
 
   return env
 
@@ -135,6 +147,7 @@ def process_single_file(source_path: str,
     # Add context variables specific to this template
     template_vars = variables.copy()
     template_vars.update({
+      '__output_directory__': options.get('out_dir', os.getcwd()),
       '__source_path__': source_path,
       '__output_path__': output_path,
     })
@@ -291,6 +304,7 @@ def render_template_string(template_string: str,
                            include_dirs:    List[str]     = None,
                            filters:         Dict[str,Any] = None,
                            tests:           Dict[str,Any] = None,
+                           globals:         Dict[str,Any] = None,
                            options:         Dict[str,Any] = None,
                            ) -> str:
   """Quick utility to render a template string"""
@@ -299,5 +313,5 @@ def render_template_string(template_string: str,
   if options is None:
     options = {}
 
-  env = setup_jinja_environment(include_dirs=include_dirs, filters=filters, tests=tests, options=options)
+  env = setup_jinja_environment(include_dirs=include_dirs, filters=filters, tests=tests, globals=globals, options=options)
   return env.from_string(template_string).render(variables)

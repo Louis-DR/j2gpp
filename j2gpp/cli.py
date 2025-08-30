@@ -55,6 +55,7 @@ def parse_arguments():
   argparser.add_argument(      "--envvar",                 dest="envvar",                 help="Loads environment variables as global variables",                       nargs='?',           default=None, const="")
   argparser.add_argument(      "--filters",                dest="filters",                help="Load extra Jinja2 filters from a Python file",                          nargs='+')
   argparser.add_argument(      "--tests",                  dest="tests",                  help="Load extra Jinja2 tests from a Python file",                            nargs='+')
+  argparser.add_argument(      "--globals",                dest="globals",                help="Load extra Jinja2 globals from a Python file",                          nargs='+')
   argparser.add_argument(      "--file-vars-adapter",      dest="file_vars_adapter",      help="Load a Python function to process variables after loading from a file", nargs=2  )
   argparser.add_argument(      "--global-vars-adapter",    dest="global_vars_adapter",    help="Load a Python function to process all variables before rendering",      nargs=2  )
   argparser.add_argument(      "--overwrite-outdir",       dest="overwrite_outdir",       help="Overwrite output directory",                                            action="store_true", default=False)
@@ -121,6 +122,10 @@ def configure_engine_from_args(engine: J2GPP, args) -> None:
   if args.tests:
     for test_path in args.tests:
       engine.load_tests_from_file(test_path)
+
+  if args.globals:
+    for global_path in args.globals:
+      engine.load_globals_from_file(global_path)
 
   # Set adapter functions
   if args.file_vars_adapter:
@@ -388,6 +393,12 @@ def main():
       test_path = os.path.expandvars(os.path.expanduser(os.path.abspath(test_path)))
       print(" ", test_path)
 
+  if args.globals:
+    print("Extra Jinja2 global files :")
+    for global_path in args.globals:
+      global_path = os.path.expandvars(os.path.expanduser(os.path.abspath(global_path)))
+      print(" ", global_path)
+
   # Display adapter functions
   if args.file_vars_adapter:
     print(f"Variables files adapter function :\n  {args.file_vars_adapter[1]} from {args.file_vars_adapter[0]}")
@@ -406,6 +417,7 @@ def main():
   throw_h2("Loading plugin scripts")
   print("Loading J2GPP built-in filters.")
   print("Loading J2GPP built-in tests.")
+  print("Loading J2GPP built-in globals.")
 
   engine = J2GPP()
   configure_engine_from_args(engine, args)

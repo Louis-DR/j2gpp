@@ -14,6 +14,7 @@
 import math
 import statistics
 import hashlib
+import zlib
 import dataclasses
 import datetime
 import json
@@ -22,6 +23,7 @@ import os
 import errno
 import itertools
 from j2gpp.utils import *
+from jinja2.runtime import Undefined
 
 
 
@@ -56,6 +58,19 @@ def filter_error(text):
   return ""
 extra_filters['error'] = filter_error
 
+def check_mandatory_variable(variable):
+  print(f"{variable=}")
+  print(f"{type(variable)=}")
+  print(f"{type(variable).__name__=}")
+  if type(variable) == Undefined:
+    print(f"{variable._undefined_name=}")
+    print(f"{variable._undefined_obj=}")
+    print(f"{variable._undefined_hint=}")
+    print(f"{variable._undefined_exception=}")
+    throw_error(f"Undefined mandatory variable '{variable._undefined_name}'.")
+    return ""
+extra_filters['mandatory'] = check_mandatory_variable
+
 
 
 # ┌───────────────────┐
@@ -88,6 +103,55 @@ extra_filters['list_div']  = lambda X,y : [x/y  for x in X]
 extra_filters['list_mod']  = lambda X,y : [x%y  for x in X]
 extra_filters['list_rem']  = lambda X,y : [x//y for x in X]
 extra_filters['list_exp']  = lambda X,y : [x**y for x in X]
+
+
+
+# ┌────────────────────────┐
+# │ Binary and other bases │
+# └────────────────────────┘
+
+extra_filters['bin'] = lambda x,l=0 : bin(abs(x))[2:].rjust(l,'0')
+extra_filters['hex'] = lambda x,l=0 : hex(abs(x))[2:].rjust(l,'0')
+extra_filters['oct'] = lambda x,l=0 : oct(abs(x))[2:].rjust(l,'0')
+
+extra_filters['binary']      = extra_filters['bin']
+extra_filters['hexadecimal'] = extra_filters['hex']
+extra_filters['octal']       = extra_filters['oct']
+
+def int_to_duodecimal(value, length=0, ten='a', eleven='b'):
+  digits = []
+  value = abs(value)
+  while value > 0:
+    remainder = value % 12
+    if remainder < 10:
+      digits.append(str(remainder))
+    elif remainder == 10:
+      digits.append(ten)
+    else:
+      digits.append(eleven)
+    value //= 12
+  if not digits:
+    digits.append('0')
+  duodecimal_string = ''.join(reversed(digits))
+  return duodecimal_string.rjust(length, '0')
+
+extra_filters['duodecimal'] = int_to_duodecimal
+extra_filters['doz']        = int_to_duodecimal
+
+def int_to_ternary(value, length=0):
+  digits = []
+  value = abs(value)
+  while value > 0:
+    remainder = value % 3
+    digits.append(str(remainder))
+    value //= 3
+  if not digits:
+    digits.append('0')
+  ternary_string = ''.join(reversed(digits))
+  return ternary_string.rjust(length, '0')
+
+extra_filters['ternary'] = int_to_ternary
+extra_filters['ter']     = int_to_ternary
 
 
 
@@ -129,6 +193,8 @@ extra_filters['sha3_384'] = lambda x : hashlib.sha3_384 (json_dumps(x).encode('u
 extra_filters['sha3_512'] = lambda x : hashlib.sha3_512 (json_dumps(x).encode('utf-8')).hexdigest()
 extra_filters['blake2b']  = lambda x : hashlib.blake2b  (json_dumps(x).encode('utf-8')).hexdigest()
 extra_filters['blake2s']  = lambda x : hashlib.blake2s  (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['adler32']  = lambda x : zlib.adler32     (json_dumps(x).encode('utf-8'))
+extra_filters['crc32']    = lambda x : zlib.crc32       (json_dumps(x).encode('utf-8'))
 
 
 
@@ -146,68 +212,199 @@ extra_filters['strip']  = lambda s,p=None : str(s).strip(p)
 extra_filters['lstrip'] = lambda s,p=None : str(s).lstrip(p)
 extra_filters['rstrip'] = lambda s,p=None : str(s).rstrip(p)
 
+def until(x, terminator):
+  if isinstance(x, str):
+    if isinstance(terminator, str):
+      return x.split(terminator)[0]
+    else:
+      throw_error(f"Invalid terminator of type '{type(terminator).__name__}' for filter 'until'.")
+  else:
+    try:
+      return x[:x.index(terminator)]
+    except Exception as exc:
+      throw_error(f"Exception occurred in 'until' filter : \n  {type(exc).__name__}\n{intend_text(exc)}")
+extra_filters['until'] = until
+
 # Case
-extra_filters['title']    = lambda s : str(s).title()
-extra_filters['swapcase'] = lambda s : str(s).swapcase()
-
-def camel(s, remove_underscore=True, remove_hyphen=True, remove_dot=False):
-  if remove_underscore: s = s.replace('_', '')
-  if remove_hyphen:     s = s.replace('-', '')
-  if remove_dot:        s = s.replace('.', '')
-  s = re.sub(r'[A-Z]', lambda m : m.group(0).lower() ,s,1)
-  return s
-
-def pascal(s, remove_underscore=True, remove_hyphen=True, remove_dot=False):
-  if remove_underscore: s = s.replace('_', '')
-  if remove_hyphen:     s = s.replace('-', '')
-  if remove_dot:        s = s.replace('.', '')
-  s = re.sub(r'[a-z]', lambda m : m.group(0).upper() ,s,1)
-  return s
-
-extra_filters['camel']  = camel
-extra_filters['pascal'] = pascal
+extra_filters['title']      = lambda s : str(s).title()
+extra_filters['capitalize'] = lambda s : str(s).capitalize()
+extra_filters['casefold']   = lambda s : str(s).casefold()
+extra_filters['swapcase']   = lambda s : str(s).swapcase()
 
 re_caps_boundary                    = re.compile(r'(?<!^)(?=[A-Z])')
 re_caps_boundary_with_numbers       = re.compile(r'(?<!^)(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
 re_caps_boundary_group              = re.compile(r'(?<!^)(?<![A-Z])(?=[A-Z])')
 re_caps_boundary_group_with_numbers = re.compile(r'(?<!^)(?<![A-Z0-9])(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
 
-def snake(s, preserve_caps=True, group_caps=True, consider_numbers=True):
+def split_into_words(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
   if group_caps:
     if consider_numbers:
-      s = re_caps_boundary_group_with_numbers.sub('_', s)
+      pattern = re_caps_boundary_group_with_numbers
     else:
-      s = re_caps_boundary_group.sub('_', s)
+      pattern = re_caps_boundary_group
   else:
     if consider_numbers:
-      s = re_caps_boundary_with_numbers.sub('_', s)
+      pattern = re_caps_boundary_with_numbers
     else:
-      s = re_caps_boundary.sub('_', s)
-  if not preserve_caps: s = s.lower()
-  return s
+      pattern = re_caps_boundary
 
-def kebab(s, preserve_caps=True, group_caps=True, consider_numbers=True):
-  if group_caps:
-    if consider_numbers:
-      s = re_caps_boundary_group_with_numbers.sub('-', s)
-    else:
-      s = re_caps_boundary_group.sub('-', s)
-  else:
-    if consider_numbers:
-      s = re_caps_boundary_with_numbers.sub('-', s)
-    else:
-      s = re_caps_boundary.sub('-', s)
-  if not preserve_caps: s = s.lower()
-  return s
+  words = pattern.split(text)
+  if delimiters:
+    delimiter_pattern = re.compile(f'[{re.escape(delimiters)}]+')
+    additional_words = []
+    delimiter_info = []
+    for word in words:
+      if word:
+        splits = delimiter_pattern.split(word)
+        delims = delimiter_pattern.findall(word)
+        for i, split in enumerate(splits):
+          if split:
+            additional_words.append(split)
+          if i < len(delims):
+            delimiter_info.append(delims[i])
+    words = [word for word in additional_words if word]
 
-extra_filters['snake'] = snake
-extra_filters['kebab'] = kebab
+  if not preserve_caps:
+    words = [word.lower() for word in words]
+
+  return words, delimiter_info
+
+def camel(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0].lower()
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        if len(delimiter) > 1:
+          result += delimiter[:-1]
+      result += word.capitalize()
+  return result
+
+def pascal(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0].capitalize()
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        if len(delimiter) > 1:
+          result += delimiter[:-1]
+      result += word.capitalize()
+  return result
+
+def snake(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0]
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        result += '_' * len(delimiter)
+      else:
+        result += '_'
+      result += word
+  return result
+
+def kebab(text, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  words, delimiter_info = split_into_words(text, delimiters, preserve_caps, group_caps, consider_numbers)
+  if not words:
+    return ""
+  result = words[0]
+  for i, word in enumerate(words[1:], 1):
+    if word:
+      if i <= len(delimiter_info):
+        delimiter = delimiter_info[i-1]
+        result += '-' * len(delimiter)
+      else:
+        result += '-'
+      result += word
+  return result
+
+extra_filters['camel']  = camel
+extra_filters['pascal'] = pascal
+extra_filters['snake']  = snake
+extra_filters['kebab']  = kebab
+
+def change_case(text, case=None, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  match case:
+    case "lower":      text = text.lower()
+    case "upper":      text = text.upper()
+    case "title":      text = text.title()
+    case "capitalize": text = text.capitalize()
+    case "casefold":   text = text.casefold()
+    case "swapcase":   text = text.swapcase()
+    case "camel":      text = camel  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "pascal":     text = pascal (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "snake":      text = snake  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "kebab":      text = kebab  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+  return text
+extra_filters['change_case'] = change_case
+
+def affix(text, prefix="", suffix="", case=None, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
+  return prefix + change_case(text, case, delimiters, preserve_caps, group_caps, consider_numbers) + suffix
+extra_filters['affix'] = affix
+
+extra_filters['change_case_all']  = lambda l,c,    d=" _-",pc=True,gc=True,cn=True : [change_case(s,c,d,pc,gc,cn) for s in l]
+extra_filters['affix_all']        = lambda l,p,s,c,d=" _-",pc=True,gc=True,cn=True : [affix(s,p,s,c,d,pc,gc,cn)   for s in l]
 
 
 
 # ┌──────────────────────┐
 # │ Paragraph formatting │
 # └──────────────────────┘
+
+# Affix lines with prefix and suffix
+def affix_lines(content, prefix="", suffix="", prefix_first=True, suffix_last=True, affix_blank=True, strip_left=False, strip_right=False):
+  # Iterate line by line
+  lines = content.split('\n')
+  for index,line in enumerate(lines):
+    # Strip the line if requested
+    if strip_left:
+      line = line.lstrip()
+    if strip_right:
+      line = line.rstrip()
+    # If line is not blank or we affix blank lines
+    if line != '' or affix_blank:
+      # If line isn't the first line and we affix the first line
+      if index != 0 or prefix_first:
+        line = prefix + line
+      # If line isn't the last line and we affix the last line
+      if index != len(lines)-1 or suffix_last:
+        line = line + suffix
+    # Update the line
+    lines[index] = line
+  return '\n'.join(lines)
+extra_filters['affix_lines'] = affix_lines
+
+# Justify lines
+def justify_lines(content, width=1, fillchar=' ', align='left'):
+  # Width of the longest line
+  max_width = max([len(line) for line in content.split('\n')])
+  justify_width = max(max_width, width)
+  # Iterate line by line
+  lines = content.split('\n')
+  for index,line in enumerate(lines):
+    # Justify the line
+    match align:
+      case 'left':
+        line = line.ljust(justify_width, fillchar)
+      case 'right':
+        line = line.rjust(justify_width, fillchar)
+      case 'center':
+        line = line.center(justify_width, fillchar)
+    # Update the line
+    lines[index] = line
+  return '\n'.join(lines)
+extra_filters['ljust_lines']  = lambda s,w=1,c=" " : justify_lines(s,w,c,'left')
+extra_filters['rjust_lines']  = lambda s,w=1,c=" " : justify_lines(s,w,c,'right')
+extra_filters['center_lines'] = lambda s,w=1,c=" " : justify_lines(s,w,c,'center')
 
 # Controlling line jumps and blank lines
 extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
@@ -216,22 +413,20 @@ extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
 # Removes pre-existing indentation and sets new one
 def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
   indent = depth * ('\t' if tabs else ' '*spaces)
-  is_first = True
 
   # Iterate line by line
   lines = content.split('\n')
-  for idx,line in enumerate(lines):
+  for index,line in enumerate(lines):
 
     # First line skipped according to argument
-    if is_first and not first:
-      is_first = False
+    if index == 0 and not first:
       continue
 
     # Update the line with the correct indentation
     line = line.lstrip()
-    if line != '' and not blank:
+    if line != '' or blank:
       line = indent + line
-    lines[idx] = line
+    lines[index] = line
 
   # Return paragraph of lines
   return '\n'.join(lines)
@@ -241,18 +436,16 @@ extra_filters['reindent'] = reindent
 
 # Removes pre-existing indentation and sets new indent based on rules
 def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=False, blank=False):
-  is_first = True
-  depth = 0
+  depth      = 0
   next_depth = 0
 
   # Iterate line by line
   lines = content.split('\n')
-  for idx,line in enumerate(lines):
+  for index,line in enumerate(lines):
     depth = next_depth
 
     # First line
-    if is_first:
-      is_first = False
+    if index == 0:
 
       # Count the indentation of the first line
       if tabs:
@@ -280,9 +473,9 @@ def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=Fa
     # Update the line with the correct indentation
     line = line.lstrip()
     indent = depth * ('\t' if tabs else ' '*spaces)
-    if line != '' and not blank:
+    if line != '' or blank:
       line = indent + line
-    lines[idx] = line
+    lines[index] = line
 
   # Return paragraph of lines
   return '\n'.join(lines)
@@ -299,20 +492,20 @@ def align(content, margin=1):
   columns_widths = []
   for line in lines:
     line_obj = []
-    column_idx = 0
+    column_index = 0
     # First split at the right align boundaries
     line_split_rjust = line.split('§§')
-    for rjust_idx, text_rjust in enumerate(line_split_rjust):
+    for rjust_index, text_rjust in enumerate(line_split_rjust):
       # Then split at the left align boundaries
       text_rjust_split_ljust = text_rjust.split('§')
-      for ljust_idx, text in enumerate(text_rjust_split_ljust):
+      for ljust_index, text in enumerate(text_rjust_split_ljust):
         # Preserve the indentation of the line
-        if column_idx == 0:
+        if column_index == 0:
           text = text.rstrip()
         else:
           text = text.strip()
         # Build object with dict for each column
-        if ljust_idx == len(text_rjust_split_ljust)-1 and rjust_idx != len(line_split_rjust)-1:
+        if ljust_index == len(text_rjust_split_ljust)-1 and rjust_index != len(line_split_rjust)-1:
           line_obj.append({
             'text': text,
             'just': 'right'
@@ -326,11 +519,11 @@ def align(content, margin=1):
         if len(line_split_rjust) + len(text_rjust_split_ljust) > 2:
           # Update the column widths
           column_width = len(text)
-          if column_idx == len(columns_widths):
+          if column_index == len(columns_widths):
             columns_widths.append(column_width)
           else:
-            columns_widths[column_idx] = max(columns_widths[column_idx], column_width)
-        column_idx += 1
+            columns_widths[column_index] = max(columns_widths[column_index], column_width)
+        column_index += 1
     lines_objs.append(line_obj)
 
   # No alignment markers detected
@@ -339,19 +532,19 @@ def align(content, margin=1):
 
   # Then apply the alignment to all the lines
   lines = []
-  for line_idx,line_obj in enumerate(lines_objs):
+  for line_index,line_obj in enumerate(lines_objs):
     line = ""
-    for column_idx, column in enumerate(line_obj):
-      column_width = columns_widths[column_idx]
+    for column_index, column in enumerate(line_obj):
+      column_width = columns_widths[column_index]
       column_text = column['text']
       column_just = column['just']
-      if column_idx == len(line_obj)-1:
+      if column_index == len(line_obj)-1:
         line += column_text
       elif column_just == 'left':
         line += column_text.ljust(column_width)
       else:
         line += column_text.rjust(column_width)
-      if column_idx != len(line_obj)-1:
+      if column_index != len(line_obj)-1:
         line += ' '*margin
     lines.append(line)
 
@@ -401,8 +594,8 @@ extra_filters['restructure'] = restructure
 # └─────────────────────┘
 
 # List of keys or values
-extra_filters['keys']       = lambda D   : list(D.keys())
-extra_filters['values']     = lambda D   : list(D.values())
+extra_filters['keys']   = lambda D : list(D.keys())
+extra_filters['values'] = lambda D : list(D.values())
 
 # List of attributes of elements in nested dictionary or list of dictionaries
 extra_filters['attributes'] = lambda X,attr : [x[attr] for x in (X.values() if isinstance(X,dict) else X) if attr in x]
@@ -437,6 +630,7 @@ extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 
 # Flatten to shallow list, keep only values for dictionaries
 extra_filters['flatten'] = flatten
+
 
 
 # ┌───────────────┐
