@@ -47,6 +47,7 @@
     - [INI/CFG](#inicfg)
     - [ENV](#env)
     - [CSV/TSV](#csvtsv)
+    - [PLIST](#plist)
   - [Scripting in J2GPP templates](#scripting-in-j2gpp-templates)
     - [Conditional and do extension](#conditional-and-do-extension)
     - [Conditional and filters](#conditional-and-filters)
@@ -505,7 +506,7 @@ j2gpp.define_variable("bar", 42).render_file("./foo.c.j2")
 
 ### Loading global variables from files
 
-You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, HJSON, XML, TOML, INI/CFG, ENV, CSV and TSV. Global variables loaded from files are overwritten by variables defined in the command line.
+You can load global variables from files using the `-V/--varfile` argument with a list of files. The file paths can be relative or absolute, and can use UNIX-style patterns such as wildcards. Variables file types supported right now are YAML, JSON, HJSON, XML, TOML, INI/CFG, ENV, CSV, TSV and PLIST. Global variables loaded from files are overwritten by variables defined in the command line.
 
 For instance, with the following command or script, the variable `bar` will have the value `42` when rendering the template `foo.c.j2`.
 
@@ -1080,6 +1081,44 @@ keys  key1  key2  key3
 test_dict1  1  2  3
 test_dict2  11  12  13
 test_dict3  21  22  23
+```
+
+### PLIST
+
+Apple's Property List (PLIST) files are supported.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>test_bool1</key>
+	<true/>
+	<key>test_bool2</key>
+	<false/>
+	<key>test_int</key>
+	<integer>42</integer>
+	<key>test_float</key>
+	<real>3.141592</real>
+	<key>test_string</key>
+	<string>lorem ipsum</string>
+	<key>test_list</key>
+	<array>
+		<integer>1</integer>
+		<integer>2</integer>
+		<integer>3</integer>
+	</array>
+	<key>test_dict</key>
+	<dict>
+		<key>key1</key>
+		<string>value1</string>
+		<key>key2</key>
+		<string>value2</string>
+		<key>key3</key>
+		<string>value3</string>
+	</dict>
+</dict>
+</plist>
 ```
 
 ## Scripting in J2GPP templates
