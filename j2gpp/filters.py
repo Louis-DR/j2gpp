@@ -100,6 +100,10 @@ extra_filters['bin'] = lambda x,l=0 : bin(abs(x))[2:].rjust(l,'0')
 extra_filters['hex'] = lambda x,l=0 : hex(abs(x))[2:].rjust(l,'0')
 extra_filters['oct'] = lambda x,l=0 : oct(abs(x))[2:].rjust(l,'0')
 
+extra_filters['binary']      = extra_filters['bin']
+extra_filters['hexadecimal'] = extra_filters['hex']
+extra_filters['octal']       = extra_filters['oct']
+
 def int_to_duodecimal(value, length=0, ten='a', eleven='b'):
   digits = []
   value = abs(value)
@@ -118,7 +122,7 @@ def int_to_duodecimal(value, length=0, ten='a', eleven='b'):
   return duodecimal_string.rjust(length, '0')
 
 extra_filters['duodecimal'] = int_to_duodecimal
-extra_filters['doz'] = int_to_duodecimal
+extra_filters['doz']        = int_to_duodecimal
 
 def int_to_ternary(value, length=0):
   digits = []
