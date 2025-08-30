@@ -15,9 +15,18 @@ import os
 import glob
 import errno
 import shutil
-from typing import Dict, Any, List, Optional
+from typing import (
+  Dict,
+  Any,
+  List,
+  Optional
+)
 
-from jinja2 import Environment, FileSystemLoader, StrictUndefined
+from jinja2 import (
+  Environment,
+  FileSystemLoader,
+  StrictUndefined
+)
 import jinja2.exceptions as jinja2_exceptions
 
 from j2gpp.results import (
@@ -28,7 +37,6 @@ from j2gpp.utils import (
   throw_error,
   throw_warning,
   change_working_directory,
-  load_module,
   jinja2_render_traceback
 )
 from j2gpp.filters import (
@@ -36,6 +44,7 @@ from j2gpp.filters import (
   write_source_toggle
 )
 from j2gpp.tests import extra_tests
+from j2gpp.globals import extra_globals
 
 
 
@@ -73,11 +82,13 @@ def setup_jinja_environment(include_dirs: List[str]     = None,
   # Load built-in filters and tests
   env.filters.update(extra_filters)
   env.tests.update(extra_tests)
+  env.globals.update(extra_globals)
 
-  # Load custom filters
+  # Option-specific context variables
+  env.globals['__output_directory__'] = options.get('out_dir', os.getcwd())
+
+  # Load custom filters and tests
   env.filters.update(filters)
-
-  # Load custom tests
   env.tests.update(tests)
 
   return env

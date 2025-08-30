@@ -14,12 +14,19 @@
 import os
 import re
 import glob
-from datetime import datetime
-from platform import python_version
-from typing import Dict, Any, List, Optional, Callable, Set
+from typing import (
+  Dict,
+  Any,
+  List,
+  Optional,
+  Callable,
+  Set
+)
 
-from jinja2 import __version__ as jinja2_version
-from jinja2 import Environment, TemplateSyntaxError, TemplateNotFound
+from jinja2 import (
+  TemplateSyntaxError,
+  TemplateNotFound
+)
 
 from j2gpp.core import (
   setup_jinja_environment,
@@ -38,7 +45,6 @@ from j2gpp.loaders import (
   load_variables_from_env_vars
 )
 from j2gpp.utils import (
-  get_j2gpp_version,
   auto_cast_str,
   throw_warning,
   rec_check_valid_identifier,
@@ -787,34 +793,6 @@ class J2GPP:
     """Get merged variables including context variables"""
     # Start with global variables
     merged_vars = self.variables.copy()
-
-    # Add context variables
-    context_vars = {}
-    try:                     context_vars['__python_version__'] = python_version()
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__python_version__'.")
-    try:                     context_vars['__jinja2_version__'] = jinja2_version
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__jinja2_version__'.")
-    try:                     context_vars['__j2gpp_version__'] = get_j2gpp_version()
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__j2gpp_version__'.")
-    try:                     context_vars['__user__'] = os.getlogin()
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__user__'.")
-    try:                     context_vars['__pid__'] = os.getpid()
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__pid__'.")
-    try:                     context_vars['__ppid__'] = os.getppid()
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__ppid__'.")
-    try:                     context_vars['__working_directory__'] = os.getcwd()
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__working_directory__'.")
-    try:                     context_vars['__output_directory__'] = self.options.get('out_dir', os.getcwd())
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__output_directory__'.")
-    try:                     context_vars['__date__'] = datetime.now().strftime("%d-%m-%Y")
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__date__'.")
-    try:                     context_vars['__date_inv__'] = datetime.now().strftime("%Y-%m-%d")
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__date_inv__'.")
-    try:                     context_vars['__time__'] = datetime.now().strftime("%H:%M:%S")
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__time__'.")
-    try:                     context_vars['__datetime__'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    except Exception as exc: throw_warning(f"Could not set the context global variable '__datetime__'.")
-    merged_vars = self._merge_variables(merged_vars, context_vars)
 
     # Add per-render variables if provided
     if additional_vars:
