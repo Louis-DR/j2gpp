@@ -14,6 +14,7 @@
 import os
 from datetime import datetime
 from platform import python_version
+from itertools import cycle
 from math import (
   pow,
   log,
@@ -196,3 +197,21 @@ class Accumulator:
     self.value = log(self.value, value)
     return before
 extra_globals['Accumulator'] = Accumulator
+
+
+
+# ┌────────┐
+# │ Cycler │
+# └────────┘
+
+class Cycler:
+  def __init__(self, *items):
+    if not items:
+      raise ValueError("Cycler requires at least one item.")
+    self.items = items
+    self.iterator = cycle(self.items)
+  def next(self):
+    return next(self.iterator)
+  def reset(self):
+    self.iterator = cycle(self.items)
+extra_globals['Cycler'] = Cycler
