@@ -239,7 +239,7 @@ Jinja2 provides the `defined` test. To facilitate testing if a variable is defin
 
 The global [context variables](#context-variables) are defined inside J2GPP as global variables.
 
-Some useful mathematical constants are provided: `nan`, `inf`, `pi`, `tau`, `e`, `sqrt2`, `sqrt3`, `cbrt2`, `cbrt3`.
+Some useful mathematical constants are provided: `nan`, `inf`, `pi`, `tau`, `e`, `phi`, `sqrt2`, `sqrt3`, `cbrt2`, `cbrt3`, and `ln2`.
 
 The `Accumulator` class represents a variable that can be mutated with many operator that return the current value of the accumulator. The mutator methods are `reset()`, `clear()`, `set(value)`, `get()`, `increment()`, `decrement()`, `add(value)`, `subtract(value)`, `multiply(value)`, `divide(value)`, `modulo(value)`, `floor_divide(value)`, `square()`, `cube()`, `square_root()`, `cube_root()`, `exponentiate(value=2)`, `logarithm(value=2)`. There are additional `*_after()` methods that return the value before the operation (it performs the operation after the return, hence the name). The accumulator can be instantiated with an initial value. The `clear()` method sets the value of the accumulator to zero, while the `reset()` method sets it back to the initial value (or zero if none provided).
 

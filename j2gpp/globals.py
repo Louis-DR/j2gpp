@@ -79,10 +79,14 @@ extra_globals['inf']   = inf
 extra_globals['pi']    = pi
 extra_globals['tau']   = tau
 extra_globals['e']     = e
+extra_globals['phi']   = (1+sqrt(5))/2
 extra_globals['sqrt2'] = sqrt(2)
 extra_globals['sqrt3'] = sqrt(3)
 extra_globals['cbrt2'] = cbrt(2)
 extra_globals['cbrt3'] = cbrt(3)
+extra_globals['ln2']   = log(2)
+
+
 
 
 
