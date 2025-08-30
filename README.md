@@ -245,6 +245,8 @@ The `Accumulator` class represents a variable that can be mutated with many oper
 
 The `Cycler` class can be used to cycle through a list of items. The method `next()` returns the next item in the cycle, and `reset()` restarts the cycle from the beginning. The cycler is instantiated with a list of items.
 
+Multiple standard and third party libraries are provided: `math`, `statistics`, `itertools`, `random`, `secrets`, `ospath` (os.path), `datetime`, `calendar`, `pprint`, `colorsys`, `colour` (https://pypi.org/project/colour/).
+
 ## CLI reference
 
 ### Command line arguments

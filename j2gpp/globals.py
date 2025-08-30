@@ -88,6 +88,47 @@ extra_globals['ln2']   = log(2)
 
 
 
+# ┌──────────────────┐
+# │ Python libraries │
+# └──────────────────┘
+
+import math as math
+extra_globals['math'] = math
+
+import statistics as statistics
+extra_globals['statistics'] = statistics
+
+import itertools as itertools
+extra_globals['itertools'] = itertools
+
+import random as random
+extra_globals['random'] = random
+
+import secrets as secrets
+extra_globals['secrets'] = secrets
+
+import os.path as ospath
+extra_globals['ospath'] = ospath
+
+import datetime as datetime
+extra_globals['datetime'] = datetime
+
+import calendar as calendar
+extra_globals['calendar'] = calendar
+
+import pprint as pprint
+extra_globals['pprint'] = pprint
+
+import colorsys as colorsys
+extra_globals['colorsys'] = colorsys
+
+try:
+  import colour as colour
+  extra_globals['colour'] = colour
+except ImportError:
+  throw_warning(f"Could not load the global library 'colour'.")
+  pass
+
 
 
 # ┌──────────────┐
