@@ -14,6 +14,7 @@
 import math
 import statistics
 import hashlib
+import zlib
 import dataclasses
 import datetime
 import json
@@ -129,6 +130,8 @@ extra_filters['sha3_384'] = lambda x : hashlib.sha3_384 (json_dumps(x).encode('u
 extra_filters['sha3_512'] = lambda x : hashlib.sha3_512 (json_dumps(x).encode('utf-8')).hexdigest()
 extra_filters['blake2b']  = lambda x : hashlib.blake2b  (json_dumps(x).encode('utf-8')).hexdigest()
 extra_filters['blake2s']  = lambda x : hashlib.blake2s  (json_dumps(x).encode('utf-8')).hexdigest()
+extra_filters['adler32']  = lambda x : zlib.adler32     (json_dumps(x).encode('utf-8'))
+extra_filters['crc32']    = lambda x : zlib.crc32       (json_dumps(x).encode('utf-8'))
 
 
 
