@@ -100,6 +100,25 @@ extra_filters['bin'] = lambda x,l=0 : bin(x)[2:].rjust(l,'0')
 extra_filters['hex'] = lambda x,l=0 : hex(x)[2:].rjust(l,'0')
 extra_filters['oct'] = lambda x,l=0 : oct(x)[2:].rjust(l,'0')
 
+def int_to_duodecimal(value, length=0, ten='a', eleven='b'):
+  digits = []
+  while value > 0:
+    remainder = value % 12
+    if remainder < 10:
+      digits.append(str(remainder))
+    elif remainder == 10:
+      digits.append(ten)
+    else:
+      digits.append(eleven)
+    value //= 12
+  if not digits:
+    digits.append('0')
+  duodecimal_string = ''.join(reversed(digits))
+  return duodecimal_string.rjust(length, '0')
+
+extra_filters['duodecimal'] = int_to_duodecimal
+extra_filters['doz'] = int_to_duodecimal
+
 
 
 # ┌───────────────────────┐
