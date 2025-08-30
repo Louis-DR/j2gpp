@@ -92,6 +92,16 @@ extra_filters['list_exp']  = lambda X,y : [x**y for x in X]
 
 
 
+# ┌────────────────────────┐
+# │ Binary and other bases │
+# └────────────────────────┘
+
+extra_filters['bin'] = lambda x,l=0 : bin(x)[2:].rjust(l,'0')
+extra_filters['hex'] = lambda x,l=0 : hex(x)[2:].rjust(l,'0')
+extra_filters['oct'] = lambda x,l=0 : oct(x)[2:].rjust(l,'0')
+
+
+
 # ┌───────────────────────┐
 # │ Hash and cryptography │
 # └───────────────────────┘
