@@ -96,12 +96,13 @@ extra_filters['list_exp']  = lambda X,y : [x**y for x in X]
 # │ Binary and other bases │
 # └────────────────────────┘
 
-extra_filters['bin'] = lambda x,l=0 : bin(x)[2:].rjust(l,'0')
-extra_filters['hex'] = lambda x,l=0 : hex(x)[2:].rjust(l,'0')
-extra_filters['oct'] = lambda x,l=0 : oct(x)[2:].rjust(l,'0')
+extra_filters['bin'] = lambda x,l=0 : bin(abs(x))[2:].rjust(l,'0')
+extra_filters['hex'] = lambda x,l=0 : hex(abs(x))[2:].rjust(l,'0')
+extra_filters['oct'] = lambda x,l=0 : oct(abs(x))[2:].rjust(l,'0')
 
 def int_to_duodecimal(value, length=0, ten='a', eleven='b'):
   digits = []
+  value = abs(value)
   while value > 0:
     remainder = value % 12
     if remainder < 10:
@@ -121,6 +122,7 @@ extra_filters['doz'] = int_to_duodecimal
 
 def int_to_ternary(value, length=0):
   digits = []
+  value = abs(value)
   while value > 0:
     remainder = value % 3
     digits.append(str(remainder))
