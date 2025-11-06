@@ -11,7 +11,7 @@
 
 
 
-import os
+import os, getpass
 from datetime import datetime
 from platform import python_version
 from itertools import cycle
@@ -52,7 +52,9 @@ except Exception as exc: throw_warning(f"Could not set the context global variab
 try:                     extra_globals['__j2gpp_version__'] = get_j2gpp_version()
 except Exception as exc: throw_warning(f"Could not set the context global variable '__j2gpp_version__'.")
 try:                     extra_globals['__user__'] = os.getlogin()
-except Exception as exc: throw_warning(f"Could not set the context global variable '__user__'.")
+except Exception as exc:
+  try:                   extra_globals['__user__'] = getpass.getuser()
+  except: throw_warning(f"Could not set the context global variable '__user__'.")
 try:                     extra_globals['__pid__'] = os.getpid()
 except Exception as exc: throw_warning(f"Could not set the context global variable '__pid__'.")
 try:                     extra_globals['__ppid__'] = os.getppid()
