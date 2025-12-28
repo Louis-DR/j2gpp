@@ -47,6 +47,54 @@ extra_filters = {}
 # └─────────────────────┘
 
 @render_time_only
+def filter_print(text):
+  print(text)
+  return ""
+extra_filters['print'] = filter_print
+
+@render_time_only
+def filter_pprint(text):
+  pprint.pprint(text)
+  return ""
+extra_filters['pprint'] = filter_pprint
+
+@render_time_only
+def filter_message(text):
+  throw_message(text)
+  return ""
+extra_filters['message'] = filter_message
+
+@render_time_only
+def filter_note(text):
+  throw_note(text)
+  return ""
+extra_filters['note'] = filter_note
+
+@render_time_only
+def filter_debug(text):
+  throw_debug(text)
+  return ""
+extra_filters['debug'] = filter_debug
+
+@render_time_only
+def filter_section(text):
+  throw_section(text)
+  return ""
+extra_filters['section'] = filter_section
+
+@render_time_only
+def filter_success(text):
+  throw_success(text)
+  return ""
+extra_filters['success'] = filter_success
+
+@render_time_only
+def filter_fail(text):
+  throw_fail(text)
+  return ""
+extra_filters['fail'] = filter_fail
+
+@render_time_only
 def filter_warning(text):
   throw_warning(text)
   return ""
