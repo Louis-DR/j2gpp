@@ -122,14 +122,35 @@ def set_errors_output_stream(stream):
   errors_output_stream = stream
 
 # Cool looking messages
+def throw_message(text):
+  print(ansi_codes['bold'], end='')
+  print(f"MESSAGE:",text)
+  print(ansi_codes['reset'], end='')
+  print(text)
+
 def throw_note(text):
   print(ansi_codes['blue']+ansi_codes['bold'], end='')
   print(f"NOTE:",text)
   print(ansi_codes['reset'], end='')
 
-def throw_done(text):
+def throw_debug(text):
+  print(ansi_codes['magenta']+ansi_codes['bold'], end='')
+  print(f"DEBUG:",text)
+  print(ansi_codes['reset'], end='')
+
+def throw_section(text):
+  print(ansi_codes['cyan']+ansi_codes['bold'], end='')
+  print(f"SECTION:",text)
+  print(ansi_codes['reset'], end='')
+
+def throw_success(text):
   print(ansi_codes['green']+ansi_codes['bold'], end='')
-  print(f"DONE:",text)
+  print(f"SUCCESS:",text)
+  print(ansi_codes['reset'], end='')
+
+def throw_fail(text):
+  print(ansi_codes['red']+ansi_codes['bold'], end='')
+  print(f"FAIL:",text)
   print(ansi_codes['reset'], end='')
 
 def throw_warning(text):
@@ -145,6 +166,7 @@ def throw_error(text):
   print(ansi_codes['red']+ansi_codes['bold'], end='', file=errors_output_stream)
   print(f"ERROR:",text, file=errors_output_stream)
   print(ansi_codes['reset'], end='', file=errors_output_stream)
+  print(ansi_codes['reset'], end='')
 
 def throw_fatal(text):
   global errors
@@ -152,6 +174,7 @@ def throw_fatal(text):
   print(ansi_codes['red']+ansi_codes['bold']+ansi_codes['reversed']+ansi_codes['slowblink'], end='', file=errors_output_stream)
   print(f"FATAL:",text, file=errors_output_stream)
   print(ansi_codes['reset'], end='', file=errors_output_stream)
+  print(ansi_codes['reset'], end='')
 
 def error_warning_summary():
   print("Warnings:", ansi_codes['yellow']+ansi_codes['bold']+ansi_codes['reversed'], len(warnings), ansi_codes['reset'],
