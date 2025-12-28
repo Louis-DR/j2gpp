@@ -49,7 +49,8 @@ from j2gpp.utils import (
   throw_warning,
   rec_check_valid_identifier,
   var_dict_update,
-  load_module
+  load_module,
+  resolve_path,
 )
 
 
@@ -733,6 +734,7 @@ class J2GPP:
           output_dir = self.output_directory
         else:
           output_dir = os.path.dirname(os.path.abspath(source_path))
+      output_dir = resolve_path(output_dir)
 
       # Generate output filename
       filename = os.path.basename(source_path)
@@ -747,9 +749,6 @@ class J2GPP:
           filename += suffix
 
       output_path = os.path.join(output_dir, filename)
-
-    # Ensure output path is absolute
-    output_path = os.path.abspath(output_path)
 
     # Merge variables
     merged_vars = self._get_merged_variables(variables)
@@ -778,6 +777,7 @@ class J2GPP:
         output_dir = self.output_directory
       else:
         output_dir = source_dir
+    output_dir = resolve_path(output_dir)
 
     # Merge variables
     merged_vars = self._get_merged_variables(variables)

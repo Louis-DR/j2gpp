@@ -47,6 +47,54 @@ extra_filters = {}
 # └─────────────────────┘
 
 @render_time_only
+def filter_print(text):
+  print(text)
+  return ""
+extra_filters['print'] = filter_print
+
+@render_time_only
+def filter_pprint(text):
+  pprint.pprint(text)
+  return ""
+extra_filters['pprint'] = filter_pprint
+
+@render_time_only
+def filter_message(text):
+  throw_message(text)
+  return ""
+extra_filters['message'] = filter_message
+
+@render_time_only
+def filter_note(text):
+  throw_note(text)
+  return ""
+extra_filters['note'] = filter_note
+
+@render_time_only
+def filter_debug(text):
+  throw_debug(text)
+  return ""
+extra_filters['debug'] = filter_debug
+
+@render_time_only
+def filter_section(text):
+  throw_section(text)
+  return ""
+extra_filters['section'] = filter_section
+
+@render_time_only
+def filter_success(text):
+  throw_success(text)
+  return ""
+extra_filters['success'] = filter_success
+
+@render_time_only
+def filter_fail(text):
+  throw_fail(text)
+  return ""
+extra_filters['fail'] = filter_fail
+
+@render_time_only
 def filter_warning(text):
   throw_warning(text)
   return ""
@@ -601,8 +649,39 @@ extra_filters['values'] = lambda D : list(D.values())
 extra_filters['attributes'] = lambda X,attr : [x[attr] for x in (X.values() if isinstance(X,dict) else X) if attr in x]
 
 # Filter nested dictionary or list of dictionaries
-extra_filters['filter']  = lambda X,attribute,query : {key:value for key,value in X.keys() if isinstance(value,dict) and attribute in value and value[attribute]==query} if isinstance(X,dict) else [element for element in X if isinstance(element,dict) and attribute in element and element[attribute]==query]
-extra_filters['excluse'] = lambda X,attribute,query : {key:value for key,value in X.keys() if isinstance(value,dict) and attribute in value and value[attribute]!=query} if isinstance(X,dict) else [element for element in X if isinstance(element,dict) and attribute in element and element[attribute]!=query]
+def filter_structure(structure, attribute, query):
+  match structure:
+    case dict():
+      structure_filtered = {}
+      for key, value in structure.items():
+        if isinstance(value, dict) and attribute in value and value[attribute] == query:
+          structure_filtered[key] = value
+    case list():
+      structure_filtered = []
+      for element in structure:
+        if isinstance(element, dict) and attribute in element and element[attribute] == query:
+          structure_filtered.append(element)
+    case _:
+      throw_error(f"Unsopported structure type for the 'filter' filter.")
+  return structure_filtered
+extra_filters['filter']  = filter_structure
+
+def exclude_structure(structure, attribute, query):
+  match structure:
+    case dict():
+      structure_filtered = {}
+      for key, value in structure.items():
+        if isinstance(value, dict) and attribute in value and value[attribute] != query:
+          structure_filtered[key] = value
+    case list():
+      structure_filtered = []
+      for element in structure:
+        if isinstance(element, dict) and attribute in element and element[attribute] != query:
+          structure_filtered.append(element)
+    case _:
+      throw_error(f"Unsopported structure type for the 'exclude' filter.")
+  return structure_filtered
+extra_filters['exclude']  = exclude_structure
 
 # Filter dictionary based on keys
 extra_filters['filter_by_list']   = lambda D,keys  : {key:D[key] for key       in keys      if key in D.keys()}
