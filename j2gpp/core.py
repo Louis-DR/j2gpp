@@ -114,10 +114,6 @@ def process_single_file(source_path: str,
   original_wd = os.getcwd()
 
   try:
-    # Change working directory if specified
-    if working_dir:
-      change_working_directory(working_dir)
-
     # Check if it's a template
     is_template = source_path.endswith('.j2')
 
@@ -128,6 +124,10 @@ def process_single_file(source_path: str,
     except OSError as exc:
       error_msg = f"Cannot create directory '{output_dir}'."
       return FileRenderResult(source_path, output_path, False, error_msg, is_template)
+
+    # Change working directory if specified
+    if working_dir:
+      change_working_directory(working_dir)
 
     # Handle non-template files
     if not is_template:
