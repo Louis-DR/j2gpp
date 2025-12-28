@@ -51,7 +51,11 @@ from j2gpp.globals import extra_globals
 class RelativeIncludeEnvironment(Environment):
   """Jinja2 environment with relative include support"""
   def join_path(self, template, parent):
-    return os.path.join(os.path.dirname(parent), template)
+    if template.startswith('./'):
+      return os.path.join(os.path.dirname(parent), template)
+    else:
+      return template
+
 
 
 def setup_jinja_environment(include_dirs: List[str]     = None,
