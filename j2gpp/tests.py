@@ -45,6 +45,14 @@ extra_tests['printable']  = lambda s : str(s).isprintable()
 
 extra_tests['empty']     = lambda l : len(l) == 0
 extra_tests['singleton'] = lambda l : len(l) == 1
+extra_tests['single']    = lambda l : len(l) == 1
+extra_tests['pair']      = lambda l : len(l) == 2
+extra_tests['triplet']   = lambda l : len(l) == 3
+extra_tests['solo']      = lambda l : len(l) == 1
+extra_tests['duo']       = lambda l : len(l) == 2
+extra_tests['trio']      = lambda l : len(l) == 3
+extra_tests['quartet']   = lambda l : len(l) == 4
+extra_tests['quintet']   = lambda l : len(l) == 5
 
 
 
