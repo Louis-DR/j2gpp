@@ -728,6 +728,9 @@ extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 # Flatten to shallow list, keep only values for dictionaries
 extra_filters['flatten'] = flatten
 
+# Rotate list of lists
+extra_filters['rotate'] = lambda L : list(map(list, zip(*L)))
+
 
 
 # ┌───────────────┐
