@@ -144,13 +144,20 @@ load_from_lib(math)
 load_from_lib(statistics)
 
 # List operations
-extra_filters['list_add']  = lambda X,y : [x+y  for x in X]
-extra_filters['list_sub']  = lambda X,y : [x-y  for x in X]
-extra_filters['list_mult'] = lambda X,y : [x*y  for x in X]
-extra_filters['list_div']  = lambda X,y : [x/y  for x in X]
-extra_filters['list_mod']  = lambda X,y : [x%y  for x in X]
-extra_filters['list_rem']  = lambda X,y : [x//y for x in X]
-extra_filters['list_exp']  = lambda X,y : [x**y for x in X]
+extra_filters['list_add'] = lambda X,y : [x+y  for x in X]
+extra_filters['list_sub'] = lambda X,y : [x-y  for x in X]
+extra_filters['list_mul'] = lambda X,y : [x*y  for x in X]
+extra_filters['list_div'] = lambda X,y : [x/y  for x in X]
+extra_filters['list_mod'] = lambda X,y : [x%y  for x in X]
+extra_filters['list_rem'] = lambda X,y : [x//y for x in X]
+extra_filters['list_exp'] = lambda X,y : [x**y for x in X]
+
+extra_filters['list_subtract']    = extra_filters['list_sub']
+extra_filters['list_multiply']    = extra_filters['list_mul']
+extra_filters['list_divide']      = extra_filters['list_div']
+extra_filters['list_modulo']      = extra_filters['list_mod']
+extra_filters['list_remainder']   = extra_filters['list_rem']
+extra_filters['list_exponential'] = extra_filters['list_exp']
 
 
 
@@ -254,11 +261,15 @@ extra_filters['crc32']    = lambda x : zlib.crc32       (json_dumps(x).encode('u
 extra_filters['ljust']  = lambda s,l,c=" " : str(s).ljust(l,c)
 extra_filters['rjust']  = lambda s,l,c=" " : str(s).rjust(l,c)
 extra_filters['center'] = lambda s,l,c=" " : str(s).center(l,c)
+extra_filters['left_justify']  = extra_filters['ljust']
+extra_filters['right_justify'] = extra_filters['rjust']
 
 # Trimming
 extra_filters['strip']  = lambda s,p=None : str(s).strip(p)
 extra_filters['lstrip'] = lambda s,p=None : str(s).lstrip(p)
 extra_filters['rstrip'] = lambda s,p=None : str(s).rstrip(p)
+extra_filters['left_strip']    = extra_filters['lstrip']
+extra_filters['right_strip']   = extra_filters['rstrip']
 
 def until(x, terminator):
   if isinstance(x, str):
@@ -453,6 +464,8 @@ def justify_lines(content, width=1, fillchar=' ', align='left'):
 extra_filters['ljust_lines']  = lambda s,w=1,c=" " : justify_lines(s,w,c,'left')
 extra_filters['rjust_lines']  = lambda s,w=1,c=" " : justify_lines(s,w,c,'right')
 extra_filters['center_lines'] = lambda s,w=1,c=" " : justify_lines(s,w,c,'center')
+extra_filters['left_justify_lines']  = extra_filters['ljust_lines']
+extra_filters['right_justify_lines'] = extra_filters['rjust_lines']
 
 # Controlling line jumps and blank lines
 extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
@@ -693,10 +706,14 @@ extra_filters['exclude_by_regex'] = lambda D,regex : {key:value  for key,value i
 # Element max and min based on sub attribute
 extra_filters['el_of_max_attr'] = lambda L,attr : max(L, key = lambda el : el[attr])
 extra_filters['el_of_min_attr'] = lambda L,attr : min(L, key = lambda el : el[attr])
+extra_filters['element_with_max_attribute'] = extra_filters['el_of_max_attr']
+extra_filters['element_with_min_attribute'] = extra_filters['el_of_min_attr']
 
 # Key of max and min based on sub attribute
 extra_filters['key_of_max_attr'] = lambda D,attr : max(D, key = lambda key : D[key][attr])
 extra_filters['key_of_min_attr'] = lambda D,attr : min(D, key = lambda key : D[key][attr])
+extra_filters['key_of_max_attribute'] = extra_filters['key_of_max_attr']
+extra_filters['key_of_min_attribute'] = extra_filters['key_of_min_attr']
 
 # Shortcut for the previous filters for both dictionary and list
 extra_filters['with_max'] = lambda X,attr : extra_filters['el_of_max_attr'](X,attr) if isinstance(X,dict) else extra_filters['key_of_max_attr'](X,attr)
