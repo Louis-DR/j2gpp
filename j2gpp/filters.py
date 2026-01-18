@@ -413,6 +413,17 @@ extra_filters['affix'] = affix
 extra_filters['change_case_all']  = lambda l,c,    d=" _-",pc=True,gc=True,cn=True : [change_case(s,c,d,pc,gc,cn) for s in l]
 extra_filters['affix_all']        = lambda l,p,s,c,d=" _-",pc=True,gc=True,cn=True : [affix(s,p,s,c,d,pc,gc,cn)   for s in l]
 
+# Truncate to words with ellipsis
+def truncate_words(text, count=10, end='...', separator=' '):
+  words = str(text).split(separator)
+  if len(words) <= count:
+    return text
+  return separator.join(words[:count]) + end
+extra_filters['truncate_words'] = truncate_words
+
+# Others
+extra_filters['reverse_string'] = lambda s : str(s)[::-1]
+
 
 
 # ┌──────────────────────┐
