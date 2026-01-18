@@ -107,6 +107,9 @@ extra_globals['random'] = random
 import secrets as secrets
 extra_globals['secrets'] = secrets
 
+import re as re
+extra_globals['re'] = re
+
 import os.path as ospath
 extra_globals['ospath'] = ospath
 
