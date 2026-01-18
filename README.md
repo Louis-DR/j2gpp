@@ -196,9 +196,9 @@ Text alignment can be controlled with the Python functions `ljust`, `rjust` and 
 
 Stripping whitespaces or other characters from the start or end of strings can be done with the Python functions `strip`, `lstrip`, and `rstrip`.
 
-Case and formatting can be controlled with the Python functions `title` and `swapcase`, or the added functions `camel`, `pascal`, `snake` and `kebab`. `camel` and `pascal` will remove the underscores and hyphens by default but leave the dots ; that behaviour can be changed by providing the filter arguments `remove_underscore`, `remove_hyphen` and `remove_dot` as `True` or `False`. `snake` and `kebab` will group capitalized letters and preserve capitalization by default ; that behaviour can be changed by providing the filter arguments `preserve_caps` and `group_caps` as `True` or `False`.
+Case and formatting can be controlled with the Python functions `title` and `swapcase`, or the added functions `camel`, `pascal`, `snake` and `kebab`. `camel` and `pascal` will remove the underscores and hyphens by default but leave the dots ; that behavior can be changed by providing the filter arguments `remove_underscore`, `remove_hyphen` and `remove_dot` as `True` or `False`. `snake` and `kebab` will group capitalized letters and preserve capitalization by default ; that behavior can be changed by providing the filter arguments `preserve_caps` and `group_caps` as `True` or `False`.
 
-Paragraph formatting is facilitated by multiple filters that should be used on a `filter` block. `reindent` removes pre-existing indentation and sets new one. `autoindent` removes pre-existing indentation and sets new indent by incrementing and decrementing the depth based on start and end delimiters of blocks provided by the `starts` and `ends` lists of strings provided by argument (culry braces by default). `align` aligns every line of the paragraph by columns, left before `§`, right before `§§`.
+Paragraph formatting is facilitated by multiple filters that should be used on a `filter` block. `reindent` removes pre-existing indentation and sets new one. `autoindent`/`auto_indent` removes pre-existing indentation and sets new indent by incrementing and decrementing the depth based on start and end delimiters of blocks provided by the `starts` and `ends` lists of strings provided by argument (curly braces by default). `align` aligns every line of the paragraph by columns, left before `§`, right before `§§`.
 
 Restructuring of large blocks is facilitated by the filter `restructure` that should be used on a `filter` block. The block will be parsed for structure tags, which is an addition to the Jinja2 syntax and uses the `{§...§}` syntax. The only structure tag currently implemented is `spacing`. It takes a single parameter representing a number of line. When the restructuring filter processes the tag, it will strip all line breaks before and after the tag and replace them with the number of line breaks specified. This is useful to add spacing to the template for readability while keeping the spacing of the generate file clean.
 
@@ -210,9 +210,9 @@ The sum of elements in a list or other iterable object can be computed using the
 
 You can count the number of occurrences of a value in a list using the `count` filter.
 
-To perform combinatorics on a list, the following functions from the Python library [`itertools`](https://docs.python.org/3/library/itertools.html) are provided : `pairwise`, `product` (catersian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to generate permutations and combinations of a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
+To perform combinatorics on a list, the following functions from the Python library [`itertools`](https://docs.python.org/3/library/itertools.html) are provided : `pairwise`, `product` (cartesian product), `permutations`, `combinations`, and `combinations_with_replacement`. They all work on lists and may take an additional parameter for the length of the permutations or combinations. In addition, the following functions are used to generate permutations and combinations of a range : `permutations_range`, `combinations_range`, and `combinations_with_replacement_range`. They all work in lists and take two additional parameters : the start and stop index of the range of lengths.
 
-The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behaviour can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
+The `write` and `append` filters can be used to export the content of a filter to another file whose path is provided as argument to the filter. The path can be absolute or relative to the output rendered base template. By default, the content of the filter is not written to the base rendered template ; this behavior can be changed by providing the filter argument `preserve` as `True`. The source template can also be prevented from resulting in a generated file by providing the filter argument `write_source` as `False`, and only the content of `write` and `append` blocks will generate files.
 
 To get the name of the type of a variable as a string, use the `type` filter.
 
@@ -294,7 +294,7 @@ The following arguments can be added to the command for additional features. The
 
 When exceptions are encountered during the execution of J2GPP - either in the template, the variables file loaders, or the variable adapter functions - it will display the errors gracefully including, if possible, an error message explaining the issue, and the traceback information to locate the issue in the template.
 
-The errors and warnings can occur in different steps of the execution of J2GPP. They are collected and displayed again at the end of the execution alongside an error and warning counter. Warnings are printed on the standard output `stdout` of the shell, while errors are printed on the error stream `stderr`. If errors occured, the J2GPP process will also return an error status.
+The errors and warnings can occur in different steps of the execution of J2GPP. They are collected and displayed again at the end of the execution alongside an error and warning counter. Warnings are printed on the standard output `stdout` of the shell, while errors are printed on the error stream `stderr`. If errors occurred, the J2GPP process will also return an error status.
 
 ## API reference
 
@@ -474,7 +474,7 @@ j2gpp.render_file("./foo.c.j2", output_path="./bar.c")
 
 ### Include search directory
 
-The `include` and `import` Jinja2 statements require specifying the directory in which the renderer will search. That is provided using the `-I/--incidr` argument.
+The `include` and `import` Jinja2 statements require specifying the directory in which the renderer will search. That is provided using the `-I/--incdir` argument.
 
 For instance, with the following command or script, the files in the directory `./includes/` will be available to `include` and `import` statements when rendering the template `foo.c.j2`.
 
@@ -566,7 +566,7 @@ j2gpp.load_variables_from_env("ENV").render_file("./foo.c.j2")
 
 You can import custom Jinja2 filters by providing Python files with the `--filters` argument. All functions defined in the python files will be available as Jinja2 filters in the templates.
 
-For instance, with the following command or script and python file, the filter `right_ajust` will be available when rendering the template `foo.c.j2`.
+For instance, with the following command or script and python file, the filter `right_justify` will be available when rendering the template `foo.c.j2`.
 
 ``` shell
 j2gpp ./foo.c.j2 --filters ./bar.py
@@ -583,17 +583,17 @@ Or add filter functions directly:
 ```python
 from j2gpp import J2GPP
 
-def right_ajust(s, length=0):
+def right_justify(s, length=0):
   return s.rjust(length)
 
 j2gpp = J2GPP()
-j2gpp.add_filter("right_ajust", right_ajust).render_file("./foo.c.j2")
+j2gpp.add_filter("right_justify", right_justify).render_file("./foo.c.j2")
 ```
 
 With the filter script `bar.py` :
 
 ``` python
-def right_ajust(s, length=0):
+def right_justify(s, length=0):
   return s.rjust(length)
 ```
 
@@ -1067,7 +1067,7 @@ CSV and TSV are interpreted as a list of objects with the same attributes. They 
 
 CSV and TSV use the same loader, just with different delimiters. A different delimiter can be provided with the argument `--csv-delimiter`. To use the delimiter in a value, it can be escaped by defining an escape character with the argument `--csv-escapechar`, for instance the backslash "`\`".
 
-By default, the whitespace around the keys and values in the CSV is stripped. This behaviour can be disabled with the argument `--csv-dontstrip`.
+By default, the whitespace around the keys and values in the CSV is stripped. This behavior can be disabled with the argument `--csv-dontstrip`.
 
 ``` csv
 keys,key1,key2,key3
@@ -1145,13 +1145,13 @@ pip3 install ./
 
 ### Throw errors and warnings from template
 
-If the version of Jinja2 installed supports the `@render_time_only` decorator, then the `warning` and `error` filters allow to throw warnings and erros from the template and display them in the J2GPP logs. This is useful with conditionals to perform data sanity checks for instance.
+If the version of Jinja2 installed supports the `@render_time_only` decorator, then the `warning` and `error` filters allow to throw warnings and errors from the template and display them in the J2GPP logs. This is useful with conditionals to perform data sanity checks for instance.
 
 ### Writing files
 
-The J2GPP filters `write` and `append` allow exporting the content of a block to another file. This can be used for a file combining elements contributed by multiple templates, for alternative versions of a file from a single template, for generating small annex files to a large template, for generating a files for each element in a list, etc. When coupled with the `include` or `macro` statements with nested temlates, it allows for even more complex outputs.
+The J2GPP filters `write` and `append` allow exporting the content of a block to another file. This can be used for a file combining elements contributed by multiple templates, for alternative versions of a file from a single template, for generating small annex files to a large template, for generating a files for each element in a list, etc. When coupled with the `include` or `macro` statements with nested templates, it allows for even more complex outputs.
 
-Note that if the installed Jinja2 version doesn't support the `@render_time_only` decorator, using the `write` and `append` filters in conditional blocks may results in unwnated behaviour.
+Note that if the installed Jinja2 version doesn't support the `@render_time_only` decorator, using the `write` and `append` filters in conditional blocks may results in unwanted behavior.
 
 #### Write example
 

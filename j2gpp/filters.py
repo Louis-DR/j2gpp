@@ -32,7 +32,7 @@ try: from jinja2.utils import render_time_only
 except ImportError:
   def render_time_only(func):
     def decorated(*args, **kwargs):
-      throw_warning(f"The installed Jinja2 library doesn't support the @render_time_only decorator. The function {func.__name__} may get executed regarless of conditional block.")
+      throw_warning(f"The installed Jinja2 library doesn't support the @render_time_only decorator. The function {func.__name__} may get executed regardless of conditional block.")
       return func(*args, **kwargs)
     return decorated
 
@@ -483,7 +483,7 @@ extra_filters['reindent'] = reindent
 
 
 # Removes pre-existing indentation and sets new indent based on rules
-def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=False, blank=False):
+def auto_indent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=False, blank=False):
   depth      = 0
   next_depth = 0
 
@@ -528,7 +528,8 @@ def autoindent(content, starts=['{'], ends=['}'], spaces=2, tabs=False, first=Fa
   # Return paragraph of lines
   return '\n'.join(lines)
 
-extra_filters['autoindent'] = autoindent
+extra_filters['autoindent']  = auto_indent
+extra_filters['auto_indent'] = auto_indent
 
 
 # Align every line of the paragraph, left before §, right before §§
@@ -662,7 +663,7 @@ def filter_structure(structure, attribute, query):
         if isinstance(element, dict) and attribute in element and element[attribute] == query:
           structure_filtered.append(element)
     case _:
-      throw_error(f"Unsopported structure type for the 'filter' filter.")
+      throw_error(f"Unsupported structure type for the 'filter' filter.")
   return structure_filtered
 extra_filters['filter']  = filter_structure
 
@@ -679,7 +680,7 @@ def exclude_structure(structure, attribute, query):
         if isinstance(element, dict) and attribute in element and element[attribute] != query:
           structure_filtered.append(element)
     case _:
-      throw_error(f"Unsopported structure type for the 'exclude' filter.")
+      throw_error(f"Unsupported structure type for the 'exclude' filter.")
   return structure_filtered
 extra_filters['exclude']  = exclude_structure
 
@@ -704,7 +705,7 @@ extra_filters['with_min'] = lambda X,attr : extra_filters['el_of_min_attr'](X,at
 # Accumulate elements of integer/float list
 extra_filters['accumulate'] = lambda L : itertools.accumulate(L)
 
-# Count occurences in list
+# Count occurrences in list
 extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 
 # Flatten to shallow list, keep only values for dictionaries

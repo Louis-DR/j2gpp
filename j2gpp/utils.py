@@ -362,7 +362,7 @@ def change_working_directory(dir_path):
     else:
       throw_error(f"Cannot change working directory to '{dir_path}'.")
 
-# Get absolte path with resolved symbolic links and variables
+# Get absolute path with resolved symbolic links and variables
 def resolve_path(path:str) -> str:
   return os.path.expandvars(os.path.expanduser(os.path.abspath(path)))
 
