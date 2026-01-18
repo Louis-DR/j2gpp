@@ -131,6 +131,17 @@ except ImportError:
 
 
 
+# ┌──────────────────┐
+# │ Python functions │
+# └──────────────────┘
+
+extra_globals['reversed']  = reversed
+extra_globals['sorted']    = sorted
+extra_globals['enumerate'] = enumerate
+extra_globals['zip']       = zip
+
+
+
 # ┌──────────────┐
 # │ Accumulators │
 # └──────────────┘
