@@ -655,6 +655,14 @@ extra_filters['restructure'] = restructure
 # │ Dictionary and list │
 # └─────────────────────┘
 
+# For list of booleans
+extra_filters['any'] = any
+extra_filters['all'] = all
+extra_filters['first_true']  = lambda L : next((i for i, x in enumerate(L)            if x),        None)
+extra_filters['first_false'] = lambda L : next((i for i, x in enumerate(L)            if not x),    None)
+extra_filters['last_true']   = lambda L : next((i for i    in range(len(L)-1, -1, -1) if L[i]),     None)
+extra_filters['last_false']  = lambda L : next((i for i    in range(len(L)-1, -1, -1) if not L[i]), None)
+
 # List of keys or values
 extra_filters['keys']   = lambda D : list(D.keys())
 extra_filters['values'] = lambda D : list(D.values())
