@@ -22,6 +22,8 @@ import re
 import os
 import errno
 import itertools
+import unicodedata
+import collections
 from j2gpp.utils import *
 from jinja2.runtime import Undefined
 
@@ -250,6 +252,256 @@ extra_filters['blake2b']  = lambda x : hashlib.blake2b  (json_dumps(x).encode('u
 extra_filters['blake2s']  = lambda x : hashlib.blake2s  (json_dumps(x).encode('utf-8')).hexdigest()
 extra_filters['adler32']  = lambda x : zlib.adler32     (json_dumps(x).encode('utf-8'))
 extra_filters['crc32']    = lambda x : zlib.crc32       (json_dumps(x).encode('utf-8'))
+
+
+
+# ┌───────────────────────────────────────┐
+# │ Internationalization and localization │
+# └───────────────────────────────────────┘
+
+# Optional library imports with graceful fallbacks
+HAS_INFLECT    = False
+HAS_BABEL      = False
+HAS_LOREM_TEXT = False
+HAS_LANGDETECT = False
+
+try:
+  import inflect
+  inflect_engine = inflect.engine()
+  HAS_INFLECT = True
+except ImportError:
+  inflect_engine = None
+
+try:
+  import babel
+  HAS_BABEL = True
+except ImportError:
+  pass
+
+try:
+  import lorem_text
+  HAS_LOREM_TEXT = True
+except ImportError:
+  pass
+
+try:
+  import langdetect
+  HAS_LANGDETECT = True
+except ImportError:
+  pass
+
+# Language detection
+def detect_language(text, return_probabilities=False):
+  """Detect the language of the given text. Requires langdetect library."""
+  if not HAS_LANGDETECT:
+    throw_warning("Language detection requires the 'langdetect' library. Install with: pip install langdetect")
+    return None
+  try:
+    if return_probabilities:
+      results = langdetect.detect_langs(str(text))
+      return {str(r.lang): r.prob for r in results}
+    return langdetect.detect(str(text))
+  except Exception:
+    return None
+extra_filters['detect_language'] = detect_language
+extra_filters['detect_lang']     = detect_language
+
+# Pluralization
+def pluralize(word, count=2, locale='en'):
+  """Pluralize a word based on count. Uses inflect library for English if available."""
+  count = int(count) if not isinstance(count, int) else count
+  if count == 1:
+    return word
+  if locale == 'en' and HAS_INFLECT:
+    result = inflect_engine.plural(word)
+    return result if result else word + 's'
+  if HAS_BABEL:
+    # Babel doesn't have direct word pluralization, fall back to simple
+    pass
+  # Fallback: simple 's' suffix for English-like languages
+  if locale == 'en':
+    throw_warning("For accurate English pluralization, install the 'inflect' library: pip install inflect")
+  return word + 's'
+extra_filters['pluralize'] = pluralize
+
+# Number to words
+def number_to_words(n, locale='en', ordinal=False, threshold=None):
+  """Convert a number to words. Uses inflect library for English if available."""
+  n = int(n)
+  # Threshold: only convert if number is below threshold
+  if threshold is not None and abs(n) >= threshold:
+    return str(n)
+  if locale == 'en' and HAS_INFLECT:
+    if ordinal:
+      return inflect_engine.ordinal(n)
+    return inflect_engine.number_to_words(n)
+  if not HAS_INFLECT:
+    throw_warning("Number to words requires the 'inflect' library for English. Install with: pip install inflect")
+  return str(n)
+extra_filters['number_to_words'] = number_to_words
+extra_filters['num2words']       = number_to_words
+
+# Ordinal numbers
+def ordinal(n, locale='en', words=False):
+  """Convert a number to its ordinal form (1st, 2nd, 3rd or first, second, third)."""
+  n = int(n)
+  if locale == 'en' and HAS_INFLECT:
+    if words:
+      return inflect_engine.ordinal(inflect_engine.number_to_words(n))
+    return inflect_engine.ordinal(n)
+  if HAS_BABEL:
+    # Babel doesn't have ordinals directly, but we could use CLDR data
+    pass
+  # Fallback: English ordinals
+  if locale != 'en':
+    throw_warning(f"Ordinals for locale '{locale}' require the 'babel' library. Install with: pip install babel")
+  if 11 <= abs(n) % 100 <= 13:
+    return f"{n}th"
+  suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(abs(n) % 10, 'th')
+  return f"{n}{suffix}"
+extra_filters['ordinal'] = ordinal
+
+# Roman numerals (no library needed, keep simple implementation)
+def int_to_roman(n, lowercase=False):
+  n = int(n)
+  if n <= 0 or n >= 4000:
+    return str(n)
+  numerals = [(1000,'M'), (900,'CM'), (500,'D'), (400,'CD'), (100,'C'), (90,'XC'),
+              (50,'L'), (40,'XL'), (10,'X'), (9,'IX'), (5,'V'), (4,'IV'), (1,'I')]
+  result = ''
+  for value, numeral in numerals:
+    while n >= value:
+      result += numeral
+      n -= value
+  return result.lower() if lowercase else result
+extra_filters['roman'] = int_to_roman
+
+# Convert to URL-friendly slug
+def slugify(text, separator='-', lowercase=True, max_length=0):
+  # Normalize unicode characters
+  text = unicodedata.normalize('NFKD', str(text))
+  text = text.encode('ascii', 'ignore').decode('ascii')
+  # Replace non-alphanumeric with separator
+  text = re.sub(r'[^\w\s-]', '', text)
+  text = re.sub(r'[\s_-]+', separator, text).strip(separator)
+  if lowercase:
+    text = text.lower()
+  if max_length > 0:
+    text = text[:max_length].rstrip(separator)
+  return text
+extra_filters['slugify'] = slugify
+
+# Date and time
+extra_filters['strftime']  = lambda dt,fmt='%Y-%m-%d %H:%M:%S' : dt.strftime(fmt) if hasattr(dt,'strftime') else datetime.datetime.fromtimestamp(dt).strftime(fmt)
+extra_filters['strptime']  = lambda s, fmt='%Y-%m-%d %H:%M:%S' : datetime.datetime.strptime(s,fmt)
+extra_filters['timedelta'] = lambda dt,days=0,hours=0,minutes=0,seconds=0,weeks=0 : dt + datetime.timedelta(days=days,hours=hours,minutes=minutes,seconds=seconds,weeks=weeks)
+extra_filters['iso8601']   = lambda dt : dt.isoformat() if hasattr(dt,'isoformat') else datetime.datetime.fromtimestamp(dt).isoformat()
+
+def relative_time(dt, now=None, granularity=1, locale='en', add_direction=True):
+  """
+  Format datetime as relative time (e.g., '2 days ago', 'in 3 hours').
+  Uses Babel for localization if available.
+  Args:
+    dt: datetime object or timestamp
+    now: reference datetime (default: current time)
+    granularity: number of time units to include (e.g., 2 for '2 days, 3 hours ago')
+    locale: language code (e.g., 'en', 'fr', 'de') - requires Babel for non-English
+    add_direction: include 'ago' or 'in' prefix/suffix
+  """
+  if now is None:
+    now = datetime.datetime.now(dt.tzinfo if hasattr(dt,'tzinfo') else None)
+  if not hasattr(dt,'timestamp'):
+    dt = datetime.datetime.fromtimestamp(dt)
+  delta = now - dt
+
+  # Use Babel for localized relative time if available
+  if HAS_BABEL and locale != 'en':
+    try:
+      return babel.dates.format_timedelta(dt - now, locale=locale, add_direction=add_direction, granularity='second')
+    except Exception:
+      pass
+  elif locale != 'en' and not HAS_BABEL:
+    throw_warning(f"Localized relative time for '{locale}' requires the 'babel' library. Install with: pip install babel")
+
+  # Fallback: English implementation
+  seconds = abs(delta.total_seconds())
+  is_future = delta.total_seconds() < 0
+  units = [('year',31536000), ('month',2592000), ('week',604800), ('day',86400),
+           ('hour',3600), ('minute',60), ('second',1)]
+  parts = []
+  for name, secs in units:
+    if seconds >= secs:
+      count = int(seconds // secs)
+      seconds %= secs
+      parts.append(f"{count} {name}{'s' if count != 1 else ''}")
+      if len(parts) >= granularity:
+        break
+  if not parts:
+    return "just now"
+  result = ', '.join(parts)
+  if add_direction:
+    return f"in {result}" if is_future else f"{result} ago"
+  return result
+extra_filters['relative_time'] = relative_time
+
+# Text generators
+extra_filters['repeat'] = lambda s,n,sep='' : sep.join([str(s)]*n)
+
+# Lorem ipsum generator
+LOREM_WORDS_FALLBACK = ['lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit','sed','do',
+                        'eiusmod','tempor','incididunt','ut','labore','et','dolore','magna','aliqua','enim',
+                        'ad','minim','veniam','quis','nostrud','exercitation','ullamco','laboris','nisi',
+                        'aliquip','ex','ea','commodo','consequat','duis','aute','irure','in','reprehenderit',
+                        'voluptate','velit','esse','cillum','fugiat','nulla','pariatur','excepteur','sint',
+                        'occaecat','cupidatat','non','proident','sunt','culpa','qui','officia','deserunt',
+                        'mollit','anim','id','est','laborum']
+
+def lorem(count=5, unit='sentences'):
+  """
+  Generate Lorem Ipsum placeholder text.
+  Uses lorem-text library if available for better quality.
+  Args:
+    count: number of units to generate
+    unit: 'words', 'sentences', or 'paragraphs'
+  """
+  if HAS_LOREM_TEXT:
+    try:
+      if unit == 'words':
+        return lorem_text.lorem.words(count)
+      elif unit == 'sentences':
+        return lorem_text.lorem.sentences(count)
+      elif unit == 'paragraphs':
+        return lorem_text.lorem.paragraphs(count)
+    except Exception:
+      pass
+
+  # Fallback implementation
+  import random
+  if unit == 'words':
+    words = [random.choice(LOREM_WORDS_FALLBACK) for _ in range(count)]
+    return ' '.join(words)
+  elif unit == 'sentences':
+    sentences = []
+    for _ in range(count):
+      length = random.randint(5, 12)
+      words = [random.choice(LOREM_WORDS_FALLBACK) for _ in range(length)]
+      words[0] = words[0].capitalize()
+      sentences.append(' '.join(words) + '.')
+    return ' '.join(sentences)
+  elif unit == 'paragraphs':
+    paragraphs = []
+    for _ in range(count):
+      sent_count = random.randint(4, 8)
+      sentences = []
+      for _ in range(sent_count):
+        length = random.randint(5, 12)
+        words = [random.choice(LOREM_WORDS_FALLBACK) for _ in range(length)]
+        words[0] = words[0].capitalize()
+        sentences.append(' '.join(words) + '.')
+      paragraphs.append(' '.join(sentences))
+    return '\n\n'.join(paragraphs)
+  return ''
+extra_filters['lorem'] = lorem
 
 
 
