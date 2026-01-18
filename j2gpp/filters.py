@@ -673,6 +673,8 @@ extra_filters['first_true']  = lambda L : next((i for i, x in enumerate(L)      
 extra_filters['first_false'] = lambda L : next((i for i, x in enumerate(L)            if not x),    None)
 extra_filters['last_true']   = lambda L : next((i for i    in range(len(L)-1, -1, -1) if L[i]),     None)
 extra_filters['last_false']  = lambda L : next((i for i    in range(len(L)-1, -1, -1) if not L[i]), None)
+extra_filters['count_true']  = lambda L : sum(1 for x in L if x)
+extra_filters['count_false'] = lambda L : sum(1 for x in L if not x)
 
 # List of keys or values
 extra_filters['keys']   = lambda D : list(D.keys())
@@ -744,11 +746,63 @@ extra_filters['accumulate'] = lambda L : itertools.accumulate(L)
 # Count occurrences in list
 extra_filters['count'] = lambda L,x : sum([l==x for l in L])
 
+# Count occurrences of each element
+extra_filters['occurrences'] = lambda L : dict(collections.Counter(L))
+extra_filters['frequencies'] = lambda L : {k: v/len(L) for k,v in collections.Counter(L).items()} if L else {}
+
 # Flatten to shallow list, keep only values for dictionaries
 extra_filters['flatten'] = flatten
 
 # Rotate list of lists
 extra_filters['rotate'] = lambda L : list(map(list, zip(*L)))
+
+# Get element with default
+extra_filters['get_nth'] = lambda L,n,default=None : L[n] if 0 <= n < len(L) else default
+
+# Split list into chunks of size N
+extra_filters['chunks'] = lambda L,n : [L[i:i+n] for i in range(0, len(L), n)]
+
+# Interleave multiple lists
+def interleave(lists, truncate=False, repeat=False):
+  if not lists:
+    return []
+  # Truncate: stop after shortest list is finished
+  if truncate:
+    return [x for tupl in zip(*lists) for x in tupl]
+  # Repeat: repeat the shortest list until the longest one is finished
+  if repeat:
+    max_len = max(len(lst) for lst in lists)
+    result = []
+    for iteration in range(max_len):
+      for lst in lists:
+        if lst:
+          result.append(lst[iteration % len(lst)])
+    return result
+  # Default: continue with remaining lists
+  max_len = max(len(lst) for lst in lists)
+  result = []
+  for iteration in range(max_len):
+    for lst in lists:
+      if iteration < len(lst):
+        result.append(lst[iteration])
+  return result
+extra_filters['interleave'] = interleave
+
+# Overlapping windows of N elements
+def sliding_window(L, N, pad=False, pad_before=False, pad_after=False, pad_with=None):
+  result = []
+  if pad or pad_before:
+    for index in range(1, N):
+      window = [pad_with] * (N - index) + list(L[:index])
+      result.append(window)
+  for index in range(len(L) - N + 1):
+    result.append(list(L[index:index+N]))
+  if pad or pad_after:
+    for index in range(1, N):
+      window = list(L[len(L)-N+index:]) + [pad_with] * index
+      result.append(window)
+  return result
+extra_filters['sliding_window'] = sliding_window
 
 
 
