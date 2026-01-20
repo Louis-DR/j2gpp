@@ -52,6 +52,12 @@ from j2gpp.utils import (
   load_module,
   resolve_path,
 )
+from j2gpp.extensions import (
+  discover_extensions,
+  load_extension_by_name,
+  resolve_dependencies,
+  get_extension_info,
+)
 
 
 
@@ -99,6 +105,11 @@ class J2GPP:
     # Cached Jinja2 environment
     self._jinja_env = None
     self._env_dirty = True
+
+    # Extensions
+    self._loaded_extensions      = {}
+    self._disabled_extensions    = set()
+    self._auto_extensions_loaded = False
 
 
 
@@ -806,9 +817,109 @@ class J2GPP:
 
 
 
+  # ┌────────────────────────┐
+  # │ Extension Management   │
+  # └────────────────────────┘
+
+  def load_extensions(self) -> 'J2GPP':
+    """Discover and load all installed J2GPP extensions (chainable)"""
+    if self._auto_extensions_loaded:
+      return self
+
+    # Discover all available extensions
+    available = discover_extensions()
+
+    # Filter out disabled extensions
+    extensions_to_load = {
+      name:extension for name, extension in available.items()
+                      if name not in self._disabled_extensions
+    }
+
+    if not extensions_to_load:
+      self._auto_extensions_loaded = True
+      return self
+
+    # Resolve dependencies and get load order
+    load_order = resolve_dependencies(extensions_to_load)
+
+    # Register each extension in order
+    for name in load_order:
+      if name in extensions_to_load:
+        self._register_extension(name, extensions_to_load[name])
+
+    self._env_dirty = True
+    self._auto_extensions_loaded = True
+    return self
+
+  def load_extension(self, name: str) -> 'J2GPP':
+    """Load a specific extension by name (chainable)"""
+    # Check if already loaded
+    if name in self._loaded_extensions:
+      return self
+
+    # Try to load the extension
+    extension = load_extension_by_name(name)
+    if extension is None:
+      return self
+
+    # Check for dependencies
+    dependencies = extension.get("dependencies", [])
+    for dependency in dependencies:
+      if dependency not in self._loaded_extensions:
+        self.load_extension(dependency)
+
+    # Register extension content
+    self._register_extension(name, extension)
+    self._env_dirty = True
+    return self
+
+  def disable_extension(self, name: str) -> 'J2GPP':
+    """Disable an extension from being loaded during auto-discovery (chainable)"""
+    self._disabled_extensions.add(name)
+    return self
+
+  def get_loaded_extensions(self) -> Dict[str, Dict[str, Any]]:
+    """Get information about all loaded extensions"""
+    return {name: get_extension_info(extension) for name, extension in self._loaded_extensions.items()}
+
+  def has_extension(self, name: str) -> bool:
+    """Check if an extension is loaded"""
+    return name in self._loaded_extensions
+
+
+
   # ┌──────────────────┐
   # │ Internal Methods │
   # └──────────────────┘
+
+  def _register_extension(self, name: str, extension: Dict[str, Any]) -> None:
+    """Register an extension's filters, tests, and globals"""
+    # Register filters
+    for filter_name, filter_func in extension.get("filters", {}).items():
+      if filter_name in self.filters:
+        throw_warning(f"Extension '{name}' overrides filter '{filter_name}'")
+      if callable(filter_func):
+        self.filters[filter_name] = filter_func
+      else:
+        throw_warning(f"Extension '{name}' filter '{filter_name}' is not callable")
+
+    # Register tests
+    for test_name, test_func in extension.get("tests", {}).items():
+      if test_name in self.tests:
+        throw_warning(f"Extension '{name}' overrides test '{test_name}'")
+      if callable(test_func):
+        self.tests[test_name] = test_func
+      else:
+        throw_warning(f"Extension '{name}' test '{test_name}' is not callable")
+
+    # Register globals
+    for global_name, global_value in extension.get("globals", {}).items():
+      if global_name in self.globals:
+        throw_warning(f"Extension '{name}' overrides global '{global_name}'")
+      self.globals[global_name] = global_value
+
+    # Store extension metadata
+    self._loaded_extensions[name] = extension
 
   def _ensure_environment(self):
     """Lazy initialization of Jinja2 environment"""

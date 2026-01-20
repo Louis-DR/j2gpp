@@ -80,6 +80,9 @@ def parse_arguments():
   argparser.add_argument(      "--perf",                   dest="perf",                   help="Measure and display performance",                                       action="store_true", default=False)
   argparser.add_argument(      "--version",                dest="version",                help="Print J2GPP version and quits",                                         action="store_true", default=False)
   argparser.add_argument(      "--license",                dest="license",                help="Print J2GPP license and quits",                                         action="store_true", default=False)
+  argparser.add_argument(      "--no-auto-extensions",     dest="no_auto_extensions",     help="Disable automatic loading of installed extensions",                     action="store_true", default=False)
+  argparser.add_argument(      "--extension",              dest="extensions",             help="Explicitly load an extension by name",                                  action="append")
+  argparser.add_argument(      "--disable-extension",      dest="disable_extensions",     help="Disable a specific extension from being loaded",                        action="append")
 
   return argparser.parse_known_args()
 
@@ -147,6 +150,19 @@ def configure_engine_from_args(engine: J2GPP, args) -> None:
       engine.set_global_vars_adapter(global_vars_adapter_function)
     except Exception as exc:
       throw_error(f"Cannot load global vars adapter function '{global_vars_adapter_name}' from '{global_vars_adapter_path}': {exc}")
+
+  # Handle extensions
+  # First, apply disable flags
+  if args.disable_extensions:
+    for ext_name in args.disable_extensions:
+      engine.disable_extension(ext_name)
+  # Second, auto-load extensions unless disabled
+  if not args.no_auto_extensions:
+    engine.load_extensions()
+  # Third, explicitly load additional extensions
+  if args.extensions:
+    for ext_name in args.extensions:
+      engine.load_extension(ext_name)
 
 
 def load_variables_from_args(engine: J2GPP, args) -> None:
@@ -421,6 +437,19 @@ def main():
 
   engine = J2GPP()
   configure_engine_from_args(engine, args)
+
+  # Display loaded extensions
+  loaded_extensions = engine.get_loaded_extensions()
+  if loaded_extensions:
+    print(f"Loaded {len(loaded_extensions)} extension(s):")
+    for extension_name, extension_info in loaded_extensions.items():
+      version       = extension_info.get('version', 'unknown')
+      filters_count = extension_info.get('filter_count', 0)
+      tests_count   = extension_info.get('test_count',   0)
+      globals_count = extension_info.get('global_count', 0)
+      print(f"  {extension_name} v{version} ({filters_count} filters, {tests_count} tests, {globals_count} globals)")
+  elif not args.no_auto_extensions:
+    print("No extensions found.")
 
   # Collect source paths
   throw_h2("Fetching source files")
