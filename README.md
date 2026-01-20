@@ -23,6 +23,7 @@
     - [Configuration inspection](#configuration-inspection)
     - [Template validation](#template-validation)
     - [Template discovery \& analysis](#template-discovery--analysis)
+    - [Extension management](#extension-management)
     - [Result objects](#result-objects)
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
@@ -58,6 +59,9 @@
       - [Path argument](#path-argument)
       - [Writing to both files](#writing-to-both-files)
       - [Skipping the parent file](#skipping-the-parent-file)
+  - [Extensions](#extensions)
+    - [Using extensions](#using-extensions)
+    - [Creating extensions](#creating-extensions)
 
 
 ## Installation
@@ -289,6 +293,9 @@ The following arguments can be added to the command for additional features. The
 | `--perf`                   | Measure the execution time for performance testing                      |
 | `--version`                | Print J2GPP version and quits                                           |
 | `--license`                | Print J2GPP license and quits                                           |
+| `--no-auto-extensions`     | Disable automatic loading of installed extensions                       |
+| `--extension`              | Explicitly load an extension by name                                    |
+| `--disable-extension`      | Disable a specific extension from being loaded                          |
 
 ### Exception handling and errors
 
@@ -397,6 +404,19 @@ J2GPP.find_templates("./templates/", False)  # Find .j2 files (non-recursive)
 # Analyze template dependencies and structure
 J2GPP.find_template_dependencies("main.j2") # Find included/imported templates
 J2GPP.analyze_template_variables("main.j2") # Extract variables used in template
+```
+
+### Extension management
+
+``` python
+# Extension loading
+J2GPP.load_extensions()              # Discover and load all installed extensions
+J2GPP.load_extension("ext_name")     # Load a specific extension by name
+J2GPP.disable_extension("ext_name")  # Disable an extension from auto-loading
+
+# Extension inspection
+J2GPP.get_loaded_extensions()        # Get metadata for all loaded extensions
+J2GPP.has_extension("ext_name")      # Check if an extension is loaded
 ```
 
 ### Result objects
@@ -1309,3 +1329,110 @@ This will be rendered to the child output file
 >>> cat child.txt
 This will be rendered to the child output file
 ```
+
+## Extensions
+
+J2GPP supports extensions that can add custom filters, tests, and globals. Extensions are Python packages that register themselves via entry points, allowing them to be automatically discovered when installed.
+
+### Using extensions
+
+By default, J2GPP automatically discovers and loads all installed extensions. Extensions are loaded during engine initialization and their filters, tests, and globals become available to templates.
+
+**CLI usage:**
+
+``` shell
+# Auto-load all installed extensions (default behavior)
+j2gpp ./template.j2
+
+# Disable automatic extension loading
+j2gpp ./template.j2 --no-auto-extensions
+
+# Explicitly load a specific extension
+j2gpp ./template.j2 --extension my_extension
+
+# Disable a specific extension from being loaded
+j2gpp ./template.j2 --disable-extension unwanted_extension
+```
+
+**API usage:**
+
+``` python
+from j2gpp import J2GPP
+
+# Auto-load all installed extensions
+engine = J2GPP()
+engine.load_extensions()
+
+# Load a specific extension by name
+engine.load_extension("my_extension")
+
+# Disable an extension before auto-loading
+engine = J2GPP()
+engine.disable_extension("unwanted_extension")
+engine.load_extensions()
+
+# Inspect loaded extensions
+loaded = engine.get_loaded_extensions()
+for name, info in loaded.items():
+    print(f"{name} v{info['version']}: {info['filter_count']} filters")
+
+# Check if an extension is loaded
+if engine.has_extension("my_extension"):
+    print("Extension is available")
+```
+
+### Creating extensions
+
+Extensions are Python packages that expose a dictionary via entry points. The dictionary contains the extension's metadata and the filters, tests, and globals it provides.
+
+**1. Create the extension package:**
+
+``` python
+# my_j2gpp_extension/__init__.py
+
+j2gpp_extension = {
+    "name": "my_extension",
+    "version": "1.0.0",
+    "dependencies": [],  # Optional: list of extension names this depends on
+    "filters": {
+        "shout": lambda x: str(x).upper() + "!",
+        "whisper": lambda x: str(x).lower(),
+    },
+    "tests": {
+        "loud": lambda x: str(x).isupper(),
+    },
+    "globals": {
+        "EXTENSION_VERSION": "1.0.0",
+    },
+}
+```
+
+**2. Register the entry point in `pyproject.toml`:**
+
+``` toml
+[project.entry-points."j2gpp.extensions"]
+my_extension = "my_j2gpp_extension:j2gpp_extension"
+```
+
+**3. Install the package:**
+
+``` shell
+pip install ./my_j2gpp_extension
+```
+
+Once installed, the extension will be automatically discovered by J2GPP and its filters, tests, and globals will be available in templates.
+
+**Extension interface:**
+
+| Field          | Required | Description                                           |
+| -------------- | -------- | ----------------------------------------------------- |
+| `name`         | Yes      | Unique identifier for the extension                   |
+| `version`      | No       | Version string (defaults to "unknown")                |
+| `dependencies` | No       | List of extension names this extension depends on     |
+| `filters`      | No       | Dictionary of filter name to callable                 |
+| `tests`        | No       | Dictionary of test name to callable                   |
+| `globals`      | No       | Dictionary of global name to value (any type)         |
+
+**Conflict handling:**
+
+If multiple extensions or custom filters/tests/globals define the same name, the later one will override the earlier one and a warning will be displayed. Extensions are loaded in dependency order, then alphabetically.
