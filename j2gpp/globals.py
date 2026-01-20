@@ -107,6 +107,9 @@ extra_globals['random'] = random
 import secrets as secrets
 extra_globals['secrets'] = secrets
 
+import re as re
+extra_globals['re'] = re
+
 import os.path as ospath
 extra_globals['ospath'] = ospath
 
@@ -128,6 +131,17 @@ try:
 except ImportError:
   throw_warning(f"Could not load the global library 'colour'.")
   pass
+
+
+
+# ┌──────────────────┐
+# │ Python functions │
+# └──────────────────┘
+
+extra_globals['reversed']  = reversed
+extra_globals['sorted']    = sorted
+extra_globals['enumerate'] = enumerate
+extra_globals['zip']       = zip
 
 
 

@@ -170,7 +170,7 @@ def process_single_file(source_path: str,
       try:
         traceback = jinja2_render_traceback(source_path)
       except Exception as exc:
-        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
+        throw_error(f"Exception occurred while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
       error_msg = f"Undefined object encountered while rendering '{source_path}' :\n{traceback}\n      {exc.message}"
       return FileRenderResult(source_path, output_path, False, error_msg, is_template)
     except jinja2_exceptions.TemplateSyntaxError as exc:
@@ -178,7 +178,7 @@ def process_single_file(source_path: str,
       try:
         traceback = jinja2_render_traceback(source_path)
       except Exception as exc:
-        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
+        throw_error(f"Exception occurred while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
       error_msg = f"Syntax error encountered while rendering '{source_path}' :\n{traceback}\n      {exc.message}"
       return FileRenderResult(source_path, output_path, False, error_msg, is_template)
     except jinja2_exceptions.TemplateNotFound as exc:
@@ -186,7 +186,7 @@ def process_single_file(source_path: str,
       try:
         traceback = jinja2_render_traceback(source_path)
       except Exception as exc:
-        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
+        throw_error(f"Exception occurred while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
       error_msg = f"Included template '{exc}' not found :\n{traceback}"
       return FileRenderResult(source_path, output_path, False, error_msg, is_template)
     except OSError as exc:
@@ -203,7 +203,7 @@ def process_single_file(source_path: str,
       try:
         traceback = jinja2_render_traceback(source_path, including_non_template=True)
       except Exception as exc:
-        throw_error(f"Exception occured while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
+        throw_error(f"Exception occurred while rendering the traceback of a previous Jinja2 exception for template '{source_path}':\n      {exc.message}")
       error_msg = f"Exception occurred while rendering '{source_path}' :\n{traceback}\n      {type(exc).__name__} - {exc}"
       return FileRenderResult(source_path, output_path, False, error_msg, is_template)
 
