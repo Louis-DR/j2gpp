@@ -12,7 +12,7 @@
 
 
 # Main programmatic API
-from j2gpp.engine import J2GPP, render_template
+from j2gpp.engine import J2GPP, J2GPPRenderError, render_template
 from j2gpp.results import RenderResult, FileRenderResult
 
 # Core functions for advanced use
@@ -30,6 +30,7 @@ __version__ = get_j2gpp_version()
 
 __all__ = [
   'J2GPP',
+  'J2GPPRenderError',
   'RenderResult',
   'FileRenderResult',
   'render_template',
