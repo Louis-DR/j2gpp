@@ -40,6 +40,14 @@ from j2gpp.utils import (
   warnings,
   load_module
 )
+from j2gpp.config import (
+  find_config_file,
+  load_config_file,
+  get_default_config,
+  merge_configs,
+  cli_args_to_config,
+  get_extension_config,
+)
 
 
 
@@ -83,41 +91,28 @@ def parse_arguments():
   argparser.add_argument(      "--no-auto-extensions",     dest="no_auto_extensions",     help="Disable automatic loading of installed extensions",                     action="store_true", default=False)
   argparser.add_argument(      "--extension",              dest="extensions",             help="Explicitly load an extension by name",                                  action="append")
   argparser.add_argument(      "--disable-extension",      dest="disable_extensions",     help="Disable a specific extension from being loaded",                        action="append")
+  argparser.add_argument("-c", "--config",                 dest="config",                 help="Path to configuration file"                                                     )
+  argparser.add_argument(      "--no-config",              dest="no_config",              help="Disable loading user configuration file",                               action="store_true", default=False)
 
   return argparser.parse_known_args()
 
 
-def configure_engine_from_args(engine: J2GPP, args) -> None:
-  """Configure J2GPP engine from parsed CLI arguments"""
+def configure_engine_from_args(engine: J2GPP, args, merged_config: dict) -> None:
+  """Configure J2GPP engine from merged configuration (config file + CLI args)"""
 
-  # Set all options
-  option_mapping = {
-    'no_strict_undefined':    args.no_strict_undefined,
-    'debug_vars':             args.debug_vars,
-    'no_check_identifier':    args.no_check_identifier,
-    'fix_identifiers':        args.fix_identifiers,
-    'chdir_src':              args.chdir_src,
-    'no_chdir':               args.no_chdir,
-    'csv_delimiter':          args.csv_delimiter if args.csv_delimiter else ',',
-    'csv_escape_char':        args.csv_escape_char,
-    'csv_dont_strip':         args.csv_dont_strip,
-    'xml_convert_attributes': args.xml_convert_attributes,
-    'xml_remove_namespaces':  args.xml_remove_namespaces,
-    'render_non_template':    args.render_non_template,
-    'copy_non_template':      args.copy_non_template,
-    'warn_overwrite':         args.warn_overwrite,
-    'no_overwrite':           args.no_overwrite,
-    'overwrite_outdir':       args.overwrite_outdir,
-  }
-
-  for option_name, value in option_mapping.items():
+  # Set all options from merged configuration
+  options = merged_config.get("options", {})
+  for option_name, value in options.items():
     engine.set_option(option_name, value)
 
-  # Set include directories
-  if args.incdir:
-    engine.set_include_directories(args.incdir)
+  # Set include directories from merged config
+  include_dirs = merged_config.get("include_dirs", [])
+  if include_dirs:
+    # Expand paths in include directories
+    expanded_dirs = [os.path.expanduser(os.path.expandvars(d)) for d in include_dirs]
+    engine.set_include_directories(expanded_dirs)
 
-  # Load custom filters and tests
+  # Load custom filters and tests (CLI only - not in config file)
   if args.filters:
     for filter_path in args.filters:
       engine.load_filters_from_file(filter_path)
@@ -130,7 +125,7 @@ def configure_engine_from_args(engine: J2GPP, args) -> None:
     for global_path in args.globals:
       engine.load_globals_from_file(global_path)
 
-  # Set adapter functions
+  # Set adapter functions (CLI only)
   if args.file_vars_adapter:
     file_vars_adapter_path = args.file_vars_adapter[0]
     file_vars_adapter_name = args.file_vars_adapter[1]
@@ -151,18 +146,58 @@ def configure_engine_from_args(engine: J2GPP, args) -> None:
     except Exception as exc:
       throw_error(f"Cannot load global vars adapter function '{global_vars_adapter_name}' from '{global_vars_adapter_path}': {exc}")
 
-  # Handle extensions
-  # First, apply disable flags
+  # Handle extensions from merged config
+  # First, apply disable flags from merged config
+  disable_extensions = merged_config.get("disable_extensions", [])
+  for ext_name in disable_extensions:
+    engine.disable_extension(ext_name)
+
+  # Also apply CLI disable flags (in case they weren't merged)
   if args.disable_extensions:
     for ext_name in args.disable_extensions:
       engine.disable_extension(ext_name)
-  # Second, auto-load extensions unless disabled
-  if not args.no_auto_extensions:
+
+  # Set extension configurations before loading extensions
+  extension_configs = merged_config.get("extensions", {})
+  for ext_name, ext_config in extension_configs.items():
+    engine.set_extension_config(ext_name, ext_config)
+
+  # Auto-load extensions unless disabled
+  no_auto_extensions = merged_config.get("no_auto_extensions", False)
+  if not no_auto_extensions:
     engine.load_extensions()
-  # Third, explicitly load additional extensions
+
+  # Explicitly load additional extensions (CLI only)
   if args.extensions:
     for ext_name in args.extensions:
       engine.load_extension(ext_name)
+
+
+def load_user_config(args) -> tuple:
+  """Load user configuration, merge with defaults and CLI args"""
+  # Check if config loading is disabled
+  if args.no_config:
+    return get_default_config(), None
+
+  # Find or use explicit config file
+  config_file_path = None
+  if args.config:
+    config_file_path = os.path.expanduser(os.path.expandvars(args.config))
+  else:
+    config_file_path = find_config_file()
+
+  # Load user config (returns empty dict if not found)
+  user_config = {}
+  if config_file_path:
+    user_config = load_config_file(config_file_path)
+
+  # Convert CLI args to config format
+  cli_config = cli_args_to_config(args)
+
+  # Merge: defaults < user_config < cli_config
+  merged_config = merge_configs(get_default_config(), user_config, cli_config)
+
+  return merged_config, config_file_path
 
 
 def load_variables_from_args(engine: J2GPP, args) -> None:
@@ -352,6 +387,17 @@ def main():
     print("Displaying errors on stdout instead of stderr.")
     set_errors_output_stream(sys.stdout)
 
+  # Load user configuration
+  merged_config, config_file_path = load_user_config(args)
+
+  # Display configuration file info
+  if args.no_config:
+    print("User configuration file disabled.")
+  elif config_file_path:
+    print(f"Configuration file :\n  {config_file_path}")
+  else:
+    print("No user configuration file found.")
+
   # Enable performance monitor
   perf_counter = None
   if args.perf:
@@ -387,12 +433,19 @@ def main():
       os.makedirs(one_out_dir)
     print("Output file :", args.output)
 
-  # Display include directories
+  # Display include directories (from merged config)
+  include_dirs = merged_config.get("include_dirs", [])
   if args.incdir:
+    # CLI args override, display those
     print("Include directories :")
     for inc_dir in args.incdir:
       inc_dir = os.path.expandvars(os.path.expanduser(os.path.abspath(inc_dir)))
       print(" ", inc_dir)
+  elif include_dirs:
+    print("Include directories (from config) :")
+    for include_dir in include_dirs:
+      include_dir = os.path.expandvars(os.path.expanduser(include_dir))
+      print(" ", include_dir)
   else:
     print("No include directory provided.")
 
@@ -436,7 +489,7 @@ def main():
   print("Loading J2GPP built-in globals.")
 
   engine = J2GPP()
-  configure_engine_from_args(engine, args)
+  configure_engine_from_args(engine, args, merged_config)
 
   # Display loaded extensions
   loaded_extensions = engine.get_loaded_extensions()
@@ -448,7 +501,7 @@ def main():
       tests_count   = extension_info.get('test_count',   0)
       globals_count = extension_info.get('global_count', 0)
       print(f"  {extension_name} v{version} ({filters_count} filters, {tests_count} tests, {globals_count} globals)")
-  elif not args.no_auto_extensions:
+  elif not merged_config.get("no_auto_extensions", False):
     print("No extensions found.")
 
   # Collect source paths
