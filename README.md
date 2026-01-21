@@ -14,6 +14,7 @@
     - [Additional built-in globals](#additional-built-in-globals)
   - [CLI reference](#cli-reference)
     - [Command line arguments](#command-line-arguments)
+    - [User configuration file](#user-configuration-file)
     - [Exception handling and errors](#exception-handling-and-errors)
   - [API reference](#api-reference)
     - [Rendering methods](#rendering-methods)
@@ -296,6 +297,75 @@ The following arguments can be added to the command for additional features. The
 | `--no-auto-extensions`     | Disable automatic loading of installed extensions                       |
 | `--extension`              | Explicitly load an extension by name                                    |
 | `--disable-extension`      | Disable a specific extension from being loaded                          |
+| `-c/--config`              | Path to user configuration file                                         |
+| `--no-config`              | Disable loading user configuration file                                 |
+
+### User configuration file
+
+J2GPP supports a user configuration file to set default values for CLI options. The configuration file is searched in the following locations (first found wins):
+
+1. `~/.config/j2gpp/j2gpp.json` (XDG standard)
+2. `~/.j2gpp.json` (simple dotfile)
+
+Options are resolved with the following priority (highest to lowest):
+
+1. **CLI arguments** - Always take precedence
+2. **User configuration file** - Second priority
+3. **Hardcoded defaults** - Fallback values
+
+You can specify an explicit configuration file path with the `-c/--config` argument, or disable configuration file loading entirely with `--no-config`.
+
+**Example configuration file:**
+
+```json
+{
+  "options": {
+    "trim_whitespace": true,
+    "csv_delimiter": ";",
+    "warn_overwrite": true
+  },
+  "include_dirs": [
+    "~/templates/includes",
+    "/shared/jinja2/macros"
+  ],
+  "no_auto_extensions": false,
+  "disable_extensions": ["problematic_extension"],
+  "extensions": {
+    "my_extension": {
+      "api_url": "https://api.example.com",
+      "timeout": 30
+    }
+  }
+}
+```
+
+**Supported options:**
+
+The `options` object supports the following keys, corresponding to CLI arguments:
+
+| Option Key              | CLI Equivalent           |
+| ----------------------- | ------------------------ |
+| `no_strict_undefined`   | `--no-strict-undefined`  |
+| `debug_vars`            | `--debug-vars`           |
+| `no_check_identifier`   | `--no-check-identifier`  |
+| `fix_identifiers`       | `--fix-identifiers`      |
+| `chdir_src`             | `--chdir-src`            |
+| `no_chdir`              | `--no-chdir`             |
+| `trim_whitespace`       | `--trim-whitespace`      |
+| `csv_delimiter`         | `--csv-delimiter`        |
+| `csv_escape_char`       | `--csv-escape-char`      |
+| `csv_dont_strip`        | `--csv-dont-strip`       |
+| `xml_convert_attributes`| `--xml-convert-attributes`|
+| `xml_remove_namespaces` | `--xml-remove-namespaces`|
+| `render_non_template`   | `--render-non-template`  |
+| `copy_non_template`     | `--copy-non-template`    |
+| `warn_overwrite`        | `--warn-overwrite`       |
+| `no_overwrite`          | `--no-overwrite`         |
+| `overwrite_outdir`      | `--overwrite-outdir`     |
+
+**Extension configuration:**
+
+Extensions can receive configuration from the `extensions` section. Each key under `extensions` corresponds to an extension name, and its value is a dictionary of configuration options that will be passed to the extension's `on_configure` callback.
 
 ### Exception handling and errors
 

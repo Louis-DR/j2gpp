@@ -109,6 +109,7 @@ class J2GPP:
     # Extensions
     self._loaded_extensions      = {}
     self._disabled_extensions    = set()
+    self._extension_configs      = {}  # Configuration for each extension
     self._auto_extensions_loaded = False
 
 
@@ -886,6 +887,15 @@ class J2GPP:
     """Check if an extension is loaded"""
     return name in self._loaded_extensions
 
+  def set_extension_config(self, name: str, config: Dict[str, Any]) -> 'J2GPP':
+    """Set configuration for a specific extension (chainable)"""
+    self._extension_configs[name] = config
+    return self
+
+  def get_extension_config(self, name: str) -> Dict[str, Any]:
+    """Get configuration for a specific extension"""
+    return self._extension_configs.get(name, {})
+
 
 
   # ┌──────────────────┐
@@ -917,6 +927,15 @@ class J2GPP:
       if global_name in self.globals:
         throw_warning(f"Extension '{name}' overrides global '{global_name}'")
       self.globals[global_name] = global_value
+
+    # Call on_configure callback if extension provides one
+    on_configure = extension.get("on_configure")
+    if on_configure and callable(on_configure):
+      ext_config = self.get_extension_config(name)
+      try:
+        on_configure(ext_config)
+      except Exception as exc:
+        throw_warning(f"Extension '{name}' on_configure callback failed: {exc}")
 
     # Store extension metadata
     self._loaded_extensions[name] = extension

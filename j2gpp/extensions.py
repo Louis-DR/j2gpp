@@ -35,6 +35,18 @@ from j2gpp.utils import throw_warning
 #     "filters": {"name": callable},   # Optional: Jinja2 filters
 #     "tests": {"name": callable},     # Optional: Jinja2 tests
 #     "globals": {"name": value},      # Optional: Jinja2 globals
+#     "on_configure": callable,        # Optional: (config: Dict) -> None
+#   }
+#
+# The on_configure callback receives extension-specific configuration from
+# the user's configuration file (~/.config/j2gpp/j2gpp.json):
+#   {
+#     "extensions": {
+#       "extension_name": {
+#         "option1": "value1",
+#         "option2": true
+#       }
+#     }
 #   }
 
 # Extensions register via entry points in pyproject.toml:
