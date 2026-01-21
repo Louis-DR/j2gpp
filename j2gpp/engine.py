@@ -61,12 +61,29 @@ from j2gpp.extensions import (
 
 
 
+# ┌──────────────────┐
+# │ Custom Exception │
+# └──────────────────┘
+
+class J2GPPRenderError(Exception):
+  """Exception raised when rendering fails and raise_exceptions is enabled"""
+
+  def __init__(self, message: str, result=None):
+    super().__init__(message)
+    self.message = message
+    self.result = result  # The FileRenderResult or RenderResult that caused the error
+
+
+
 class J2GPP:
   """Main J2GPP processing engine for programmatic use"""
 
-  def __init__(self):
+  def __init__(self, raise_exceptions: bool = False):
     # Global variables
     self.variables = {}
+
+    # Exception mode - raise exceptions instead of returning error results
+    self._raise_exceptions = raise_exceptions
 
     # Rendering options
     self.options = {
@@ -214,6 +231,11 @@ class J2GPP:
   def set_output_directory(self, output_dir: str) -> 'J2GPP':
     """Set the output directory for all file rendering (chainable)"""
     self.output_directory = os.path.abspath(output_dir)
+    return self
+
+  def set_raise_exceptions(self, enabled: bool = True) -> 'J2GPP':
+    """Enable or disable raising exceptions on render errors (chainable)"""
+    self._raise_exceptions = enabled
     return self
 
   def set_include_directories(self, dirs: List[str]) -> 'J2GPP':
@@ -769,9 +791,15 @@ class J2GPP:
     jinja_env = self._ensure_environment()
 
     # Process the file
-    return process_single_file(
+    result = process_single_file(
       source_path, output_path, jinja_env, merged_vars, self.options
     )
+
+    # Raise exception if enabled and render failed
+    if self._raise_exceptions and not result.success:
+      raise J2GPPRenderError(result.error_message, result)
+
+    return result
 
   def render_directory(self,
                        source_dir: str,
@@ -798,9 +826,17 @@ class J2GPP:
     jinja_env = self._ensure_environment()
 
     # Process the directory
-    return process_directory(
+    result = process_directory(
       source_dir, output_dir, jinja_env, merged_vars, self.options
     )
+
+    # Raise exception if enabled and render failed
+    if self._raise_exceptions and not result.success:
+      error_messages = [file.error_message for file in result.files if not file.success and file.error_message]
+      combined_message = "\n".join(error_messages) if error_messages else "Render failed"
+      raise J2GPPRenderError(combined_message, result)
+
+    return result
 
   def render_string(self,
                    template_string: str,

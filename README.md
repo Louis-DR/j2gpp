@@ -21,6 +21,7 @@
     - [Variable management](#variable-management)
     - [Configuration methods](#configuration-methods)
     - [Advanced configuration](#advanced-configuration)
+    - [Exception handling mode](#exception-handling-mode)
     - [Configuration inspection](#configuration-inspection)
     - [Template validation](#template-validation)
     - [Template discovery \& analysis](#template-discovery--analysis)
@@ -432,6 +433,30 @@ J2GPP.set_option("trim_whitespace", True)               # Set rendering options
 ``` python
 J2GPP.set_file_vars_adapter(my_function)   # Process variables after loading from files
 J2GPP.set_global_vars_adapter(my_function) # Process all variables before rendering
+J2GPP.set_raise_exceptions(True)           # Raise exceptions on errors instead of returning error results
+```
+
+### Exception handling mode
+
+By default, the J2GPP API returns error information in result objects without raising exceptions. This allows for graceful handling of errors in batch processing scenarios.
+
+To enable exception mode, where errors raise a `J2GPPRenderError` exception:
+
+``` python
+from j2gpp import J2GPP, J2GPPRenderError
+
+# Enable via constructor
+j2gpp = J2GPP(raise_exceptions=True)
+
+# Or enable via setter (chainable)
+j2gpp = J2GPP().set_raise_exceptions(True)
+
+# Handle exceptions
+try:
+  j2gpp.render_file("template.j2")
+except J2GPPRenderError as e:
+  print(f"Render failed: {e.message}")
+  # e.result contains the FileRenderResult or RenderResult object
 ```
 
 ### Configuration inspection
