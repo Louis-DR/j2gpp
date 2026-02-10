@@ -30,6 +30,7 @@
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
+    - [Template search directories](#template-search-directories)
     - [Include search directory](#include-search-directory)
     - [Passing global variables in command line](#passing-global-variables-in-command-line)
     - [Loading global variables from files](#loading-global-variables-from-files)
@@ -432,6 +433,10 @@ J2GPP.load_filters_from_file("./filters.py")            # Load custom Jinja2 fil
 J2GPP.load_tests_from_file("./tests.py")                # Load custom Jinja2 tests from Python file
 J2GPP.load_globals_from_file("./globals.py")            # Load custom Jinja2 globals from Python file
 J2GPP.set_option("trim_whitespace", True)               # Set rendering options
+J2GPP.add_search_directory("./templates/")              # Add template search directory
+J2GPP.set_search_directories(["./t1/", "./t2/"])        # Set multiple search directories
+J2GPP.remove_search_directory("./templates/")           # Remove a search directory
+J2GPP.clear_search_directories()                        # Remove all search directories
 ```
 
 ### Advanced configuration
@@ -486,6 +491,8 @@ J2GPP.has_filter("my_filter")              # Check if filter is loaded
 J2GPP.has_test("my_test")                  # Check if test is loaded
 J2GPP.has_global("my_global")              # Check if global is loaded
 J2GPP.has_include_directory("./includes/") # Check if include directory is configured
+J2GPP.get_search_directories()             # Return copy of search directories list
+J2GPP.has_search_directory("./templates/") # Check if search directory is configured
 ```
 
 ### Template validation
@@ -611,6 +618,33 @@ from j2gpp import J2GPP
 j2gpp = J2GPP()
 j2gpp.add_include_directory("./includes/").render_file("./foo.c.j2")
 ```
+
+### Template search directories
+
+In API mode, you can register template search directories to avoid specifying the full path to every template file. When a source path is provided to a render method, J2GPP resolves it in the following order:
+
+1. If the path exists relative to the current working directory, use it directly
+2. Otherwise, search through registered search directories in the order they were added
+3. If the file is not found in any search directory, the path is passed through as-is (producing the normal "file not found" error)
+
+```python
+from j2gpp import J2GPP
+
+j2gpp = J2GPP()
+j2gpp.add_search_directory("./project/templates/")
+j2gpp.add_search_directory("./shared/templates/")
+
+# Render by name — resolved through search directories
+j2gpp.render_file("header.h.j2")
+
+# Render to string by name
+result = j2gpp.render_file_to_string("config.yml.j2")
+
+# Subdirectory paths are also supported
+j2gpp.render_file("components/widget.html.j2")
+```
+
+Search directories also apply to `validate_template_file()`, `find_template_dependencies()`, and `analyze_template_variables()`.
 
 ### Passing global variables in command line
 
