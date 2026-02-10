@@ -109,6 +109,9 @@ class J2GPP:
     # Output configuration
     self.output_directory = None
 
+    # Template search directories
+    self.search_dirs = []
+
     # Jinja2 configuration
     self.include_dirs = []
     self.filters = {}
@@ -248,6 +251,30 @@ class J2GPP:
     """Add single include directory (chainable)"""
     self.include_dirs.append(os.path.abspath(dir_path))
     self._env_dirty = True
+    return self
+
+  def add_search_directory(self, dir_path: str) -> 'J2GPP':
+    """Add single template search directory (chainable)"""
+    abs_dir = os.path.abspath(dir_path)
+    if abs_dir not in self.search_dirs:
+      self.search_dirs.append(abs_dir)
+    return self
+
+  def set_search_directories(self, dirs: List[str]) -> 'J2GPP':
+    """Set template search directories (chainable)"""
+    self.search_dirs = [os.path.abspath(d) for d in dirs]
+    return self
+
+  def remove_search_directory(self, dir_path: str) -> 'J2GPP':
+    """Remove a template search directory (chainable)"""
+    abs_dir = os.path.abspath(dir_path)
+    if abs_dir in self.search_dirs:
+      self.search_dirs.remove(abs_dir)
+    return self
+
+  def clear_search_directories(self) -> 'J2GPP':
+    """Remove all template search directories (chainable)"""
+    self.search_dirs = []
     return self
 
   def set_option(self, option_name: str, value: Any) -> 'J2GPP':
@@ -431,6 +458,15 @@ class J2GPP:
     abs_dir = os.path.abspath(directory)
     return abs_dir in self.include_dirs
 
+  def get_search_directories(self) -> List[str]:
+    """Get copy of current search directories list"""
+    return self.search_dirs.copy()
+
+  def has_search_directory(self, directory: str) -> bool:
+    """Check if search directory is configured"""
+    abs_dir = os.path.abspath(directory)
+    return abs_dir in self.search_dirs
+
   @property
   def jinja_env(self):
     """Access the Jinja2 environment (creates/rebuilds if needed for power users)"""
@@ -470,7 +506,7 @@ class J2GPP:
 
   def validate_template_file(self, file_path: str) -> ValidationResult:
     """Validate template file syntax without rendering"""
-    abs_path = os.path.abspath(file_path)
+    abs_path = os.path.abspath(self._resolve_template_path(file_path))
 
     # Check if file exists
     if not os.path.isfile(abs_path):
@@ -578,7 +614,7 @@ class J2GPP:
 
   def find_template_dependencies(self, template_path: str) -> List[str]:
     """Find templates included or imported by the given template"""
-    template_absolute_path = os.path.abspath(template_path)
+    template_absolute_path = os.path.abspath(self._resolve_template_path(template_path))
     dependencies = set()
 
     if not os.path.isfile(template_absolute_path):
@@ -633,7 +669,7 @@ class J2GPP:
 
   def analyze_template_variables(self, template_path: str) -> Set[str]:
     """Extract variable names used in a template"""
-    template_absolute_path = os.path.abspath(template_path)
+    template_absolute_path = os.path.abspath(self._resolve_template_path(template_path))
     variables = set()
 
     if not os.path.isfile(template_absolute_path):
@@ -762,6 +798,9 @@ class J2GPP:
                   ) -> FileRenderResult:
     """Render single file with optional per-render parameters"""
 
+    # Resolve template path through search directories
+    source_path = self._resolve_template_path(source_path)
+
     # Determine output path with hierarchy:
     # 1. Method parameter output_path (highest priority)
     # 2. Method parameter output_dir
@@ -863,6 +902,8 @@ class J2GPP:
                             ) -> str:
     """Render template file and return result as string"""
 
+    # Resolve template path through search directories
+    source_path = self._resolve_template_path(source_path)
     abs_path = os.path.abspath(source_path)
 
     # Check if file exists
@@ -1008,6 +1049,22 @@ class J2GPP:
 
     # Store extension metadata
     self._loaded_extensions[name] = extension
+
+  def _resolve_template_path(self, source_path: str) -> str:
+    """Resolve template path through search directories"""
+    # If the path exists directly (relative to cwd), use it as-is
+    if os.path.isfile(source_path) or os.path.isabs(source_path):
+      return source_path
+
+    # Search through registered search directories in order
+    for search_dir in self.search_dirs:
+      candidate = os.path.join(search_dir, source_path)
+      if os.path.isfile(candidate):
+        return candidate
+
+    # Not found in search dirs, return original path
+    # (let downstream code handle the "file not found" error)
+    return source_path
 
   def _ensure_environment(self):
     """Lazy initialization of Jinja2 environment"""
