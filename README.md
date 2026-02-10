@@ -398,6 +398,12 @@ J2GPP.render_string(template_string, variables=None)
 
 Renders a template string directly. Returns the rendered string.
 
+``` python
+J2GPP.render_file_to_string(source_path, variables=None)
+```
+
+Renders a template file and returns the result as a string without writing to disk. Useful for testing, preview, or programmatic string generation from file-based templates.
+
 ### Variable management
 
 ``` python
@@ -434,7 +440,10 @@ J2GPP.set_option("trim_whitespace", True)               # Set rendering options
 J2GPP.set_file_vars_adapter(my_function)   # Process variables after loading from files
 J2GPP.set_global_vars_adapter(my_function) # Process all variables before rendering
 J2GPP.set_raise_exceptions(True)           # Raise exceptions on errors instead of returning error results
+J2GPP.jinja2_env                           # Access Jinja2 Environment instance for advanced operations
 ```
+
+The `jinja_env` property provides direct access to the underlying `jinja2.Environment` instance. This allows power users to perform advanced operations on the Jinja2 environment, such as using Jinja2 overlays or adding native extensions. The environment is created lazily and automatically rebuilt when configuration changes.
 
 ### Exception handling mode
 
