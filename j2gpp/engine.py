@@ -431,6 +431,11 @@ class J2GPP:
     abs_dir = os.path.abspath(directory)
     return abs_dir in self.include_dirs
 
+  @property
+  def jinja_env(self):
+    """Access the Jinja2 environment (creates/rebuilds if needed for power users)"""
+    return self._ensure_environment()
+
 
 
   # ┌─────────────────────┐
@@ -851,6 +856,34 @@ class J2GPP:
     return render_template_string(
       template_string, merged_vars, self.include_dirs, self.filters, self.tests, self.globals, self.options
     )
+
+  def render_file_to_string(self,
+                            source_path: str,
+                            variables: Optional[Dict[str, Any]] = None,
+                            ) -> str:
+    """Render template file and return result as string"""
+
+    abs_path = os.path.abspath(source_path)
+
+    # Check if file exists
+    if not os.path.isfile(abs_path):
+      raise FileNotFoundError(f"Template file not found: {abs_path}")
+
+    try:
+      # Read template file
+      with open(abs_path, 'r', encoding='utf-8') as f:
+        template_string = f.read()
+
+      # Render using render_string
+      return self.render_string(template_string, variables)
+
+    except UnicodeDecodeError as exc:
+      raise UnicodeDecodeError(
+        exc.encoding, exc.object, exc.start, exc.end,
+        f"Cannot read template file (encoding error): {abs_path}"
+      )
+    except OSError as exc:
+      raise OSError(f"Cannot read template file: {abs_path}") from exc
 
 
 

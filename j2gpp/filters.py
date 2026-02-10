@@ -653,7 +653,20 @@ def restructure(content):
       # Number of line breaks (by default 1)
       spacing = int(tag_operands[0])+1 if len(tag_operands) > 0 else 1
       # Add the section and its after-spacing
-      result += section + '\n'*spacing
+      if len(section.strip()) == 0 and result.endswith('\n'):
+        # Count the current trailing newlines
+        current_spacing = 0
+        for char in reversed(result):
+          if char == '\n':
+            current_spacing += 1
+          else:
+            break
+        # Only add the difference if the new spacing is larger
+        if spacing > current_spacing:
+          result += '\n'*(spacing - current_spacing)
+      else:
+        # Standard case
+        result += section + '\n'*spacing
   # Add the last section
   result += sections[-1].rstrip(' \t').strip('\n\r')
   return result
