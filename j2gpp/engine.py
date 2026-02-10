@@ -431,6 +431,11 @@ class J2GPP:
     abs_dir = os.path.abspath(directory)
     return abs_dir in self.include_dirs
 
+  @property
+  def jinja_env(self):
+    """Access the Jinja2 environment (creates/rebuilds if needed for power users)"""
+    return self._ensure_environment()
+
 
 
   # ┌─────────────────────┐
