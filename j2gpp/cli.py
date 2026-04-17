@@ -50,11 +50,18 @@ from j2gpp.config import (
 )
 
 
+class PrintLicenseAction(argparse.Action):
+  def __call__(self, parser, namespace, values, option_string=None):
+    print_license()
+    parser.exit(status=0)
 
-def parse_arguments():
+
+def parse_arguments(j2gpp_version: str):
   """Parse command line arguments"""
   argparser = argparse.ArgumentParser()
-  argparser.add_argument("source",                                                        help="Source template files or directories to render",                        nargs='*')
+  argparser.add_argument("-v", "--version",                action="version",              help="Print J2GPP version and exit",                                          version=j2gpp_version)
+  argparser.add_argument(      "--license",                action=PrintLicenseAction,     help="Print J2GPP license and exit",                                          nargs=0  )
+  argparser.add_argument("source",                                                        help="Source template files or directories to render",                        nargs='+')
   argparser.add_argument("-O", "--outdir",                 dest="outdir",                 help="Output directory path"                                                           )
   argparser.add_argument("-o", "--output",                 dest="output",                 help="Output file path for single source template"                                     )
   argparser.add_argument("-I", "--incdir",                 dest="incdir",                 help="Include directories for include and import Jinja2 statements",          nargs='+')
@@ -86,8 +93,6 @@ def parse_arguments():
   argparser.add_argument(      "--debug-vars",             dest="debug_vars",             help="Display available variables at the top of rendered templates",          action="store_true", default=False)
   argparser.add_argument(      "--stdout-errors",          dest="stdout_errors",          help="Display errors on stdout instead of stderr",                            action="store_true", default=False)
   argparser.add_argument(      "--perf",                   dest="perf",                   help="Measure and display performance",                                       action="store_true", default=False)
-  argparser.add_argument(      "--version",                dest="version",                help="Print J2GPP version and quits",                                         action="store_true", default=False)
-  argparser.add_argument(      "--license",                dest="license",                help="Print J2GPP license and quits",                                         action="store_true", default=False)
   argparser.add_argument(      "--no-auto-extensions",     dest="no_auto_extensions",     help="Disable automatic loading of installed extensions",                     action="store_true", default=False)
   argparser.add_argument(      "--extension",              dest="extensions",             help="Explicitly load an extension by name",                                  action="append")
   argparser.add_argument(      "--disable-extension",      dest="disable_extensions",     help="Disable a specific extension from being loaded",                        action="append")
@@ -361,19 +366,10 @@ def main():
   # Get version info
   j2gpp_version = get_j2gpp_version()
 
-  # Parse arguments
-  args, args_unknown = parse_arguments()
+  # Parse arguments (--version / --license exit from argparse actions).
+  args, args_unknown = parse_arguments(j2gpp_version)
 
-  # Handle version and license early
-  if args.version:
-    print(j2gpp_version)
-    sys.exit(0)
-
-  if args.license:
-    print_license()
-    sys.exit(0)
-
-  # Title after version and license argument parsing
+  # Title after argument parsing
   j2gpp_title()
   print(f"Python version :",python_version())
   print(f"Jinja2 version :",jinja2_version)
@@ -406,11 +402,6 @@ def main():
   # Report unknown command line arguments
   if args_unknown:
     throw_error(f"Incorrect arguments '{' '.join(args_unknown)}'.")
-
-  # Validate source arguments
-  if not args.source:
-    throw_error("Must provide at least one source template.")
-    sys.exit(1)
 
   # Validate single output with multiple sources
   if args.output and len(args.source) > 1:

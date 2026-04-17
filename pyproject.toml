@@ -31,6 +31,9 @@ j2gpp = "j2gpp:main"
 [project.urls]
 "Homepage" = "https://github.com/Louis-DR/j2gpp"
 
+[tool.setuptools]
+license-files = ["LICENSE"]
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["j2gpp*"]

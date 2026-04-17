@@ -30,8 +30,8 @@
   - [Advanced usage](#advanced-usage)
     - [Specify output directory](#specify-output-directory)
     - [Specifying output file](#specifying-output-file)
-    - [Template search directories](#template-search-directories)
     - [Include search directory](#include-search-directory)
+    - [Template search directories](#template-search-directories)
     - [Passing global variables in command line](#passing-global-variables-in-command-line)
     - [Loading global variables from files](#loading-global-variables-from-files)
     - [Loading global variables from environment](#loading-global-variables-from-environment)
@@ -263,6 +263,8 @@ The following arguments can be added to the command for additional features. The
 
 | Argument                   | Description                                                             |
 | -------------------------- | ----------------------------------------------------------------------- |
+| `-v/--version`             | Print J2GPP version and quits                                           |
+| `--license`                | Print J2GPP license and quits                                           |
 | `-O/--outdir`              | Output directory for all rendered templates                             |
 | `-o/--output`              | Output file for single template                                         |
 | `-I/--incdir`              | Include search directory for include and import statements              |
@@ -294,8 +296,6 @@ The following arguments can be added to the command for additional features. The
 | `--debug-vars`             | Display available variables at the top of rendered templates            |
 | `--stdout-errors`          | Display errors on stdout instead of stderr                              |
 | `--perf`                   | Measure the execution time for performance testing                      |
-| `--version`                | Print J2GPP version and quits                                           |
-| `--license`                | Print J2GPP license and quits                                           |
 | `--no-auto-extensions`     | Disable automatic loading of installed extensions                       |
 | `--extension`              | Explicitly load an extension by name                                    |
 | `--disable-extension`      | Disable a specific extension from being loaded                          |
@@ -345,25 +345,25 @@ You can specify an explicit configuration file path with the `-c/--config` argum
 
 The `options` object supports the following keys, corresponding to CLI arguments:
 
-| Option Key              | CLI Equivalent           |
-| ----------------------- | ------------------------ |
-| `no_strict_undefined`   | `--no-strict-undefined`  |
-| `debug_vars`            | `--debug-vars`           |
-| `no_check_identifier`   | `--no-check-identifier`  |
-| `fix_identifiers`       | `--fix-identifiers`      |
-| `chdir_src`             | `--chdir-src`            |
-| `no_chdir`              | `--no-chdir`             |
-| `trim_whitespace`       | `--trim-whitespace`      |
-| `csv_delimiter`         | `--csv-delimiter`        |
-| `csv_escape_char`       | `--csv-escape-char`      |
-| `csv_dont_strip`        | `--csv-dont-strip`       |
-| `xml_convert_attributes`| `--xml-convert-attributes`|
-| `xml_remove_namespaces` | `--xml-remove-namespaces`|
-| `render_non_template`   | `--render-non-template`  |
-| `copy_non_template`     | `--copy-non-template`    |
-| `warn_overwrite`        | `--warn-overwrite`       |
-| `no_overwrite`          | `--no-overwrite`         |
-| `overwrite_outdir`      | `--overwrite-outdir`     |
+| Option Key               | CLI Equivalent             |
+| ------------------------ | -------------------------- |
+| `no_strict_undefined`    | `--no-strict-undefined`    |
+| `debug_vars`             | `--debug-vars`             |
+| `no_check_identifier`    | `--no-check-identifier`    |
+| `fix_identifiers`        | `--fix-identifiers`        |
+| `chdir_src`              | `--chdir-src`              |
+| `no_chdir`               | `--no-chdir`               |
+| `trim_whitespace`        | `--trim-whitespace`        |
+| `csv_delimiter`          | `--csv-delimiter`          |
+| `csv_escape_char`        | `--csv-escape-char`        |
+| `csv_dont_strip`         | `--csv-dont-strip`         |
+| `xml_convert_attributes` | `--xml-convert-attributes` |
+| `xml_remove_namespaces`  | `--xml-remove-namespaces`  |
+| `render_non_template`    | `--render-non-template`    |
+| `copy_non_template`      | `--copy-non-template`      |
+| `warn_overwrite`         | `--warn-overwrite`         |
+| `no_overwrite`           | `--no-overwrite`           |
+| `overwrite_outdir`       | `--overwrite-outdir`       |
 
 **Extension configuration:**
 
@@ -1562,14 +1562,14 @@ Once installed, the extension will be automatically discovered by J2GPP and its 
 
 **Extension interface:**
 
-| Field          | Required | Description                                           |
-| -------------- | -------- | ----------------------------------------------------- |
-| `name`         | Yes      | Unique identifier for the extension                   |
-| `version`      | No       | Version string (defaults to "unknown")                |
-| `dependencies` | No       | List of extension names this extension depends on     |
-| `filters`      | No       | Dictionary of filter name to callable                 |
-| `tests`        | No       | Dictionary of test name to callable                   |
-| `globals`      | No       | Dictionary of global name to value (any type)         |
+| Field          | Required | Description                                       |
+| -------------- | -------- | ------------------------------------------------- |
+| `name`         | Yes      | Unique identifier for the extension               |
+| `version`      | No       | Version string (defaults to "unknown")            |
+| `dependencies` | No       | List of extension names this extension depends on |
+| `filters`      | No       | Dictionary of filter name to callable             |
+| `tests`        | No       | Dictionary of test name to callable               |
+| `globals`      | No       | Dictionary of global name to value (any type)     |
 
 **Conflict handling:**
 
