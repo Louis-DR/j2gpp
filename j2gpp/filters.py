@@ -585,12 +585,12 @@ extra_filters['auto_indent'] = auto_indent
 
 
 # Align every line of the paragraph, left before §, right before §§
-def align(content, character='§', margin=1):
+def align(content, character='§', margin=1, threshold=None):
   lines = content.split('\n')
 
-  # First split the line by column and measure the width of the columns
+  # First split the line by column and collect the width samples per column
   lines_objs = []
-  columns_widths = []
+  columns_widths_samples = []
   for line in lines:
     line_obj = []
     column_index = 0
@@ -618,34 +618,52 @@ def align(content, character='§', margin=1):
           })
         # Lines without alignment do not affect column width
         if len(line_split_rjust) + len(text_rjust_split_ljust) > 2:
-          # Update the column widths
-          column_width = len(text)
-          if column_index == len(columns_widths):
-            columns_widths.append(column_width)
-          else:
-            columns_widths[column_index] = max(columns_widths[column_index], column_width)
+          # Collect the width sample used to compute the column width
+          while column_index >= len(columns_widths_samples):
+            columns_widths_samples.append([])
+          columns_widths_samples[column_index].append(len(text))
         column_index += 1
     lines_objs.append(line_obj)
 
   # No alignment markers detected
-  if not columns_widths:
+  if not columns_widths_samples:
     return content
+
+  # Compute the column widths, excluding samples beyond the threshold from the median
+  columns_widths = []
+  for widths in columns_widths_samples:
+    if threshold is not None:
+      median = sorted(widths)[len(widths)//2]
+      widths = [width for width in widths if abs(width-median) <= threshold] or widths
+    columns_widths.append(max(widths))
+
+  # Compute the target end position of each column. Cells are padded to reach this
+  # absolute position so an overflowing outlier is compensated by shrinking the
+  # padding of the following columns, keeping the remaining boundaries aligned.
+  columns_target_positions = []
+  position = 0
+  for column_width in columns_widths:
+    position += column_width
+    columns_target_positions.append(position)
+    position += margin
 
   # Then apply the alignment to all the lines
   lines = []
-  for line_index,line_obj in enumerate(lines_objs):
+  for line_obj in lines_objs:
     line = ""
+    current_position = 0
     for column_index, column in enumerate(line_obj):
-      column_width = columns_widths[column_index]
       column_text = column['text']
       column_just = column['just']
       if column_index == len(line_obj)-1:
         line += column_text
-      elif column_just == 'left':
-        line += column_text.ljust(column_width)
       else:
-        line += column_text.rjust(column_width)
-      if column_index != len(line_obj)-1:
+        column_width = max(len(column_text), columns_target_positions[column_index] - current_position)
+        if column_just == 'left':
+          line += column_text.ljust(column_width)
+        else:
+          line += column_text.rjust(column_width)
+        current_position += column_width + margin
         line += ' '*margin
     lines.append(line)
 
