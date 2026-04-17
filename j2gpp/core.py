@@ -117,13 +117,14 @@ def process_single_file(source_path: str,
     # Check if it's a template
     is_template = source_path.endswith('.j2')
 
-    # Create output directory
+    # Create parent directories when needed
     output_dir = os.path.dirname(output_path)
-    try:
-      os.makedirs(output_dir, exist_ok=True)
-    except OSError as exc:
-      error_msg = f"Cannot create directory '{output_dir}'."
-      return FileRenderResult(source_path, output_path, False, error_msg, is_template)
+    if output_dir:
+      try:
+        os.makedirs(output_dir, exist_ok=True)
+      except OSError as exc:
+        error_msg = f"Cannot create directory '{output_dir}'."
+        return FileRenderResult(source_path, output_path, False, error_msg, is_template)
 
     # Change working directory if specified
     if working_dir:
