@@ -585,7 +585,7 @@ extra_filters['auto_indent'] = auto_indent
 
 
 # Align every line of the paragraph, left before §, right before §§
-def align(content, margin=1):
+def align(content, character='§', margin=1):
   lines = content.split('\n')
 
   # First split the line by column and measure the width of the columns
@@ -595,10 +595,10 @@ def align(content, margin=1):
     line_obj = []
     column_index = 0
     # First split at the right align boundaries
-    line_split_rjust = line.split('§§')
+    line_split_rjust = line.split(character*2)
     for rjust_index, text_rjust in enumerate(line_split_rjust):
       # Then split at the left align boundaries
-      text_rjust_split_ljust = text_rjust.split('§')
+      text_rjust_split_ljust = text_rjust.split(character)
       for ljust_index, text in enumerate(text_rjust_split_ljust):
         # Preserve the indentation of the line
         if column_index == 0:
