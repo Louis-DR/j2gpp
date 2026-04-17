@@ -285,10 +285,8 @@ def until(x, terminator):
 extra_filters['until'] = until
 
 # Case
-extra_filters['title']      = lambda s : str(s).title()
-extra_filters['capitalize'] = lambda s : str(s).capitalize()
-extra_filters['casefold']   = lambda s : str(s).casefold()
-extra_filters['swapcase']   = lambda s : str(s).swapcase()
+extra_filters['casefold'] = lambda s : str(s).casefold()
+extra_filters['swapcase'] = lambda s : str(s).swapcase()
 
 re_caps_boundary                    = re.compile(r'(?<!^)(?=[A-Z])')
 re_caps_boundary_with_numbers       = re.compile(r'(?<!^)(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
@@ -391,18 +389,48 @@ extra_filters['pascal'] = pascal
 extra_filters['snake']  = snake
 extra_filters['kebab']  = kebab
 
+def humanize(text):
+  if not text: return ""
+  words, _ = split_into_words(text)
+  if not words: return ""
+  result   = " ".join(words)
+  return result
+
+def humanize_title(text):
+  if not text: return ""
+  words, _ = split_into_words(text)
+  if not words: return ""
+  words    = [word[0].upper() + word[1:] for word in words]
+  result   = " ".join(words)
+  return result
+
+def humanize_capitalize(text):
+  if not text: return ""
+  words, _ = split_into_words(text)
+  if not words: return ""
+  words[0] = words[0][0].upper() + words[0][1:]
+  result   = " ".join(words)
+  return result
+
+extra_filters['humanize']            = humanize
+extra_filters['humanize_title']      = humanize_title
+extra_filters['humanize_capitalize'] = humanize_capitalize
+
 def change_case(text, case=None, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
   match case:
-    case "lower":      text = text.lower()
-    case "upper":      text = text.upper()
-    case "title":      text = text.title()
-    case "capitalize": text = text.capitalize()
-    case "casefold":   text = text.casefold()
-    case "swapcase":   text = text.swapcase()
-    case "camel":      text = camel  (text, delimiters, preserve_caps, group_caps, consider_numbers)
-    case "pascal":     text = pascal (text, delimiters, preserve_caps, group_caps, consider_numbers)
-    case "snake":      text = snake  (text, delimiters, preserve_caps, group_caps, consider_numbers)
-    case "kebab":      text = kebab  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "lower":               text = text.lower()
+    case "upper":               text = text.upper()
+    case "title":               text = text.title()
+    case "capitalize":          text = text.capitalize()
+    case "casefold":            text = text.casefold()
+    case "swapcase":            text = text.swapcase()
+    case "camel":               text = camel  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "pascal":              text = pascal (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "snake":               text = snake  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "kebab":               text = kebab  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "humanize":            text = humanize(text)
+    case "humanize_title":      text = humanize_title(text)
+    case "humanize_capitalize": text = humanize_capitalize(text)
   return text
 extra_filters['change_case'] = change_case
 
