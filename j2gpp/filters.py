@@ -285,10 +285,8 @@ def until(x, terminator):
 extra_filters['until'] = until
 
 # Case
-extra_filters['title']      = lambda s : str(s).title()
-extra_filters['capitalize'] = lambda s : str(s).capitalize()
-extra_filters['casefold']   = lambda s : str(s).casefold()
-extra_filters['swapcase']   = lambda s : str(s).swapcase()
+extra_filters['casefold'] = lambda s : str(s).casefold()
+extra_filters['swapcase'] = lambda s : str(s).swapcase()
 
 re_caps_boundary                    = re.compile(r'(?<!^)(?=[A-Z])')
 re_caps_boundary_with_numbers       = re.compile(r'(?<!^)(?=[A-Z0-9])|(?<=[0-9])(?=[a-z])')
@@ -391,18 +389,48 @@ extra_filters['pascal'] = pascal
 extra_filters['snake']  = snake
 extra_filters['kebab']  = kebab
 
+def humanize(text):
+  if not text: return ""
+  words, _ = split_into_words(text)
+  if not words: return ""
+  result   = " ".join(words)
+  return result
+
+def humanize_title(text):
+  if not text: return ""
+  words, _ = split_into_words(text)
+  if not words: return ""
+  words    = [word[0].upper() + word[1:] for word in words]
+  result   = " ".join(words)
+  return result
+
+def humanize_capitalize(text):
+  if not text: return ""
+  words, _ = split_into_words(text)
+  if not words: return ""
+  words[0] = words[0][0].upper() + words[0][1:]
+  result   = " ".join(words)
+  return result
+
+extra_filters['humanize']            = humanize
+extra_filters['humanize_title']      = humanize_title
+extra_filters['humanize_capitalize'] = humanize_capitalize
+
 def change_case(text, case=None, delimiters=" _-", preserve_caps=True, group_caps=True, consider_numbers=True):
   match case:
-    case "lower":      text = text.lower()
-    case "upper":      text = text.upper()
-    case "title":      text = text.title()
-    case "capitalize": text = text.capitalize()
-    case "casefold":   text = text.casefold()
-    case "swapcase":   text = text.swapcase()
-    case "camel":      text = camel  (text, delimiters, preserve_caps, group_caps, consider_numbers)
-    case "pascal":     text = pascal (text, delimiters, preserve_caps, group_caps, consider_numbers)
-    case "snake":      text = snake  (text, delimiters, preserve_caps, group_caps, consider_numbers)
-    case "kebab":      text = kebab  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "lower":               text = text.lower()
+    case "upper":               text = text.upper()
+    case "title":               text = text.title()
+    case "capitalize":          text = text.capitalize()
+    case "casefold":            text = text.casefold()
+    case "swapcase":            text = text.swapcase()
+    case "camel":               text = camel  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "pascal":              text = pascal (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "snake":               text = snake  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "kebab":               text = kebab  (text, delimiters, preserve_caps, group_caps, consider_numbers)
+    case "humanize":            text = humanize(text)
+    case "humanize_title":      text = humanize_title(text)
+    case "humanize_capitalize": text = humanize_capitalize(text)
   return text
 extra_filters['change_case'] = change_case
 
@@ -557,20 +585,20 @@ extra_filters['auto_indent'] = auto_indent
 
 
 # Align every line of the paragraph, left before §, right before §§
-def align(content, margin=1):
+def align(content, character='§', margin=1, threshold=None):
   lines = content.split('\n')
 
-  # First split the line by column and measure the width of the columns
+  # First split the line by column and collect the width samples per column
   lines_objs = []
-  columns_widths = []
+  columns_widths_samples = []
   for line in lines:
     line_obj = []
     column_index = 0
     # First split at the right align boundaries
-    line_split_rjust = line.split('§§')
+    line_split_rjust = line.split(character*2)
     for rjust_index, text_rjust in enumerate(line_split_rjust):
       # Then split at the left align boundaries
-      text_rjust_split_ljust = text_rjust.split('§')
+      text_rjust_split_ljust = text_rjust.split(character)
       for ljust_index, text in enumerate(text_rjust_split_ljust):
         # Preserve the indentation of the line
         if column_index == 0:
@@ -590,34 +618,52 @@ def align(content, margin=1):
           })
         # Lines without alignment do not affect column width
         if len(line_split_rjust) + len(text_rjust_split_ljust) > 2:
-          # Update the column widths
-          column_width = len(text)
-          if column_index == len(columns_widths):
-            columns_widths.append(column_width)
-          else:
-            columns_widths[column_index] = max(columns_widths[column_index], column_width)
+          # Collect the width sample used to compute the column width
+          while column_index >= len(columns_widths_samples):
+            columns_widths_samples.append([])
+          columns_widths_samples[column_index].append(len(text))
         column_index += 1
     lines_objs.append(line_obj)
 
   # No alignment markers detected
-  if not columns_widths:
+  if not columns_widths_samples:
     return content
+
+  # Compute the column widths, excluding samples beyond the threshold from the median
+  columns_widths = []
+  for widths in columns_widths_samples:
+    if threshold is not None:
+      median = sorted(widths)[len(widths)//2]
+      widths = [width for width in widths if abs(width-median) <= threshold] or widths
+    columns_widths.append(max(widths))
+
+  # Compute the target end position of each column. Cells are padded to reach this
+  # absolute position so an overflowing outlier is compensated by shrinking the
+  # padding of the following columns, keeping the remaining boundaries aligned.
+  columns_target_positions = []
+  position = 0
+  for column_width in columns_widths:
+    position += column_width
+    columns_target_positions.append(position)
+    position += margin
 
   # Then apply the alignment to all the lines
   lines = []
-  for line_index,line_obj in enumerate(lines_objs):
+  for line_obj in lines_objs:
     line = ""
+    current_position = 0
     for column_index, column in enumerate(line_obj):
-      column_width = columns_widths[column_index]
       column_text = column['text']
       column_just = column['just']
       if column_index == len(line_obj)-1:
         line += column_text
-      elif column_just == 'left':
-        line += column_text.ljust(column_width)
       else:
-        line += column_text.rjust(column_width)
-      if column_index != len(line_obj)-1:
+        column_width = max(len(column_text), columns_target_positions[column_index] - current_position)
+        if column_just == 'left':
+          line += column_text.ljust(column_width)
+        else:
+          line += column_text.rjust(column_width)
+        current_position += column_width + margin
         line += ' '*margin
     lines.append(line)
 
