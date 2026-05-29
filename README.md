@@ -279,6 +279,7 @@ The following arguments can be added to the command for additional features. The
 | `--overwrite-outdir`       | Overwrite output directory                                              |
 | `--warn-overwrite`         | Warn when overwriting files                                             |
 | `--no-overwrite`           | Prevent overwriting files                                               |
+| `--deterministic`          | Disable sources of variation for deterministic output                   |
 | `--no-strict-undefined`    | Disable error with undefined variable in template                       |
 | `--no-check-identifier`    | Disable warning when attributes are not valid identifiers               |
 | `--fix-identifiers`        | Replace invalid characters from identifiers with underscore             |
@@ -363,6 +364,7 @@ The `options` object supports the following keys, corresponding to CLI arguments
 | `copy_non_template`      | `--copy-non-template`      |
 | `warn_overwrite`         | `--warn-overwrite`         |
 | `no_overwrite`           | `--no-overwrite`           |
+| `deterministic`          | `--deterministic`          |
 | `overwrite_outdir`       | `--overwrite-outdir`       |
 
 **Extension configuration:**

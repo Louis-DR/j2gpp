@@ -61,6 +61,7 @@ def get_default_config() -> Dict[str,Any]:
       "warn_overwrite":         False,
       "no_overwrite":           False,
       "overwrite_outdir":       False,
+      "deterministic":          False,
     },
     "include_dirs":       [],
     "no_auto_extensions": False,
@@ -186,6 +187,7 @@ def cli_args_to_config(args) -> Dict[str,Any]:
     'warn_overwrite':         'warn_overwrite',
     'no_overwrite':           'no_overwrite',
     'overwrite_outdir':       'overwrite_outdir',
+    'deterministic':          'deterministic',
   }
 
   for cli_argument, config_key in cli_option_mapping.items():
