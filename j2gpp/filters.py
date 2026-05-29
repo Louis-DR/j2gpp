@@ -22,6 +22,7 @@ import re
 import os
 import errno
 import itertools
+import textwrap
 from j2gpp.utils import *
 from jinja2.runtime import Undefined
 
@@ -509,6 +510,56 @@ extra_filters['right_justify_lines'] = extra_filters['rjust_lines']
 # Controlling line jumps and blank lines
 extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
 extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
+
+# Better text wrap for blocks with terminators and padding
+def blockwrap(content, width=80, wrap_string=None, wrapstring='\n', do_pad=False, pad_character=' ', pad_chacacter=None, line_end_string='', line_start_string=None):
+  if wrap_string is None:
+    wrap_string = wrapstring
+  if pad_chacacter is not None:
+    pad_character = pad_chacacter
+
+  lines = content.split('\n')
+
+  # Auto-detect block indent if not provided
+  auto_indent = ""
+  if line_start_string is None:
+    for line in lines:
+      indent = line[:len(line) - len(line.lstrip())]
+      if len(indent) > len(auto_indent):
+        auto_indent = indent
+
+  result_lines = []
+
+  for line in lines:
+    if not line.strip():
+      result_lines.append(line)
+      continue
+
+    original_indent = line[:len(line) - len(line.lstrip())]
+    current_start = line_start_string if line_start_string is not None else auto_indent
+
+    wrapped_text = textwrap.wrap(
+      line.strip(),
+      width              = width - len(line_end_string),
+      initial_indent     = original_indent,
+      subsequent_indent  = current_start,
+      expand_tabs        = False,
+      replace_whitespace = False,
+      drop_whitespace    = True,
+      break_long_words   = False,
+      break_on_hyphens   = False
+    )
+
+    for wrapped_line in wrapped_text:
+      if do_pad:
+        target_len = width - len(line_end_string)
+        if len(wrapped_line) < target_len:
+          wrapped_line += pad_character * (target_len - len(wrapped_line))
+      wrapped_line += line_end_string
+      result_lines.append(wrapped_line)
+
+  return wrap_string.join(result_lines)
+extra_filters['blockwrap'] = blockwrap
 
 # Removes pre-existing indentation and sets new one
 def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
