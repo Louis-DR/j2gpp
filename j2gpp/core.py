@@ -86,10 +86,41 @@ def setup_jinja_environment(include_dirs: List[str]     = None,
   if not options.get('no_strict_undefined', False):
     env.undefined = StrictUndefined
 
+  # Apply deterministic mode if requested
+  base_globals = extra_globals.copy()
+  if options.get('deterministic', False):
+    base_globals['__date__']     = '01-01-1970'
+    base_globals['__date_inv__'] = '1970-01-01'
+    base_globals['__time__']     = '00:00:00'
+    base_globals['__datetime__'] = '1970-01-01 00:00:00'
+    base_globals['__pid__']      = 0
+    base_globals['__ppid__']     = 0
+
+    import random
+    class DeterministicRandom(random.Random):
+      pass
+    det_random = DeterministicRandom(0)
+    base_globals['random'] = det_random
+
+    class DeterministicSecrets:
+      def choice(self, seq):  return det_random.choice(seq)
+      def randbelow(self, n): return det_random.randrange(n)
+      def randbits(self, k):  return det_random.getrandbits(k)
+      def token_bytes(self, nbytes=None):
+        if nbytes is None: nbytes = 32
+        return bytes(det_random.getrandbits(8) for _ in range(nbytes))
+      def token_hex(self, nbytes=None): return self.token_bytes(nbytes).hex()
+      def token_urlsafe(self, nbytes=None):
+        import base64
+        tok = base64.urlsafe_b64encode(self.token_bytes(nbytes)).rstrip(b'=')
+        return tok.decode('ascii')
+
+    base_globals['secrets'] = DeterministicSecrets()
+
   # Load built-in filters and tests
   env.filters.update(extra_filters)
   env.tests.update(extra_tests)
-  env.globals.update(extra_globals)
+  env.globals.update(base_globals)
 
   # Load custom filters and tests
   env.filters.update(filters)
@@ -208,9 +239,11 @@ def process_single_file(source_path: str,
       error_msg = f"Exception occurred while rendering '{source_path}' :\n{traceback}\n      {type(exc).__name__} - {exc}"
       return FileRenderResult(source_path, output_path, False, error_msg, is_template)
 
-    # Trim trailing whitespace
+    # Trim trailing whitespace at the end of each line
     if options.get('trim_whitespace', False):
-      src_res = src_res.rstrip()
+      lines = src_res.split('\n')
+      trimmed_lines = [line.rstrip(' \t') for line in lines]
+      src_res = '\n'.join(trimmed_lines)
 
     # Check if write was skipped by export filter
     if not write_source_toggle[0]:
@@ -318,5 +351,12 @@ def render_template_string(template_string: str,
   if options is None:
     options = {}
 
-  env = setup_jinja_environment(include_dirs=include_dirs, filters=filters, tests=tests, globals=globals, options=options)
-  return env.from_string(template_string).render(variables)
+  result_string = env.from_string(template_string).render(variables)
+
+  # Trim trailing whitespace at the end of each line
+  if options.get('trim_whitespace', False):
+    lines = result_string.split('\n')
+    trimmed_lines = [line.rstrip(' \t') for line in lines]
+    result_string = '\n'.join(trimmed_lines)
+
+  return result_string

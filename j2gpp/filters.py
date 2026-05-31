@@ -22,6 +22,7 @@ import re
 import os
 import errno
 import itertools
+import textwrap
 from j2gpp.utils import *
 from jinja2.runtime import Undefined
 
@@ -510,6 +511,56 @@ extra_filters['right_justify_lines'] = extra_filters['rjust_lines']
 extra_filters['strip_line_jumps']   = lambda P : P.strip('\n')
 extra_filters['remove_blank_lines'] = lambda P : re.sub(r"\n(\s*\n)+", "\n", P)
 
+# Better text wrap for blocks with terminators and padding
+def blockwrap(content, width=80, wrap_string=None, wrapstring='\n', do_pad=False, pad_character=' ', pad_chacacter=None, line_end_string='', line_start_string=None):
+  if wrap_string is None:
+    wrap_string = wrapstring
+  if pad_chacacter is not None:
+    pad_character = pad_chacacter
+
+  lines = content.split('\n')
+
+  # Auto-detect block indent if not provided
+  auto_indent = ""
+  if line_start_string is None:
+    for line in lines:
+      indent = line[:len(line) - len(line.lstrip())]
+      if len(indent) > len(auto_indent):
+        auto_indent = indent
+
+  result_lines = []
+
+  for line in lines:
+    if not line.strip():
+      result_lines.append(line)
+      continue
+
+    original_indent = line[:len(line) - len(line.lstrip())]
+    current_start = line_start_string if line_start_string is not None else auto_indent
+
+    wrapped_text = textwrap.wrap(
+      line.strip(),
+      width              = width - len(line_end_string),
+      initial_indent     = original_indent,
+      subsequent_indent  = current_start,
+      expand_tabs        = False,
+      replace_whitespace = False,
+      drop_whitespace    = True,
+      break_long_words   = False,
+      break_on_hyphens   = False
+    )
+
+    for wrapped_line in wrapped_text:
+      if do_pad:
+        target_len = width - len(line_end_string)
+        if len(wrapped_line) < target_len:
+          wrapped_line += pad_character * (target_len - len(wrapped_line))
+      wrapped_line += line_end_string
+      result_lines.append(wrapped_line)
+
+  return wrap_string.join(result_lines)
+extra_filters['blockwrap'] = blockwrap
+
 # Removes pre-existing indentation and sets new one
 def reindent(content, depth=1, spaces=2, tabs=False, first=False, blank=False):
   indent = depth * ('\t' if tabs else ' '*spaces)
@@ -677,7 +728,7 @@ re_restructure_nocapture = re.compile(r'{§\s*[\w\s]+?\s*§}')
 re_restructure_capture   = re.compile(r'{§\s*([\w\s]+?)\s*§}')
 re_s                     = re.compile(r'\s+')
 
-def restructure(content):
+def restructure(content, align_margin=1, align_threshold=None):
   result = ""
 
   # Split the content between content sections and tags
@@ -693,29 +744,106 @@ def restructure(content):
     # First word is the type of structure
     tag_operation = tag_split[0]
     # Other words are the operands
-    tag_operands = tag_split[1:] if len(tag_split) > 1 else []
+    tag_operands = tag_split[1:]
+
+    # Replace align tag with marker
+    if tag_operation == 'align':
+      justification = 'left'
+      alignment_index = None
+      for operand in tag_operands:
+        if operand in ('left', 'right', 'center'):
+          justification = operand
+        elif operand.isdigit():
+          alignment_index = int(operand)
+      result += f"{section}\x00ALIGN:{justification}:{alignment_index if alignment_index is not None else ''}\x00"
+
     # Spacing sections with line breaks
-    if (tag_operation == 'spacing'):
-      # Number of line breaks (by default 1)
-      spacing = int(tag_operands[0])+1 if len(tag_operands) > 0 else 1
-      # Add the section and its after-spacing
-      if len(section.strip()) == 0 and result.endswith('\n'):
-        # Count the current trailing newlines
-        current_spacing = 0
-        for char in reversed(result):
-          if char == '\n':
-            current_spacing += 1
-          else:
-            break
-        # Only add the difference if the new spacing is larger
+    elif tag_operation == 'spacing':
+      spacing = int(tag_operands[0]) + 1 if tag_operands else 1
+      if not section.strip() and result.endswith('\n'):
+        current_spacing = len(result) - len(result.rstrip('\n'))
         if spacing > current_spacing:
-          result += '\n'*(spacing - current_spacing)
+          result += '\n' * (spacing - current_spacing)
       else:
-        # Standard case
-        result += section + '\n'*spacing
+        result += f"{section}{'\n' * spacing}"
+
   # Add the last section
   result += sections[-1].rstrip(' \t').strip('\n\r')
-  return result
+
+  # Now, process the align markers
+  if '\x00ALIGN' not in result:
+    return result
+
+  # We need to split into lines and process alignment
+  lines = result.split('\n')
+  line_objects_list = []
+
+  for line in lines:
+    alignment_parts = re.split(r'\x00ALIGN:(left|right|center):(\d*)\x00', line)
+    current_implicit_column_index = 1
+    current_line_objects = []
+
+    for part_index in range(1, len(alignment_parts), 3):
+      justification = alignment_parts[part_index]
+      if alignment_parts[part_index+1]:
+        column_index = int(alignment_parts[part_index+1])
+        current_implicit_column_index = column_index + 1
+      else:
+        column_index = current_implicit_column_index
+        current_implicit_column_index += 1
+
+      text_value = alignment_parts[part_index-1].rstrip() if not current_line_objects else alignment_parts[part_index-1].strip()
+      current_line_objects.append({'text': text_value, 'justification': justification, 'column_index': column_index})
+
+    last_text_value = alignment_parts[-1].rstrip() if not current_line_objects else alignment_parts[-1].strip()
+    current_line_objects.append({'text': last_text_value, 'justification': 'left', 'column_index': None})
+    line_objects_list.append(current_line_objects)
+
+  # Group text segments by their spanning boundaries
+  span_text_lengths = {}
+  for line_objects in line_objects_list:
+    previous_column_index = None
+    for column_object in line_objects[:-1]:
+      current_column_index = column_object['column_index']
+      span_text_lengths.setdefault((previous_column_index, current_column_index), []).append(len(column_object['text']))
+      previous_column_index = current_column_index
+
+  # Iteratively calculate the target string position for each column
+  target_boundary_positions = {}
+  for target_column_index in sorted({column_index for _, column_index in span_text_lengths}):
+    maximum_position = 0
+    for (start_column_index, end_column_index), lengths_list in span_text_lengths.items():
+      if end_column_index == target_column_index:
+        # Filter width outliers per specific span constraint
+        if align_threshold is not None:
+          median_length = sorted(lengths_list)[len(lengths_list)//2]
+          lengths_list = [length for length in lengths_list if abs(length - median_length) <= align_threshold] or lengths_list
+        start_position = target_boundary_positions.get(start_column_index, 0) + align_margin if start_column_index is not None else 0
+        maximum_position = max(maximum_position, start_position + max(lengths_list))
+    target_boundary_positions[target_column_index] = maximum_position
+
+  # Apply dynamic padding and format final lines
+  formatted_lines_list = []
+  for line_objects in line_objects_list:
+    formatted_line_string = ""
+    current_string_position = 0
+    for part_index, column_object in enumerate(line_objects):
+      text_value = column_object['text']
+      if part_index == len(line_objects) - 1:
+        formatted_line_string += text_value
+      else:
+        padding_width = max(len(text_value), target_boundary_positions[column_object['column_index']] - current_string_position)
+        if column_object['justification'] == 'left':
+          formatted_line_string += text_value.ljust(padding_width)
+        elif column_object['justification'] == 'right':
+          formatted_line_string += text_value.rjust(padding_width)
+        elif column_object['justification'] == 'center':
+          formatted_line_string += text_value.center(padding_width)
+        current_string_position += padding_width + align_margin
+        formatted_line_string += ' ' * align_margin
+    formatted_lines_list.append(formatted_line_string)
+
+  return '\n'.join(formatted_lines_list)
 
 extra_filters['restructure'] = restructure
 

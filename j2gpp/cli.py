@@ -77,6 +77,7 @@ def parse_arguments(j2gpp_version: str):
   argparser.add_argument(      "--warn-overwrite",         dest="warn_overwrite",         help="Warn when overwriting files",                                           action="store_true", default=False)
   argparser.add_argument(      "--no-overwrite",           dest="no_overwrite",           help="Prevent overwriting files",                                             action="store_true", default=False)
   argparser.add_argument(      "--no-strict-undefined",    dest="no_strict_undefined",    help="Disable error with undefined variable in template",                     action="store_true", default=False)
+  argparser.add_argument(      "--deterministic",          dest="deterministic",          help="Disable sources of variation for deterministic output",                 action="store_true", default=False)
   argparser.add_argument(      "--no-check-identifier",    dest="no_check_identifier",    help="Disable warning when attributes are not valid identifiers",             action="store_true", default=False)
   argparser.add_argument(      "--fix-identifiers",        dest="fix_identifiers",        help="Replace invalid characters from identifiers with underscore",           action="store_true", default=False)
   argparser.add_argument(      "--chdir-src",              dest="chdir_src",              help="Change working directory to source before rendering",                   action="store_true", default=False)
