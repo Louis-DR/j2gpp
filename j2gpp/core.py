@@ -239,9 +239,11 @@ def process_single_file(source_path: str,
       error_msg = f"Exception occurred while rendering '{source_path}' :\n{traceback}\n      {type(exc).__name__} - {exc}"
       return FileRenderResult(source_path, output_path, False, error_msg, is_template)
 
-    # Trim trailing whitespace
+    # Trim trailing whitespace at the end of each line
     if options.get('trim_whitespace', False):
-      src_res = src_res.rstrip()
+      lines = src_res.split('\n')
+      trimmed_lines = [line.rstrip(' \t') for line in lines]
+      src_res = '\n'.join(trimmed_lines)
 
     # Check if write was skipped by export filter
     if not write_source_toggle[0]:
@@ -349,5 +351,12 @@ def render_template_string(template_string: str,
   if options is None:
     options = {}
 
-  env = setup_jinja_environment(include_dirs=include_dirs, filters=filters, tests=tests, globals=globals, options=options)
-  return env.from_string(template_string).render(variables)
+  result_string = env.from_string(template_string).render(variables)
+
+  # Trim trailing whitespace at the end of each line
+  if options.get('trim_whitespace', False):
+    lines = result_string.split('\n')
+    trimmed_lines = [line.rstrip(' \t') for line in lines]
+    result_string = '\n'.join(trimmed_lines)
+
+  return result_string
