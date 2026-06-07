@@ -104,6 +104,7 @@ class J2GPP:
       'warn_overwrite':         False,
       'no_overwrite':           False,
       'overwrite_outdir':       False,
+      'deterministic':          False,
     }
 
     # Output configuration
